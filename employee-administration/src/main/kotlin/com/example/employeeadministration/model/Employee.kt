@@ -3,13 +3,12 @@ package com.example.employeeadministration.model
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
-import javax.persistence.Id
 
 /**
  * Aggregate Employee encapsulating necessary Value Objects and handling possible invariants
  *
  */
-class Employee(val id: Long?, var firstname: String, var lastname: String, val birthday: LocalDate, var address: Address, var bankDetails: BankDetails, var position: Position, hourlyRate: BigDecimal, companyMail: CompanyMail?, var department: Department) {
+class Employee(var id: Long?, var firstname: String, var lastname: String, val birthday: LocalDate, var address: Address, var bankDetails: BankDetails, var jobDetails: JobDetails, hourlyRate: BigDecimal, companyMail: CompanyMail?) {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)
@@ -19,10 +18,6 @@ class Employee(val id: Long?, var firstname: String, var lastname: String, val b
         }
 
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
-
-    override fun toString(): String {
-        return "$lastname, $firstname, born on: ${birthday.toString()} - Position: ${position.toString()}"
-    }
 
     fun moveToNewAddress(address: Address) {
         this.address = address
@@ -37,13 +32,17 @@ class Employee(val id: Long?, var firstname: String, var lastname: String, val b
     }
 
     /**
-     * Changes the position of an employy
+     * Changes the position of an employee
      *
      * @param newSalary If no salary is provided the mininum of the provided position is used
      */
-    fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
-        this.position = position
-        this.hourlyRate = newSalary ?: position.baseHourlyWageRange.start
+    fun changeJobPosition(jobDetails: JobDetails, newSalary: BigDecimal?) {
+        this.jobDetails = jobDetails
+        this.hourlyRate = newSalary ?: jobDetails.position.baseHourlyWageRange.start
+    }
+
+    fun moveToAnotherDepartment(jobDetails: JobDetails) {
+        this.jobDetails = jobDetails
     }
 
     /**
@@ -55,8 +54,27 @@ class Employee(val id: Long?, var firstname: String, var lastname: String, val b
         this.companyMail = CompanyMail(this.firstname, this.lastname)
     }
 
-    fun moveToAnotherDepartment(department: Department) {
-        this.department = department
+    override fun toString(): String {
+        return "$lastname, $firstname, born on: ${birthday.toString()} - Position: ${jobDetails.position.toString()}"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null || other !is Employee) return false
+        return this.id == other.id
+    }
+
+    override fun hashCode(): Int {
+        var result = id?.hashCode() ?: 0
+        result = 31 * result + firstname.hashCode()
+        result = 31 * result + lastname.hashCode()
+        result = 31 * result + birthday.hashCode()
+        result = 31 * result + address.hashCode()
+        result = 31 * result + bankDetails.hashCode()
+        result = 31 * result + jobDetails.hashCode()
+        result = 31 * result + hourlyRate.hashCode()
+        result = 31 * result + companyMail.hashCode()
+        return result
+    }
+
 
 }

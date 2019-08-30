@@ -15,10 +15,12 @@ class EmployeeTests {
     val bankDetails = BankDetails("128319815719", "4712841", "Sparkasse")
     val position = Position("Consultant", BigDecimal(30.00)..BigDecimal(50.00))
     val department = Department("Development")
+    val jobDetails = JobDetails(12L, department, position)
+
 
     @Before
     fun setupEmployee() {
-        employee = Employee(1L, "Max", "Mustermann", LocalDate.now().minusYears(26), address, bankDetails, position, startSalary, null, department)
+        employee = Employee(1L, "Max", "Mustermann", LocalDate.now().minusYears(26), address, bankDetails, jobDetails, startSalary, null)
     }
 
     @Test
@@ -49,10 +51,11 @@ class EmployeeTests {
     @Test
     fun employeeShouldBeMovedToNewPosition() {
         val positionTest = Position("Senior Consultant", BigDecimal(55.00)..BigDecimal(70.90))
-        employee!!.changeJobPosition(positionTest, null)
-        Assertions.assertThat(employee!!.position).isEqualTo(positionTest)
+        val newJobDetails = JobDetails(13L, department, positionTest)
+        employee!!.changeJobPosition(newJobDetails, null)
+        Assertions.assertThat(employee!!.jobDetails.position).isEqualTo(positionTest)
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(positionTest.baseHourlyWageRange.start.setScale(2, RoundingMode.HALF_UP))
-        employee!!.changeJobPosition(position, BigDecimal(35.00))
+        employee!!.changeJobPosition(jobDetails, BigDecimal(35.00))
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(BigDecimal(35.00).setScale(2, RoundingMode.HALF_UP))
     }
 
