@@ -5,6 +5,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.internal.runners.statements.ExpectException
 import org.junit.rules.ExpectedException
+import java.math.BigDecimal
 import java.util.*
 
 class VOTests {
@@ -16,13 +17,37 @@ class VOTests {
 
     @Test
     @Throws(Exception::class)
-    fun testZipError() {
+    fun zipCodeShouldThrowException() {
         val correctZipCode = ZipCode(12345)
         Assertions.assertThat(correctZipCode.zip).isEqualTo(12345)
         // Set up the exception test and run code to throw it
         expectedZipException.expect(Exception::class.java)
         expectedZipException.expectMessage("The zip code provided does not match the required length of ${ZipCode.ALLOWED_LENGTHS_PER_COUNTRY[Locale.GERMANY]} digits.")
         val exceptionZip = ZipCode(123456)
+    }
+
+    @Test
+    fun equalsShouldOnlyCompareProperties() {
+        val zipCode = ZipCode(12345)
+        val zipCodeToCompare = ZipCode(12345)
+        // Same property, different instances, should be equal
+        Assertions.assertThat(zipCode == zipCodeToCompare).isTrue()
+    }
+
+    @Test
+    fun shouldCreateTheCorrectMailAddress() {
+        val mail = CompanyMail("m.mustermann@company.com")
+        val createdMail = CompanyMail("Max", "Mustermann")
+        Assertions.assertThat(mail).isEqualTo(createdMail)
+    }
+
+    @Test
+    fun shouldCorrectlyCalculateWhetherSalaryIsInRange() {
+        val position = Position("Test Pos", BigDecimal(30.20)..BigDecimal(40.00))
+        val inRange = BigDecimal(35.72)
+        val outOfRange = BigDecimal(40.01)
+        Assertions.assertThat(position.isRateInRange(inRange)).isTrue()
+        Assertions.assertThat(position.isRateInRange(outOfRange)).isFalse()
     }
 
 }
