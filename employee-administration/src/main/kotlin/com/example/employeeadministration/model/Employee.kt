@@ -1,5 +1,7 @@
 package com.example.employeeadministration.model
 
+import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.DBRef
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -8,7 +10,7 @@ import java.time.LocalDate
  * Aggregate Employee encapsulating necessary Value Objects and handling possible invariants
  *
  */
-class Employee(var id: Long?, var firstname: String, var lastname: String, val birthday: LocalDate, var address: Address, var bankDetails: BankDetails, var jobDetails: JobDetails, hourlyRate: BigDecimal, companyMail: CompanyMail?) {
+class Employee(@Id var id: String?, var firstname: String, var lastname: String, val birthday: LocalDate, var address: Address, var bankDetails: BankDetails, @DBRef var jobDetails: JobDetails, hourlyRate: BigDecimal, companyMail: CompanyMail?) {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)

@@ -1,5 +1,7 @@
 package com.example.employeeadministration.model
 
+import org.springframework.data.annotation.TypeAlias
+import org.springframework.data.mongodb.core.mapping.Document
 import java.lang.Exception
 import java.math.BigDecimal
 import java.util.*
