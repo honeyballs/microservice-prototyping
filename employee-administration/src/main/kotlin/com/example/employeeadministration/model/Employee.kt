@@ -1,16 +1,24 @@
 package com.example.employeeadministration.model
 
-import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.mapping.DBRef
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import javax.persistence.*
 
 /**
  * Aggregate Employee encapsulating necessary Value Objects and handling possible invariants
  *
  */
-class Employee(@Id var id: String?, var firstname: String, var lastname: String, val birthday: LocalDate, var address: Address, var bankDetails: BankDetails, @DBRef var jobDetails: JobDetails, hourlyRate: BigDecimal, companyMail: CompanyMail?) {
+@Entity
+class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+               var firstname: String,
+               var lastname: String,
+               val birthday: LocalDate,
+               @Embedded var address: Address,
+               @Embedded var bankDetails: BankDetails,
+               @ManyToOne @JoinColumn(name = "fk_details") var jobDetails: JobDetails,
+               hourlyRate: BigDecimal,
+               companyMail: CompanyMail?) {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)
@@ -19,6 +27,7 @@ class Employee(@Id var id: String?, var firstname: String, var lastname: String,
             field = value.setScale(2, RoundingMode.HALF_UP)
         }
 
+    @Embedded
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
 
     fun moveToNewAddress(address: Address) {
@@ -40,7 +49,7 @@ class Employee(@Id var id: String?, var firstname: String, var lastname: String,
      */
     fun changeJobPosition(jobDetails: JobDetails, newSalary: BigDecimal?) {
         this.jobDetails = jobDetails
-        this.hourlyRate = newSalary ?: jobDetails.position.minHourlWage
+        this.hourlyRate = newSalary ?: jobDetails.position.minHourlyWage
     }
 
     fun moveToAnotherDepartment(jobDetails: JobDetails) {

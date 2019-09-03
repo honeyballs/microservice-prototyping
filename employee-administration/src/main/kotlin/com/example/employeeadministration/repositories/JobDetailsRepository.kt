@@ -4,14 +4,16 @@ import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.Employee
 import com.example.employeeadministration.model.JobDetails
 import com.example.employeeadministration.model.Position
-import org.springframework.data.mongodb.repository.MongoRepository
-import org.springframework.data.mongodb.repository.Query
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.CrudRepository
+import org.springframework.stereotype.Repository
 import java.util.*
 
-interface JobDetailsRepository : MongoRepository <JobDetails, String>  {
+@Repository
+interface JobDetailsRepository : JpaRepository<JobDetails, Long> {
 
-    fun findByDepartmentAndPosition(department: Department, position: Position): Optional<JobDetails>
-    fun findDistinctByDepartment(department: Department): List<JobDetails>
-    fun findDistinctByPosition(position: Position): List<JobDetails>
+    fun getByDepartmentAndPosition(department: Department, position: Position): Optional<JobDetails>
+    fun getAllByDepartment(department: Department): List<JobDetails>
+    fun getAllByPosition(position: Position): List<JobDetails>
 
 }

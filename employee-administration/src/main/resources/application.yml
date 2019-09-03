@@ -1,16 +1,12 @@
-logging:
-  level:
-    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
 
-#spring:
-#  jpa:
-#    hibernate:
-#      ddl-auto: create-drop
-#
-#  datasource:
-#    url: jdbc:h2:mem:testdb
-#
-#  h2:
-#    console:
-#      enabled: true
-#      path: /console
+  datasource:
+    url: jdbc:h2:mem:testdb
+
+  h2:
+    console:
+      enabled: true
+      path: /console
