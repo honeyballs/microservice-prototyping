@@ -37,13 +37,13 @@ data class BankDetails(val iban: String, val bic: String, val bankName: String)
  * Value Object representing the position an employee has in the company.
  * Should this be a VO? hourly wage could be mutable.
  */
-data class Position(val title: String, val baseHourlyWageRange: ClosedRange<BigDecimal>)
+data class Position(val title: String, val minHourlWage: BigDecimal, val maxHourlyWage: BigDecimal)
 
 /**
  * Function to check whether a rate is within the limits of a job position
  */
 fun Position.isRateInRange(rateToCheck: BigDecimal): Boolean {
-    return rateToCheck in this.baseHourlyWageRange
+    return rateToCheck in this.minHourlWage..this.maxHourlyWage
 }
 
 /**

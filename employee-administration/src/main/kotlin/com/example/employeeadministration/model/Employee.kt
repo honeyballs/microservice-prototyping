@@ -40,7 +40,7 @@ class Employee(@Id var id: String?, var firstname: String, var lastname: String,
      */
     fun changeJobPosition(jobDetails: JobDetails, newSalary: BigDecimal?) {
         this.jobDetails = jobDetails
-        this.hourlyRate = newSalary ?: jobDetails.position.baseHourlyWageRange.start
+        this.hourlyRate = newSalary ?: jobDetails.position.minHourlWage
     }
 
     fun moveToAnotherDepartment(jobDetails: JobDetails) {

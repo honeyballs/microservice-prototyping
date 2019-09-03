@@ -20,7 +20,7 @@ class JobDetailsRepositoryTests {
     @Autowired
     lateinit var jobDetailsRepository: JobDetailsRepository
 
-    val position = Position("Senior Consultant", BigDecimal(50.00)..BigDecimal(75.00))
+    val position = Position("Senior Consultant", BigDecimal(50.00), BigDecimal(75.00))
     val department = Department("Development")
 
 
@@ -34,6 +34,13 @@ class JobDetailsRepositoryTests {
     @Test
     fun shouldGetJobDetailsByProperties() {
         Assertions.assertThat(jobDetailsRepository.findByDepartmentAndPosition(department, position).isPresent).isTrue()
+    }
+
+    @Test
+    fun shouldGetJobDetailsByDepartment() {
+        val newDetails = JobDetails(null, department, Position("Junior Consultant", BigDecimal(30.00), BigDecimal(45.20)))
+        jobDetailsRepository.save(newDetails)
+        Assertions.assertThat(jobDetailsRepository.findDistinctByDepartment(department).size).isEqualTo(2)
     }
 
 }
