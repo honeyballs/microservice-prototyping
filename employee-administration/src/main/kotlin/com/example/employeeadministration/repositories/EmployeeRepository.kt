@@ -6,6 +6,7 @@ import com.example.employeeadministration.model.Position
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
+import java.util.*
 
 @Repository
 interface EmployeeRepository : JpaRepository<Employee, Long> {
@@ -13,5 +14,6 @@ interface EmployeeRepository : JpaRepository<Employee, Long> {
     fun getAllByJobDetails_Department(department: Department): List<Employee>
     fun getAllByJobDetails_Position(position: Position): List<Employee>
     fun getAllByFirstnameContainingAndLastnameContaining(firstname: String, lastname: String): List<Employee>
+    fun getById(id: Long): Optional<Employee>
 
 }

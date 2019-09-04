@@ -6,16 +6,19 @@ import com.example.employeeadministration.model.JobDetailsDto
 import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.repositories.JobDetailsRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class JobDetailsServiceImpl(val jobDetailsRepository: JobDetailsRepository) : JobDetailsService {
 
-    override fun uniquelySaveJobDetails(details: JobDetails): JobDetails {
-        return jobDetailsRepository.getByDepartmentAndPosition(details.department, details.position)
-                .orElse(jobDetailsRepository.save(details))
+    @Transactional
+    override fun uniquelySaveJobDetails(details: JobDetails): JobDetailsDto {
+        return mapEntityToDto(jobDetailsRepository.getByDepartmentAndPosition(details.department, details.position)
+                .orElse(jobDetailsRepository.save(details)))
     }
 
-    override fun addPositionToDepartment(department: Department, position: Position): JobDetails {
+    @Transactional
+    override fun addPositionToDepartment(department: Department, position: Position): JobDetailsDto {
         val jobDetails = JobDetails(null, department, position)
         return uniquelySaveJobDetails(jobDetails)
     }

@@ -7,7 +7,7 @@ import com.example.employeeadministration.model.Position
 
 interface JobDetailsService : MappingService<JobDetails, JobDetailsDto> {
 
-    fun uniquelySaveJobDetails(details: JobDetails): JobDetails
-    fun addPositionToDepartment(department: Department, position: Position): JobDetails
+    fun uniquelySaveJobDetails(details: JobDetails): JobDetailsDto
+    fun addPositionToDepartment(department: Department, position: Position): JobDetailsDto
 
 }

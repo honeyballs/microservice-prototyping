@@ -12,6 +12,7 @@ import java.util.*
 @Repository
 interface JobDetailsRepository : JpaRepository<JobDetails, Long> {
 
+    fun getById(id: Long): Optional<JobDetails>
     fun getByDepartmentAndPosition(department: Department, position: Position): Optional<JobDetails>
     fun getAllByDepartment(department: Department): List<JobDetails>
     fun getAllByPosition(position: Position): List<JobDetails>
