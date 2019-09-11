@@ -8,8 +8,8 @@ interface EmployeeController {
 
     fun getAllEmployees(): ResponseEntity<List<EmployeeDto>>
     fun getEmployeeById(id: Long): ResponseEntity<EmployeeDto>
-    fun getEmployeesOfDepartment(name: String): ResponseEntity<List<EmployeeDto>>
-    fun getEmployeesByPosition(position: Position): ResponseEntity<List<EmployeeDto>>
+    fun getEmployeesOfDepartment(departmentId: Long): ResponseEntity<List<EmployeeDto>>
+    fun getEmployeesByPosition(positionId: Long): ResponseEntity<List<EmployeeDto>>
     fun getEmployeesByName(firstname: String, lastname: String): ResponseEntity<List<EmployeeDto>>
 
     fun createEmployee(employeeDto: EmployeeDto): ResponseEntity<EmployeeDto>
@@ -20,7 +20,7 @@ interface EmployeeController {
     fun employeeMoves(id: Long, address: Address): ResponseEntity<EmployeeDto>
     fun employeeSwitchesBankDetails(id: Long, details: BankDetails): ResponseEntity<EmployeeDto>
     fun employeeReceivesRaise(id: Long, amount: BigDecimal): ResponseEntity<EmployeeDto>
-    fun employeeMovesToDepartment(id: Long, name: String): ResponseEntity<EmployeeDto>
-    fun employeeReceivesNewPosition(id: Long, position: Position, newSalary: BigDecimal): ResponseEntity<EmployeeDto>
+    fun employeeMovesToDepartment(id: Long, departmentId: Long): ResponseEntity<EmployeeDto>
+    fun employeeReceivesNewPosition(id: Long, positionId: Long, newSalary: BigDecimal): ResponseEntity<EmployeeDto>
 
 }

@@ -41,13 +41,4 @@ class VOTests {
         Assertions.assertThat(mail).isEqualTo(createdMail)
     }
 
-    @Test
-    fun shouldCorrectlyCalculateWhetherSalaryIsInRange() {
-        val position = Position("Test Pos", BigDecimal(30.20), BigDecimal(40.00))
-        val inRange = BigDecimal(35.72)
-        val outOfRange = BigDecimal(40.01)
-        Assertions.assertThat(position.isRateInRange(inRange)).isTrue()
-        Assertions.assertThat(position.isRateInRange(outOfRange)).isFalse()
-    }
-
 }

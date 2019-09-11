@@ -16,7 +16,8 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                val birthday: LocalDate,
                @Embedded var address: Address,
                @Embedded var bankDetails: BankDetails,
-               @ManyToOne @JoinColumn(name = "fk_details") var jobDetails: JobDetails,
+               @ManyToOne @JoinColumn(name = "fk_department") var department: Department,
+               @ManyToOne @JoinColumn(name = "fk_position") var position: Position,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?) {
 
@@ -47,13 +48,13 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
      *
      * @param newSalary If no salary is provided the mininum of the provided position is used
      */
-    fun changeJobPosition(jobDetails: JobDetails, newSalary: BigDecimal?) {
-        this.jobDetails = jobDetails
-        this.hourlyRate = newSalary ?: jobDetails.position.minHourlyWage
+    fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
+        this.position = position
+        this.hourlyRate = newSalary ?: position.minHourlyWage
     }
 
-    fun moveToAnotherDepartment(jobDetails: JobDetails) {
-        this.jobDetails = jobDetails
+    fun moveToAnotherDepartment(department: Department) {
+        this.department = department
     }
 
     /**
@@ -66,7 +67,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     }
 
     override fun toString(): String {
-        return "$lastname, $firstname, born on: ${birthday.toString()} - Position: ${jobDetails.position.toString()}"
+        return "$lastname, $firstname, born on: ${birthday.toString()} - Position: ${position.toString()}"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -81,7 +82,8 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         result = 31 * result + birthday.hashCode()
         result = 31 * result + address.hashCode()
         result = 31 * result + bankDetails.hashCode()
-        result = 31 * result + jobDetails.hashCode()
+        result = 31 * result + department.hashCode()
+        result = 31 * result + position.hashCode()
         result = 31 * result + hourlyRate.hashCode()
         result = 31 * result + companyMail.hashCode()
         return result

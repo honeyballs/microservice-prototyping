@@ -1,8 +1,9 @@
 package com.example.employeeadministration.controllers
 
 import com.example.employeeadministration.model.*
+import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
-import com.example.employeeadministration.repositories.JobDetailsRepository
+import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.services.EmployeeService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,7 +15,7 @@ import java.math.BigDecimal
 const val employeeUrl = "employees"
 
 @RestController
-class EmployeeControllerImpl(val repository: EmployeeRepository, val service: EmployeeService, val jobDetailsRepository: JobDetailsRepository) : EmployeeController {
+class EmployeeControllerImpl(val repository: EmployeeRepository, val service: EmployeeService, val departmentRepository: DepartmentRepository, val positionRepository: PositionRepository) : EmployeeController {
 
     @GetMapping(employeeUrl)
     override fun getAllEmployees(): ResponseEntity<List<EmployeeDto>> {
@@ -28,14 +29,14 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
         })
     }
 
-    @GetMapping("$employeeUrl/department/{name}")
-    override fun getEmployeesOfDepartment(@PathVariable("name") name: String): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByJobDetails_Department(Department(name)).map { service.mapEntityToDto(it) })
+    @GetMapping("$employeeUrl/department/{depId}")
+    override fun getEmployeesOfDepartment(@PathVariable("depId") departmentId: Long): ResponseEntity<List<EmployeeDto>> {
+        return ok(repository.getAllByDepartment_Id(departmentId).map { service.mapEntityToDto(it) })
     }
 
-    @PostMapping("$employeeUrl/position")
-    override fun getEmployeesByPosition(@RequestBody position: Position): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByJobDetails_Position(position).map { service.mapEntityToDto(it) })
+    @PostMapping("$employeeUrl/position/{posId}")
+    override fun getEmployeesByPosition(@PathVariable("posId") positionId: Long): ResponseEntity<List<EmployeeDto>> {
+        return ok(repository.getAllByPosition_Id(positionId).map { service.mapEntityToDto(it) })
     }
 
     @GetMapping("$employeeUrl/name")
@@ -90,22 +91,22 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
     }
 
     @GetMapping("$employeeUrl/actions/{id}/changedepartment")
-    override fun employeeMovesToDepartment(@PathVariable("id") id: Long, @RequestParam("name") name: String): ResponseEntity<EmployeeDto> {
+    override fun employeeMovesToDepartment(@PathVariable("id") id: Long, @RequestParam("depId") departmentId: Long): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
-        val details = jobDetailsRepository.getByDepartmentAndPosition(Department(name), employee.jobDetails.position).orElseThrow {
+        val department = departmentRepository.getById(departmentId).orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find job a department/position combination fitting the requested move")
         }
-        employee.moveToAnotherDepartment(details)
+        employee.moveToAnotherDepartment(department)
         return ok(service.mapEntityToDto(repository.save(employee)))
     }
 
     @PostMapping("$employeeUrl/actions/{id}/newposition")
-    override fun employeeReceivesNewPosition(@PathVariable("id") id: Long, @RequestBody position: Position, @RequestParam("salary") newSalary: BigDecimal): ResponseEntity<EmployeeDto> {
+    override fun employeeReceivesNewPosition(@PathVariable("id") id: Long, @RequestParam("posId") positionId: Long, @RequestParam("salary") newSalary: BigDecimal): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
-        val details = jobDetailsRepository.getByDepartmentAndPosition(employee.jobDetails.department, position).orElseThrow {
+        val position = positionRepository.getById(positionId).orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find job a department/position combination fitting the requested move")
         }
-        employee.changeJobPosition(details, newSalary)
+        employee.changeJobPosition(position, newSalary)
         return ok(service.mapEntityToDto(repository.save(employee)))
     }
 
