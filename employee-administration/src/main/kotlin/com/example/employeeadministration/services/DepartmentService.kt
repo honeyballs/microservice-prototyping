@@ -7,6 +7,6 @@ import com.example.employeeadministration.model.PositionDto
 
 interface DepartmentService : MappingService<Department, DepartmentDto> {
 
-    fun createDepartmentUniquely(department: Department): DepartmentDto
+    fun createDepartmentUniquely(departmentDto: DepartmentDto): DepartmentDto
 
 }

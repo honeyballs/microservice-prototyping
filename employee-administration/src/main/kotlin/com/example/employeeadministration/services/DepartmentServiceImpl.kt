@@ -13,10 +13,10 @@ class DepartmentServiceImpl(val departmentRepository: DepartmentRepository) : De
      * If the department already exists we just return it, otherwise it is saved and returned
      */
     @Transactional
-    override fun createDepartmentUniquely(department: Department): DepartmentDto {
-        return departmentRepository.getByName(department.name)
+    override fun createDepartmentUniquely(departmentDto: DepartmentDto): DepartmentDto {
+        return departmentRepository.getByName(departmentDto.name)
                 .map { mapEntityToDto(it) }
-                .orElseGet { mapEntityToDto(departmentRepository.save(department)) }
+                .orElseGet { mapEntityToDto(departmentRepository.save(mapDtoToEntity(departmentDto))) }
     }
 
     override fun mapEntityToDto(entity: Department): DepartmentDto {

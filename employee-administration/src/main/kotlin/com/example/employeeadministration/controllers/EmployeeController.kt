@@ -14,7 +14,7 @@ interface EmployeeController {
 
     fun createEmployee(employeeDto: EmployeeDto): ResponseEntity<EmployeeDto>
     fun updateEmployee(employeeDto: EmployeeDto): ResponseEntity<EmployeeDto>
-    fun deleteEmployee(employeeDto: EmployeeDto): ResponseEntity<EmployeeDto>
+    fun deleteEmployee(id: Long): ResponseEntity<EmployeeDto>
 
     fun employeeChangesName(id: Long, firstname: String, lastname: String): ResponseEntity<EmployeeDto>
     fun employeeMoves(id: Long, address: Address): ResponseEntity<EmployeeDto>

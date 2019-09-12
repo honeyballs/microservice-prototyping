@@ -13,10 +13,10 @@ class PositionServiceImpl(val positionRepository: PositionRepository) : Position
      * Return a position if present, otherwise save a new position.
      */
     @Transactional
-    override fun createPositionUniquely(position: Position): PositionDto {
-        return positionRepository.getByTitle(position.title)
+    override fun createPositionUniquely(positionDto: PositionDto): PositionDto {
+        return positionRepository.getByTitle(positionDto.title)
                 .map { mapEntityToDto(it) }
-                .orElseGet { mapEntityToDto(positionRepository.save(position)) }
+                .orElseGet { mapEntityToDto(positionRepository.save(mapDtoToEntity(positionDto))) }
     }
 
     override fun mapEntityToDto(entity: Position): PositionDto {
