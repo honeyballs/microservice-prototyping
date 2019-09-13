@@ -1,5 +1,6 @@
 package com.example.employeeadministration.model
 
+import com.example.employeeadministration.model.events.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -19,7 +20,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                @ManyToOne @JoinColumn(name = "fk_department") var department: Department,
                @ManyToOne @JoinColumn(name = "fk_position") var position: Position,
                hourlyRate: BigDecimal,
-               companyMail: CompanyMail?) {
+               companyMail: CompanyMail?) : EventAggregate() {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)
@@ -33,14 +34,17 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
 
     fun moveToNewAddress(address: Address) {
         this.address = address
+        registerEvent(EmployeeMovedEvent(this))
     }
 
     fun receiveRaiseBy(raiseAmount: BigDecimal) {
         this.hourlyRate = hourlyRate.add(raiseAmount)
+        registerEvent(EmployeeGotRaiseEvent(this))
     }
 
     fun switchBankDetails(bankDetails: BankDetails) {
         this.bankDetails = bankDetails
+        registerEvent(EmployeeChangedBankingEvent(this))
     }
 
     /**
@@ -51,10 +55,12 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
+        registerEvent(EmployeeChangedJobPositionEvent(this))
     }
 
     fun moveToAnotherDepartment(department: Department) {
         this.department = department
+        registerEvent(EmployeeSwitchedDepartmentEvent(this))
     }
 
     /**
@@ -64,6 +70,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         this.firstname = firstname ?: this.firstname
         this.lastname = lastname ?: this.lastname
         this.companyMail = CompanyMail(this.firstname, this.lastname)
+        registerEvent(EmployeeChangedNameEvent(this))
     }
 
     override fun toString(): String {
