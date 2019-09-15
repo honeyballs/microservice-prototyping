@@ -2,10 +2,21 @@ package com.example.employeeadministration.services
 
 import com.example.employeeadministration.model.Employee
 import com.example.employeeadministration.model.EmployeeDto
+import com.example.employeeadministration.repositories.EmployeeRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-class EmployeeServiceImpl(val departmentService: DepartmentService, val positionService: PositionService) : EmployeeService {
+class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val departmentService: DepartmentService, val positionService: PositionService) : EmployeeService {
+
+    @Transactional
+    override fun deleteEmployee(id: Long) {
+            val employee = employeeRepository.getById(id).orElseThrow {
+                Exception("The employee you are trying to delete does not exist")
+            }
+            employee.deleteEmployee()
+            employeeRepository.save(employee)
+    }
 
     override fun mapEntityToDto(entity: Employee): EmployeeDto {
         return EmployeeDto(entity.id, entity.firstname, entity.lastname, entity.birthday, entity.address, entity.bankDetails, departmentService.mapEntityToDto(entity.department), positionService.mapEntityToDto(entity.position), entity.hourlyRate, entity.companyMail)

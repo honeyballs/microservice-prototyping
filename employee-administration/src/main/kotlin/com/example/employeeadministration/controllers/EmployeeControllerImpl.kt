@@ -57,12 +57,12 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
     }
 
     @DeleteMapping("$employeeUrl/{id}")
-    override fun deleteEmployee(@PathVariable("id") id: Long): ResponseEntity<EmployeeDto> {
-        val employee = repository.getById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find employee to delete")
+    override fun deleteEmployee(@PathVariable("id") id: Long) {
+        try {
+            service.deleteEmployee(id)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
-        repository.deleteById(id)
-        return ok(service.mapEntityToDto(employee))
     }
 
     @GetMapping("$employeeUrl/actions/{id}/namechange")

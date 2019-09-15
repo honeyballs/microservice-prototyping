@@ -2,12 +2,13 @@ package com.example.employeeadministration.services
 
 import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.model.PositionDto
+import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class PositionServiceImpl(val positionRepository: PositionRepository) : PositionService {
+class PositionServiceImpl(val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository) : PositionService {
 
     /**
      * Return a position if present, otherwise save a new position.
@@ -17,6 +18,19 @@ class PositionServiceImpl(val positionRepository: PositionRepository) : Position
         return positionRepository.getByTitle(positionDto.title)
                 .map { mapEntityToDto(it) }
                 .orElseGet { mapEntityToDto(positionRepository.save(mapDtoToEntity(positionDto))) }
+    }
+
+    @Transactional
+    override fun deletePosition(id: Long) {
+        if (employeeRepository.getAllByPosition_Id(id).isEmpty()) {
+            val position = positionRepository.getById(id).orElseThrow {
+                Exception("The job position you are trying to delete does not exist")
+            }
+            position.deletePosition()
+            positionRepository.save(position)
+        } else {
+            throw Exception("The job position has employees assigned to it and cannot be deleted.")
+        }
     }
 
     override fun mapEntityToDto(entity: Position): PositionDto {

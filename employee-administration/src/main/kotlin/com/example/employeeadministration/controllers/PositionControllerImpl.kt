@@ -53,11 +53,11 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
     }
 
     @DeleteMapping(positionUrl)
-    override fun deletePosition(id: Long): ResponseEntity<PositionDto> {
-        val position = positionRepository.getById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position to delete")
+    override fun deletePosition(id: Long) {
+        try {
+            positionService.deletePosition(id)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
-        positionRepository.deleteById(id)
-        return ok(positionService.mapEntityToDto(position))
     }
 }

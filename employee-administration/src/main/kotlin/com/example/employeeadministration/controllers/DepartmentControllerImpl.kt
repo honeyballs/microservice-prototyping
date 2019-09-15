@@ -42,11 +42,11 @@ class DepartmentControllerImpl(val departmentService: DepartmentService, val dep
     }
 
     @DeleteMapping("$departmentUrl/{id}")
-    override fun deleteDepartment(@PathVariable("id") id: Long): ResponseEntity<DepartmentDto> {
-        val department = departmentRepository.getById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find department to delete")
+    override fun deleteDepartment(@PathVariable("id") id: Long) {
+        try {
+            departmentService.deleteDepartment(id)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
-        departmentRepository.deleteById(id)
-        return ok(departmentService.mapEntityToDto(department))
     }
 }

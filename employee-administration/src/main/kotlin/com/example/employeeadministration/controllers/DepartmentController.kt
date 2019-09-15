@@ -10,6 +10,6 @@ interface DepartmentController {
 
     fun createDepartment(departmentDto: DepartmentDto): ResponseEntity<DepartmentDto>
     fun updateDepartmentName(departmentDto: DepartmentDto): ResponseEntity<DepartmentDto>
-    fun deleteDepartment(id: Long): ResponseEntity<DepartmentDto>
+    fun deleteDepartment(id: Long)
 
 }

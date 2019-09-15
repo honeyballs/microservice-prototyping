@@ -6,5 +6,6 @@ import com.example.employeeadministration.model.PositionDto
 interface PositionService : MappingService<Position, PositionDto> {
 
     fun createPositionUniquely(positionDto: PositionDto): PositionDto
+    fun deletePosition(id: Long)
 
 }

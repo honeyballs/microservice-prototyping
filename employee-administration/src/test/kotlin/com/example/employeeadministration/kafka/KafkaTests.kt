@@ -5,9 +5,8 @@ import com.example.employeeadministration.model.Address
 import com.example.employeeadministration.model.Employee
 import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.model.PositionDto
-import com.example.employeeadministration.model.events.CreatedPositionEvent
 import com.example.employeeadministration.model.events.DomainEvent
-import com.example.employeeadministration.model.events.PositionActions
+import com.example.employeeadministration.model.events.PositionCreatedEvent
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.IntegerDeserializer
 import org.apache.kafka.common.serialization.IntegerSerializer
@@ -63,7 +62,7 @@ class KafkaTests {
     @Test
     fun employeeShouldBeSerialized() {
         val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
-        val event = CreatedPositionEvent(position)
+        val event = PositionCreatedEvent(position)
         producer.send(ProducerRecord(TOPIC_NAME, event.id, event))
         val message = KafkaTestUtils.getSingleRecord(consumer, TOPIC_NAME)
         println(message.value())

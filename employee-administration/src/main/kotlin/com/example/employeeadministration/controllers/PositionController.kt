@@ -13,6 +13,6 @@ interface PositionController {
     fun createPosition(positionDto: PositionDto): ResponseEntity<PositionDto>
     fun updatePositionTitle(id: Long, title: String): ResponseEntity<PositionDto>
     fun updatePositionWageRange(id: Long, min: BigDecimal, max: BigDecimal): ResponseEntity<PositionDto>
-    fun deletePosition(id: Long): ResponseEntity<PositionDto>
+    fun deletePosition(id: Long)
 
 }

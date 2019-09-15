@@ -14,11 +14,17 @@ import kotlin.math.min
  */
 @Entity
 data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
-                      @Column(name = "department_name") var name: String): EventAggregate() {
+                      @Column(name = "department_name") var name: String,
+                      var deleted: Boolean = false): EventAggregate() {
 
     fun renameDepartment(name: String) {
         this.name = name
         registerEvent(DepartmentChangedNameEvent(this))
+    }
+
+    fun deleteDepartment() {
+        deleted = true
+        registerEvent(DepartmentDeletedEvent(id!!))
     }
 
 }
@@ -30,7 +36,8 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
 data class Position constructor (@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
                                  var title: String,
                                  private var _minHourlyWage: BigDecimal,
-                                 private var _maxHourlyWage: BigDecimal): EventAggregate() {
+                                 private var _maxHourlyWage: BigDecimal,
+                                 var deleted: Boolean = false): EventAggregate() {
 
     var minHourlyWage: BigDecimal
         get() = _minHourlyWage
@@ -51,13 +58,17 @@ data class Position constructor (@Id @GeneratedValue(strategy = GenerationType.A
 
     fun changePositionTitle(title: String) {
         this.title = title
-        registerEvent(PositionChangedTitleEvent(this))
+        registerEvent(PositionChangedTitleEvent(id!!, this.title))
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
         minHourlyWage = min ?: minHourlyWage
         maxHourlyWage = max ?: maxHourlyWage
-        registerEvent(PositionChangedRangeEvent(this))
+    }
+
+    fun deletePosition() {
+        deleted = true
+        registerEvent(PositionDeletedEvent(id!!))
     }
 
 }

@@ -2,7 +2,7 @@ package com.example.employeeadministration
 
 import com.example.employeeadministration.kafka.EventProducer
 import com.example.employeeadministration.model.Department
-import com.example.employeeadministration.model.events.CreatedDepartmentEvent
+import com.example.employeeadministration.model.events.DepartmentCreatedEvent
 import com.example.employeeadministration.model.events.DomainEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -21,13 +21,13 @@ class EmployeeAdministrationApplication {
     @Autowired
     lateinit var eventProducer: EventProducer
 
-    @Bean
-    fun kafkaTestRunner(): CommandLineRunner {
-        return CommandLineRunner {
-            val dep = Department(1L, "Development")
-            eventProducer.sendDomainEvent(CreatedDepartmentEvent(dep))
-        }
-    }
+//    @Bean
+//    fun kafkaTestRunner(): CommandLineRunner {
+//        return CommandLineRunner {
+//            val dep = Department(1L, "Development")
+//            eventProducer.sendDomainEvent(DepartmentCreatedEvent(dep))
+//        }
+//    }
 
 }
 
