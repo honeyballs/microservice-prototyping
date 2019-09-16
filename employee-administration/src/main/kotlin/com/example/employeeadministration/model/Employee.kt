@@ -51,29 +51,32 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
      * @param newSalary If no salary is provided the mininum of the provided position is used
      */
     fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
+        val compensation = EmployeeChangedJobPositionCompensation(this.id!!, this.position.id!!)
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
-        registerEvent(EmployeeChangedJobPositionEvent(id!!, position.id!!))
+        registerEvent(EmployeeChangedJobPositionEvent(id!!, position.id!!,compensation))
     }
 
     fun moveToAnotherDepartment(department: Department) {
+        val compensation = EmployeeSwitchedDepartmentCompensation(this.id!!, this.department.id!!)
         this.department = department
-        registerEvent(EmployeeSwitchedDepartmentEvent(id!!, department.id!!))
+        registerEvent(EmployeeSwitchedDepartmentEvent(id!!, department.id!!, compensation))
     }
 
     /**
      * Change the name(s) of a employee which subsequently changes the mail address
      */
     fun changeName(firstname: String?, lastname: String?) {
+        val compensation = EmployeeChangedNameCompensation(this.id!!, this.firstname, this.lastname, this.companyMail.mail)
         this.firstname = firstname ?: this.firstname
         this.lastname = lastname ?: this.lastname
         this.companyMail = CompanyMail(this.firstname, this.lastname)
-        registerEvent(EmployeeChangedNameEvent(id!!, this.firstname, this.lastname, companyMail.mail))
+        registerEvent(EmployeeChangedNameEvent(id!!, this.firstname, this.lastname, companyMail.mail, compensation))
     }
 
     fun deleteEmployee() {
         deleted = true
-        registerEvent(EmployeeDeletedEvent(id!!))
+        registerEvent(EmployeeDeletedEvent(id!!, EmployeeDeletedCompensation(this.id!!)))
     }
 
     override fun toString(): String {
@@ -81,22 +84,16 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other == null || other !is Employee) return false
-        return this.id == other.id
+        if (this === other) return true
+        if (other !is Employee) return false
+
+        if (id != other.id) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        var result = id?.hashCode() ?: 0
-        result = 31 * result + firstname.hashCode()
-        result = 31 * result + lastname.hashCode()
-        result = 31 * result + birthday.hashCode()
-        result = 31 * result + address.hashCode()
-        result = 31 * result + bankDetails.hashCode()
-        result = 31 * result + department.hashCode()
-        result = 31 * result + position.hashCode()
-        result = 31 * result + hourlyRate.hashCode()
-        result = 31 * result + companyMail.hashCode()
-        return result
+        return id?.hashCode() ?: 0
     }
 
 

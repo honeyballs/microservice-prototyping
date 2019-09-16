@@ -8,10 +8,16 @@ import org.springframework.stereotype.Service
 import org.springframework.util.concurrent.ListenableFutureCallback
 
 @Service
-class EventProducer(val kafkaTemplate: KafkaTemplate<String, DomainEvent>) {
+class EventProducer(val kafkaTemplate: KafkaTemplate<Long, DomainEvent>) {
 
-    fun sendDomainEvent(event: DomainEvent) {
-        val record = ProducerRecord<String, DomainEvent>(TOPIC_NAME, event.id, event)
+    /**
+     * Send a domain Event.
+     *
+     * @param key This key should be the id of the aggregate the event is concerning.
+     * This key guarantees that all events of an aggregate are kept within the same partition in the correct order in Kafka.
+     */
+    fun sendDomainEvent(key: Long, event: DomainEvent) {
+        val record = ProducerRecord<Long, DomainEvent>(TOPIC_NAME, key, event)
         val result = kafkaTemplate.send(record)
     }
 

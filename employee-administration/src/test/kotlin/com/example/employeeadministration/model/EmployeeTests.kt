@@ -1,5 +1,7 @@
 package com.example.employeeadministration.model
 
+import com.example.employeeadministration.model.events.EmployeeChangedJobPositionCompensation
+import com.example.employeeadministration.model.events.EmployeeChangedNameCompensation
 import org.assertj.core.api.Assertions
 import org.junit.Before
 import org.junit.Test
@@ -53,6 +55,13 @@ class EmployeeTests {
         employee!!.changeJobPosition(positionTest, null)
         Assertions.assertThat(employee!!.position).isEqualTo(positionTest)
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(positionTest.minHourlyWage.setScale(2, RoundingMode.HALF_UP))
+
+        // Event checks
+        Assertions.assertThat(employee!!.events().size).isEqualTo(1)
+        val comp = employee!!.events()[0].compensatingAction as EmployeeChangedJobPositionCompensation
+        Assertions.assertThat(comp.positionId).isEqualTo(position.id!!)
+        Assertions.assertThat(comp.originalEventId).isEqualTo(employee!!.events()[0].id)
+
         employee!!.changeJobPosition(position, BigDecimal(35.00))
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(BigDecimal(35.00).setScale(2, RoundingMode.HALF_UP))
     }
@@ -70,6 +79,11 @@ class EmployeeTests {
         employee!!.changeName(null, lastname)
         Assertions.assertThat(employee!!.lastname).isEqualTo(lastname)
         Assertions.assertThat(employee!!.companyMail).isEqualTo(companyMail)
+
+        // Event checks
+        Assertions.assertThat(employee!!.events().size).isEqualTo(1)
+        val comp = employee!!.events()[0].compensatingAction as EmployeeChangedNameCompensation
+        Assertions.assertThat(comp.lastname).isEqualTo("Mustermann")
     }
 
 }

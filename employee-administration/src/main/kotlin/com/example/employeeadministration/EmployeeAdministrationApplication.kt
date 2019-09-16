@@ -2,6 +2,7 @@ package com.example.employeeadministration
 
 import com.example.employeeadministration.kafka.EventProducer
 import com.example.employeeadministration.model.Department
+import com.example.employeeadministration.model.events.DepartmentCreatedCompensation
 import com.example.employeeadministration.model.events.DepartmentCreatedEvent
 import com.example.employeeadministration.model.events.DomainEvent
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -18,14 +19,15 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 @SpringBootApplication
 class EmployeeAdministrationApplication {
 
-    @Autowired
-    lateinit var eventProducer: EventProducer
-
+//    @Autowired
+//    lateinit var eventProducer: EventProducer
+//
 //    @Bean
 //    fun kafkaTestRunner(): CommandLineRunner {
 //        return CommandLineRunner {
+//            val comp = DepartmentCreatedCompensation(1L)
 //            val dep = Department(1L, "Development")
-//            eventProducer.sendDomainEvent(DepartmentCreatedEvent(dep))
+//            eventProducer.sendDomainEvent(DepartmentCreatedEvent(dep, comp))
 //        }
 //    }
 

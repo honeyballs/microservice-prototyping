@@ -1,6 +1,10 @@
 package com.example.employeeadministration.model
 
 import com.example.employeeadministration.model.events.*
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.data.domain.AbstractAggregateRoot
 import org.springframework.data.domain.AfterDomainEventPublication
 import org.springframework.data.domain.DomainEvents
@@ -18,13 +22,14 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
                       var deleted: Boolean = false): EventAggregate() {
 
     fun renameDepartment(name: String) {
+        val compensation = DepartmentChangedNameCompensation(this)
         this.name = name
-        registerEvent(DepartmentChangedNameEvent(this))
+        registerEvent(DepartmentChangedNameEvent(this, compensation))
     }
 
     fun deleteDepartment() {
         deleted = true
-        registerEvent(DepartmentDeletedEvent(id!!))
+        registerEvent(DepartmentDeletedEvent(id!!, DepartmentDeletedCompensation(id!!)))
     }
 
 }
@@ -33,32 +38,26 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
  * Position aggregate
  */
 @Entity
-data class Position constructor (@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
                                  var title: String,
-                                 private var _minHourlyWage: BigDecimal,
-                                 private var _maxHourlyWage: BigDecimal,
+                                 minHourlyWage: BigDecimal,
+                                 maxHourlyWage: BigDecimal,
                                  var deleted: Boolean = false): EventAggregate() {
 
-    var minHourlyWage: BigDecimal
-        get() = _minHourlyWage
+    var minHourlyWage: BigDecimal = minHourlyWage.setScale(2, RoundingMode.HALF_UP)
         set(value) {
-            _minHourlyWage = value.setScale(2, RoundingMode.HALF_UP)
+            field = value.setScale(2, RoundingMode.HALF_UP)
         }
 
-    var maxHourlyWage: BigDecimal
-        get() = _maxHourlyWage
+    var maxHourlyWage: BigDecimal = maxHourlyWage.setScale(2, RoundingMode.HALF_UP)
         set(value) {
-            _maxHourlyWage = value.setScale(2, RoundingMode.HALF_UP)
+            field = value.setScale(2, RoundingMode.HALF_UP)
         }
-
-    init {
-        minHourlyWage = minHourlyWage.setScale(2, RoundingMode.HALF_UP)
-        maxHourlyWage = maxHourlyWage.setScale(2, RoundingMode.HALF_UP)
-    }
 
     fun changePositionTitle(title: String) {
+        val compensation = PositionChangedTitleCompensation(this.id!!, this.title)
         this.title = title
-        registerEvent(PositionChangedTitleEvent(id!!, this.title))
+        registerEvent(PositionChangedTitleEvent(id!!, this.title, compensation))
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
@@ -68,8 +67,22 @@ data class Position constructor (@Id @GeneratedValue(strategy = GenerationType.A
 
     fun deletePosition() {
         deleted = true
-        registerEvent(PositionDeletedEvent(id!!))
+        registerEvent(PositionDeletedEvent(id!!, PositionDeletedCompensation(this.id!!)))
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Position) return false
+
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
+    }
+
 
 }
 

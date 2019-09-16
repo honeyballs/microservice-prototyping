@@ -1,22 +1,14 @@
 package com.example.employeeadministration.kafka
 
 import com.example.employeeadministration.configurations.TOPIC_NAME
-import com.example.employeeadministration.model.Address
-import com.example.employeeadministration.model.Employee
-import com.example.employeeadministration.model.Position
-import com.example.employeeadministration.model.PositionDto
-import com.example.employeeadministration.model.events.DomainEvent
-import com.example.employeeadministration.model.events.PositionCreatedEvent
+import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.events.*
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.IntegerDeserializer
-import org.apache.kafka.common.serialization.IntegerSerializer
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
+import org.apache.kafka.common.serialization.*
 import org.assertj.core.api.Assertions
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.ClassRule
-import org.junit.Test
+import org.junit.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -42,32 +34,63 @@ import kotlin.collections.HashMap
 @SpringBootTest
 class KafkaTests {
 
-
     public companion object {
         @ClassRule
         @JvmField
         public val embeddedKafka = EmbeddedKafkaRule(1, true, TOPIC_NAME)
     }
 
+    @Autowired
+    lateinit var mapper: ObjectMapper
+
     private final val consumerConfigs = HashMap(KafkaTestUtils.consumerProps("employee", "false", embeddedKafka.embeddedKafka))
-    val consumer = DefaultKafkaConsumerFactory<String, DomainEvent>(consumerConfigs, StringDeserializer(), JsonDeserializer<DomainEvent>(DomainEvent::class.java, false)).createConsumer()
+
+    lateinit var consumer: Consumer<Long, DomainEvent>
 
     private final val producerConfig = HashMap(KafkaTestUtils.producerProps(embeddedKafka.embeddedKafka))
-    val producer = DefaultKafkaProducerFactory<String, DomainEvent>(producerConfig, StringSerializer(), JsonSerializer<DomainEvent>()).createProducer()
-    
-    init {
+    val producer = DefaultKafkaProducerFactory<Long, DomainEvent>(producerConfig, LongSerializer(), JsonSerializer()).createProducer()
+
+    @Before
+    fun setupConsumer() {
+        consumer = DefaultKafkaConsumerFactory<Long, DomainEvent>(consumerConfigs, LongDeserializer(), JsonDeserializer(DomainEvent::class.java, mapper, true)).createConsumer()
         embeddedKafka.embeddedKafka.consumeFromAllEmbeddedTopics(consumer)
     }
-    
+
+//    @Test
+//    fun shouldConvertToJsonCorrectly() {
+//        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
+//        val comp = PositionCreatedCompensation(position.id!!)
+//        val event = PositionCreatedEvent(position, comp)
+//        val json = mapper.writeValueAsString(event)
+//        val testEvent = mapper.readValue(json, PositionCreatedEvent::class.java)
+//        println(json)
+//        Assertions.assertThat(testEvent is PositionCreatedEvent).isTrue()
+//    }
+
+//    @Test
+//    fun shouldBeAbleToCast() {
+//        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
+//        val comp = PositionCreatedCompensation(position.id!!)
+//        val event = PositionCreatedEvent(position, comp)
+//        val domainEvent: DomainEvent = event as DomainEvent
+//        Assertions.assertThat(domainEvent is PositionCreatedEvent).isTrue()
+//    }
+
     @Test
-    fun employeeShouldBeSerialized() {
-        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
-        val event = PositionCreatedEvent(position)
-        producer.send(ProducerRecord(TOPIC_NAME, event.id, event))
+    fun shouldSerializeCorrectly() {
+//        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
+//        val comp = PositionCreatedCompensation(position.id!!)
+//        val event = PositionCreatedEvent(position, comp)
+        val department = Department(12L, "Development")
+        val comp = DepartmentCreatedCompensation(12L)
+        val event = DepartmentCreatedEvent(department, comp)
+        producer.send(ProducerRecord(TOPIC_NAME, department.id!!, event))
         val message = KafkaTestUtils.getSingleRecord(consumer, TOPIC_NAME)
-        println(message.value())
-        Assertions.assertThat(UUID.fromString(message.key()).toString()).isEqualTo(event.id)
-        Assertions.assertThat(message.value()).isEqualTo(event)
+        val domainEvent: DomainEvent = message.value()
+        Assertions.assertThat(domainEvent.id).isEqualTo(event.id)
+        Assertions.assertThat(message.key()).isEqualTo(department.id!!)
+        val testComp = (domainEvent as DepartmentCreatedEvent).compensatingAction as DepartmentCreatedCompensation
+        Assertions.assertThat(testComp.departmentId).isEqualTo(department.id!!)
     }
 
 

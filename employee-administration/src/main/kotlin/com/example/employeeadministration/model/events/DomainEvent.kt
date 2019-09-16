@@ -1,36 +1,35 @@
 package com.example.employeeadministration.model.events
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
+
 /**
- * Represents the base information for an event occurring within the domain. Each event contains an id and its creation time.
+ * Represents an event occurring in the domain.
+ * It implements the base [Event] interface and contains a compensating event in case a participant is unable to process it.
  */
-open class DomainEvent @JsonCreator constructor(
-        @JsonProperty("id") val id: String,
-        @JsonProperty("createdAt") val createdAt: String) {
+open class DomainEvent(
+        override val id: String,
+        override val eventCreatedAt: String,
+        compensatingAction: CompensatingAction) : Event {
 
-    constructor(): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss:SSS")))
+    open var compensatingAction: CompensatingAction? = null
+        set(value) {
+            if (value != null) {
+                value.originalEventId = id
+            }
+            field = value
+        }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is DomainEvent) return false
-        if (id != other.id) return false
-        if (createdAt != other.createdAt) return false
-
-        return true
+    init {
+        this.compensatingAction = compensatingAction
     }
 
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + createdAt.hashCode()
-        return result
-    }
+    constructor(compensatingAction: CompensatingAction): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), compensatingAction)
 
 }
