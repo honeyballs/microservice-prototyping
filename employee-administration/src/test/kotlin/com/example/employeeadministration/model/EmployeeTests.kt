@@ -57,10 +57,10 @@ class EmployeeTests {
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(positionTest.minHourlyWage.setScale(2, RoundingMode.HALF_UP))
 
         // Event checks
-        Assertions.assertThat(employee!!.events().size).isEqualTo(1)
-        val comp = employee!!.events()[0].compensatingAction as EmployeeChangedJobPositionCompensation
+        Assertions.assertThat(employee!!.events()!!.second.size).isEqualTo(1)
+        val comp = employee!!.events()!!.second[0].compensatingAction as EmployeeChangedJobPositionCompensation
         Assertions.assertThat(comp.positionId).isEqualTo(position.id!!)
-        Assertions.assertThat(comp.originalEventId).isEqualTo(employee!!.events()[0].id)
+        Assertions.assertThat(comp.originalEventId).isEqualTo(employee!!.events()!!.second[0].id)
 
         employee!!.changeJobPosition(position, BigDecimal(35.00))
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(BigDecimal(35.00).setScale(2, RoundingMode.HALF_UP))
@@ -81,8 +81,8 @@ class EmployeeTests {
         Assertions.assertThat(employee!!.companyMail).isEqualTo(companyMail)
 
         // Event checks
-        Assertions.assertThat(employee!!.events().size).isEqualTo(1)
-        val comp = employee!!.events()[0].compensatingAction as EmployeeChangedNameCompensation
+        Assertions.assertThat(employee!!.events()!!.second.size).isEqualTo(1)
+        val comp = employee!!.events()!!.second[0].compensatingAction as EmployeeChangedNameCompensation
         Assertions.assertThat(comp.lastname).isEqualTo("Mustermann")
     }
 

@@ -5,6 +5,7 @@ import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.events.DepartmentCreatedCompensation
 import com.example.employeeadministration.model.events.DepartmentCreatedEvent
 import com.example.employeeadministration.model.events.DomainEvent
+import com.example.employeeadministration.services.DepartmentService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -28,6 +29,19 @@ class EmployeeAdministrationApplication {
 //            val comp = DepartmentCreatedCompensation(1L)
 //            val dep = Department(1L, "Development")
 //            eventProducer.sendDomainEvent(DepartmentCreatedEvent(dep, comp))
+//        }
+//    }
+
+//    @Autowired
+//    lateinit var departmentService: DepartmentService
+//
+//    @Bean
+//    fun repositoryKafkaTestRunner(): CommandLineRunner {
+//        return CommandLineRunner {
+//            var department = Department(null, "Dev", false)
+//            department = departmentService.persistWithEvents(department)
+//            department.renameDepartment("HR")
+//            departmentService.persistWithEvents(department)
 //        }
 //    }
 

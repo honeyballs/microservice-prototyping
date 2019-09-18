@@ -33,6 +33,12 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     @Embedded
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
 
+    fun created() {
+        if (id != null) {
+            registerEvent(id!!, EmployeeCreatedEvent(this, EmployeeCreatedCompensation(this.id!!)))
+        }
+    }
+
     fun moveToNewAddress(address: Address) {
         this.address = address
     }
@@ -54,13 +60,13 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         val compensation = EmployeeChangedJobPositionCompensation(this.id!!, this.position.id!!)
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
-        registerEvent(EmployeeChangedJobPositionEvent(id!!, position.id!!,compensation))
+        registerEvent(id !!, EmployeeChangedJobPositionEvent(id!!, position.id!!,compensation))
     }
 
     fun moveToAnotherDepartment(department: Department) {
         val compensation = EmployeeSwitchedDepartmentCompensation(this.id!!, this.department.id!!)
         this.department = department
-        registerEvent(EmployeeSwitchedDepartmentEvent(id!!, department.id!!, compensation))
+        registerEvent(id!!, EmployeeSwitchedDepartmentEvent(id!!, department.id!!, compensation))
     }
 
     /**
@@ -71,12 +77,12 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         this.firstname = firstname ?: this.firstname
         this.lastname = lastname ?: this.lastname
         this.companyMail = CompanyMail(this.firstname, this.lastname)
-        registerEvent(EmployeeChangedNameEvent(id!!, this.firstname, this.lastname, companyMail.mail, compensation))
+        registerEvent(id!!, EmployeeChangedNameEvent(id!!, this.firstname, this.lastname, companyMail.mail, compensation))
     }
 
     fun deleteEmployee() {
         deleted = true
-        registerEvent(EmployeeDeletedEvent(id!!, EmployeeDeletedCompensation(this.id!!)))
+        registerEvent(id!!, EmployeeDeletedEvent(id!!, EmployeeDeletedCompensation(this.id!!)))
     }
 
     override fun toString(): String {

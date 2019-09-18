@@ -21,15 +21,21 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
                       @Column(name = "department_name") var name: String,
                       var deleted: Boolean = false): EventAggregate() {
 
+    fun created() {
+        if (id != null) {
+            registerEvent(id!!, DepartmentCreatedEvent(this, DepartmentCreatedCompensation(this.id!!)))
+        }
+    }
+
     fun renameDepartment(name: String) {
         val compensation = DepartmentChangedNameCompensation(this)
         this.name = name
-        registerEvent(DepartmentChangedNameEvent(this, compensation))
+        registerEvent(id!!, DepartmentChangedNameEvent(this, compensation))
     }
 
     fun deleteDepartment() {
         deleted = true
-        registerEvent(DepartmentDeletedEvent(id!!, DepartmentDeletedCompensation(id!!)))
+        registerEvent(id!!, DepartmentDeletedEvent(id!!, DepartmentDeletedCompensation(id!!)))
     }
 
 }
@@ -54,10 +60,16 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
             field = value.setScale(2, RoundingMode.HALF_UP)
         }
 
+    fun created() {
+        if (id != null) {
+            registerEvent(id!!, PositionCreatedEvent(this, PositionCreatedCompensation(this.id!!)))
+        }
+    }
+
     fun changePositionTitle(title: String) {
         val compensation = PositionChangedTitleCompensation(this.id!!, this.title)
         this.title = title
-        registerEvent(PositionChangedTitleEvent(id!!, this.title, compensation))
+        registerEvent(id!!, PositionChangedTitleEvent(id!!, this.title, compensation))
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
@@ -67,7 +79,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     fun deletePosition() {
         deleted = true
-        registerEvent(PositionDeletedEvent(id!!, PositionDeletedCompensation(this.id!!)))
+        registerEvent(id!!, PositionDeletedEvent(id!!, PositionDeletedCompensation(this.id!!)))
     }
 
     override fun equals(other: Any?): Boolean {

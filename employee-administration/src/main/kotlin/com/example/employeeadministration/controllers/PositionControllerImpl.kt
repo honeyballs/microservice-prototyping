@@ -36,7 +36,7 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
     override fun updatePositionTitle(@PathVariable("id") id: Long, @RequestParam("title") title: String): ResponseEntity<PositionDto> {
         return ok(positionRepository.getById(id).map {
             it.changePositionTitle(title)
-            positionService.mapEntityToDto(positionRepository.save(it))
+            positionService.mapEntityToDto(positionService.persistWithEvents(it))
         }.orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position to update")
         })
@@ -46,7 +46,7 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
     override fun updatePositionWageRange(@PathVariable("id") id: Long, @RequestParam("min") min: BigDecimal, @RequestParam("max") max: BigDecimal): ResponseEntity<PositionDto> {
         return ok(positionRepository.getById(id).map {
             it.adjustWageRange(min, max)
-            positionService.mapEntityToDto(positionRepository.save(it))
+            positionService.mapEntityToDto(positionService.persistWithEvents(it))
         }.orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position to update")
         })

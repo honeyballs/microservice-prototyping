@@ -56,31 +56,8 @@ class KafkaTests {
         embeddedKafka.embeddedKafka.consumeFromAllEmbeddedTopics(consumer)
     }
 
-//    @Test
-//    fun shouldConvertToJsonCorrectly() {
-//        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
-//        val comp = PositionCreatedCompensation(position.id!!)
-//        val event = PositionCreatedEvent(position, comp)
-//        val json = mapper.writeValueAsString(event)
-//        val testEvent = mapper.readValue(json, PositionCreatedEvent::class.java)
-//        println(json)
-//        Assertions.assertThat(testEvent is PositionCreatedEvent).isTrue()
-//    }
-
-//    @Test
-//    fun shouldBeAbleToCast() {
-//        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
-//        val comp = PositionCreatedCompensation(position.id!!)
-//        val event = PositionCreatedEvent(position, comp)
-//        val domainEvent: DomainEvent = event as DomainEvent
-//        Assertions.assertThat(domainEvent is PositionCreatedEvent).isTrue()
-//    }
-
     @Test
     fun shouldSerializeCorrectly() {
-//        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(47.213))
-//        val comp = PositionCreatedCompensation(position.id!!)
-//        val event = PositionCreatedEvent(position, comp)
         val department = Department(12L, "Development")
         val comp = DepartmentCreatedCompensation(12L)
         val event = DepartmentCreatedEvent(department, comp)

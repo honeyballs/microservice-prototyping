@@ -46,10 +46,11 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
 
     @PostMapping(employeeUrl)
     override fun createEmployee(@RequestBody employeeDto: EmployeeDto): ResponseEntity<EmployeeDto> {
-        val entity = repository.save(service.mapDtoToEntity(employeeDto))
+        val entity = service.persistWithEvents(service.mapDtoToEntity(employeeDto))
         return ok(service.mapEntityToDto(entity))
     }
 
+    // TODO: Remove?
     @PutMapping(employeeUrl)
     override fun updateEmployee(@RequestBody employeeDto: EmployeeDto): ResponseEntity<EmployeeDto> {
         val entity = repository.save(service.mapDtoToEntity(employeeDto))
@@ -69,28 +70,28 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
     override fun employeeChangesName(@PathVariable("id") id: Long, @RequestParam("firstname") firstname: String, @RequestParam("lastname") lastname: String): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
         employee.changeName(firstname, lastname)
-        return ok(service.mapEntityToDto(repository.save(employee)))
+        return ok(service.mapEntityToDto(service.persistWithEvents(employee)))
     }
 
     @PostMapping("$employeeUrl/actions/{id}/move")
     override fun employeeMoves(@PathVariable("id") id: Long, @RequestBody() address: Address): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
         employee.moveToNewAddress(address)
-        return ok(service.mapEntityToDto(repository.save(employee)))
+        return ok(service.mapEntityToDto(service.persistWithEvents(employee)))
     }
 
     @PostMapping("$employeeUrl/actions/{id}/switchbank")
     override fun employeeSwitchesBankDetails(@PathVariable("id") id: Long, @RequestBody details: BankDetails): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
         employee.switchBankDetails(details)
-        return ok(service.mapEntityToDto(repository.save(employee)))
+        return ok(service.mapEntityToDto(service.persistWithEvents(employee)))
     }
 
     @GetMapping("$employeeUrl/actions/{id}/raise")
     override fun employeeReceivesRaise(@PathVariable("id") id: Long, @RequestParam("amount") amount: BigDecimal): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
         employee.receiveRaiseBy(amount)
-        return ok(service.mapEntityToDto(repository.save(employee)))
+        return ok(service.mapEntityToDto(service.persistWithEvents(employee)))
     }
 
     @GetMapping("$employeeUrl/actions/{id}/changedepartment")
@@ -100,7 +101,7 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find job a department/position combination fitting the requested move")
         }
         employee.moveToAnotherDepartment(department)
-        return ok(service.mapEntityToDto(repository.save(employee)))
+        return ok(service.mapEntityToDto(service.persistWithEvents(employee)))
     }
 
     @PostMapping("$employeeUrl/actions/{id}/newposition")
@@ -110,7 +111,7 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find job a department/position combination fitting the requested move")
         }
         employee.changeJobPosition(position, newSalary)
-        return ok(service.mapEntityToDto(repository.save(employee)))
+        return ok(service.mapEntityToDto(service.persistWithEvents(employee)))
     }
 
     fun savelyRetrieveEmployee(id: Long): Employee {

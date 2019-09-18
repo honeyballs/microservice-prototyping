@@ -1,14 +1,37 @@
 package com.example.employeeadministration.services
 
+import com.example.employeeadministration.kafka.EventProducer
+import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.model.PositionDto
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class PositionServiceImpl(val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository) : PositionService {
+class PositionServiceImpl(val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository, val eventProducer: EventProducer) : PositionService {
+
+    override fun persistWithEvents(aggregate: Position): Position {
+        var agg: Position? = null
+        try {
+            // If id is null this is a newly created aggregate
+            if (aggregate.id == null) {
+                agg = positionRepository.save(aggregate)
+                agg.created()
+            } else {
+                agg = positionRepository.save(aggregate)
+            }
+            eventProducer.sendEventsOfAggregate(aggregate)
+        } catch (rollback: UnexpectedRollbackException) {
+            rollback.printStackTrace()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        } finally {
+            return agg ?: aggregate
+        }
+    }
 
     /**
      * Return a position if present, otherwise save a new position.
@@ -17,7 +40,7 @@ class PositionServiceImpl(val positionRepository: PositionRepository, val employ
     override fun createPositionUniquely(positionDto: PositionDto): PositionDto {
         return positionRepository.getByTitle(positionDto.title)
                 .map { mapEntityToDto(it) }
-                .orElseGet { mapEntityToDto(positionRepository.save(mapDtoToEntity(positionDto))) }
+                .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(positionDto))) }
     }
 
     @Transactional
@@ -27,7 +50,7 @@ class PositionServiceImpl(val positionRepository: PositionRepository, val employ
                 Exception("The job position you are trying to delete does not exist")
             }
             position.deletePosition()
-            positionRepository.save(position)
+            persistWithEvents(position)
         } else {
             throw Exception("The job position has employees assigned to it and cannot be deleted.")
         }

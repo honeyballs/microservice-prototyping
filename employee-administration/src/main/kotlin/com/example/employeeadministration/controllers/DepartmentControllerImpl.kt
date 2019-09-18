@@ -35,7 +35,7 @@ class DepartmentControllerImpl(val departmentService: DepartmentService, val dep
     override fun updateDepartmentName(@RequestBody departmentDto: DepartmentDto): ResponseEntity<DepartmentDto> {
         return ok(departmentRepository.getById(departmentDto.id!!).map {
             it.renameDepartment(departmentDto.name)
-            departmentService.mapEntityToDto(departmentRepository.save(it))
+            departmentService.mapEntityToDto(departmentService.persistWithEvents(it))
         }.orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find department to update")
         })

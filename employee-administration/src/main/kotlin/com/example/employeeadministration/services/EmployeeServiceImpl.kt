@@ -1,21 +1,45 @@
 package com.example.employeeadministration.services
 
+import com.example.employeeadministration.kafka.EventProducer
+import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.Employee
 import com.example.employeeadministration.model.EmployeeDto
 import com.example.employeeadministration.repositories.EmployeeRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val departmentService: DepartmentService, val positionService: PositionService) : EmployeeService {
+class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val departmentService: DepartmentService, val positionService: PositionService, val eventProducer: EventProducer) : EmployeeService {
+
+    override fun persistWithEvents(aggregate: Employee): Employee {
+        var agg: Employee? = null
+        try {
+            // If id is null this is a newly created aggregate
+            if (aggregate.id == null) {
+                agg = employeeRepository.save(aggregate)
+                agg.created()
+            } else {
+                agg = employeeRepository.save(aggregate)
+            }
+            eventProducer.sendEventsOfAggregate(aggregate)
+        } catch (rollback: UnexpectedRollbackException) {
+            rollback.printStackTrace()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        } finally {
+            return agg ?: aggregate
+        }
+    }
+
 
     @Transactional
     override fun deleteEmployee(id: Long) {
-            val employee = employeeRepository.getById(id).orElseThrow {
-                Exception("The employee you are trying to delete does not exist")
-            }
-            employee.deleteEmployee()
-            employeeRepository.save(employee)
+        val employee = employeeRepository.getById(id).orElseThrow {
+            Exception("The employee you are trying to delete does not exist")
+        }
+        employee.deleteEmployee()
+        persistWithEvents(employee)
     }
 
     override fun mapEntityToDto(entity: Employee): EmployeeDto {
