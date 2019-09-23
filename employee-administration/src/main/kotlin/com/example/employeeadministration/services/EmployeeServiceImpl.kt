@@ -1,7 +1,6 @@
 package com.example.employeeadministration.services
 
-import com.example.employeeadministration.kafka.EventProducer
-import com.example.employeeadministration.model.Department
+import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.Employee
 import com.example.employeeadministration.model.EmployeeDto
 import com.example.employeeadministration.repositories.EmployeeRepository
@@ -10,7 +9,7 @@ import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val departmentService: DepartmentService, val positionService: PositionService, val eventProducer: EventProducer) : EmployeeService {
+class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val departmentService: DepartmentService, val positionService: PositionService, val eventProducer: KafkaEventProducer) : EmployeeService {
 
     override fun persistWithEvents(aggregate: Employee): Employee {
         var agg: Employee? = null
@@ -35,7 +34,7 @@ class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val depart
 
     @Transactional
     override fun deleteEmployee(id: Long) {
-        val employee = employeeRepository.getById(id).orElseThrow {
+        val employee = employeeRepository.getByIdAndDeletedFalse(id).orElseThrow {
             Exception("The employee you are trying to delete does not exist")
         }
         employee.deleteEmployee()

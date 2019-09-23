@@ -10,7 +10,8 @@ import java.util.*
 @Transactional(readOnly = true)
 interface DepartmentRepository: JpaRepository<Department, Long> {
 
-    fun getById(id: Long): Optional<Department>
-    fun getByName(name: String): Optional<Department>
+    fun getAllByDeletedFalse(): List<Department>
+    fun getByIdAndDeletedFalse(id: Long): Optional<Department>
+    fun getByNameAndDeletedFalse(name: String): Optional<Department>
 
 }

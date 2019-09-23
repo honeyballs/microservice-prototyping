@@ -1,7 +1,6 @@
 package com.example.employeeadministration.services
 
-import com.example.employeeadministration.kafka.EventProducer
-import com.example.employeeadministration.model.Department
+import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.model.PositionDto
 import com.example.employeeadministration.repositories.EmployeeRepository
@@ -11,7 +10,7 @@ import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class PositionServiceImpl(val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository, val eventProducer: EventProducer) : PositionService {
+class PositionServiceImpl(val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository, val eventProducer: KafkaEventProducer) : PositionService {
 
     override fun persistWithEvents(aggregate: Position): Position {
         var agg: Position? = null
@@ -38,15 +37,15 @@ class PositionServiceImpl(val positionRepository: PositionRepository, val employ
      */
     @Transactional
     override fun createPositionUniquely(positionDto: PositionDto): PositionDto {
-        return positionRepository.getByTitle(positionDto.title)
+        return positionRepository.getByTitleAndDeletedFalse(positionDto.title)
                 .map { mapEntityToDto(it) }
                 .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(positionDto))) }
     }
 
     @Transactional
     override fun deletePosition(id: Long) {
-        if (employeeRepository.getAllByPosition_Id(id).isEmpty()) {
-            val position = positionRepository.getById(id).orElseThrow {
+        if (employeeRepository.getAllByPosition_IdAndDeletedFalse(id).isEmpty()) {
+            val position = positionRepository.getByIdAndDeletedFalse(id).orElseThrow {
                 Exception("The job position you are trying to delete does not exist")
             }
             position.deletePosition()

@@ -19,29 +19,29 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
 
     @GetMapping(employeeUrl)
     override fun getAllEmployees(): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.findAll().map { service.mapEntityToDto(it) })
+        return ok(repository.getAllByDeletedFalse().map { service.mapEntityToDto(it) })
     }
 
     @GetMapping("$employeeUrl/{id}")
     override fun getEmployeeById(@PathVariable("id") id: Long): ResponseEntity<EmployeeDto> {
-        return ok(repository.getById(id).map { service.mapEntityToDto(it) }.orElseThrow {
+        return ok(repository.getByIdAndDeletedFalse(id).map { service.mapEntityToDto(it) }.orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find employee using the given id")
         })
     }
 
     @GetMapping("$employeeUrl/department/{depId}")
     override fun getEmployeesOfDepartment(@PathVariable("depId") departmentId: Long): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByDepartment_Id(departmentId).map { service.mapEntityToDto(it) })
+        return ok(repository.getAllByDepartment_IdAndDeletedFalse(departmentId).map { service.mapEntityToDto(it) })
     }
 
     @PostMapping("$employeeUrl/position/{posId}")
     override fun getEmployeesByPosition(@PathVariable("posId") positionId: Long): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByPosition_Id(positionId).map { service.mapEntityToDto(it) })
+        return ok(repository.getAllByPosition_IdAndDeletedFalse(positionId).map { service.mapEntityToDto(it) })
     }
 
     @GetMapping("$employeeUrl/name")
     override fun getEmployeesByName(@RequestParam("firstname") firstname: String, @RequestParam("lastname") lastname: String): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByFirstnameContainingAndLastnameContaining(firstname, lastname).map { service.mapEntityToDto(it) })
+        return ok(repository.getAllByFirstnameContainingAndLastnameContainingAndDeletedFalse(firstname, lastname).map { service.mapEntityToDto(it) })
     }
 
     @PostMapping(employeeUrl)
@@ -97,7 +97,7 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
     @GetMapping("$employeeUrl/actions/{id}/changedepartment")
     override fun employeeMovesToDepartment(@PathVariable("id") id: Long, @RequestParam("depId") departmentId: Long): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
-        val department = departmentRepository.getById(departmentId).orElseThrow {
+        val department = departmentRepository.getByIdAndDeletedFalse(departmentId).orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find job a department/position combination fitting the requested move")
         }
         employee.moveToAnotherDepartment(department)
@@ -107,7 +107,7 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
     @PostMapping("$employeeUrl/actions/{id}/newposition")
     override fun employeeReceivesNewPosition(@PathVariable("id") id: Long, @RequestParam("posId") positionId: Long, @RequestParam("salary") newSalary: BigDecimal): ResponseEntity<EmployeeDto> {
         val employee = savelyRetrieveEmployee(id)
-        val position = positionRepository.getById(positionId).orElseThrow {
+        val position = positionRepository.getByIdAndDeletedFalse(positionId).orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find job a department/position combination fitting the requested move")
         }
         employee.changeJobPosition(position, newSalary)
@@ -115,7 +115,7 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
     }
 
     fun savelyRetrieveEmployee(id: Long): Employee {
-        return repository.getById(id).orElseThrow {
+        return repository.getByIdAndDeletedFalse(id).orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find employee using the given id")
         }
     }

@@ -1,21 +1,18 @@
 package com.example.employeeadministration.services
 
-import com.example.employeeadministration.kafka.EventProducer
+import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.DepartmentDto
-import com.example.employeeadministration.model.events.DepartmentCreatedCompensation
-import com.example.employeeadministration.model.events.DepartmentCreatedEvent
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import javax.persistence.RollbackException
 
 @Service
 class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
                             val employeeRepository: EmployeeRepository,
-                            val eventProducer: EventProducer) : DepartmentService {
+                            val eventProducer: KafkaEventProducer) : DepartmentService {
 
     override fun persistWithEvents(aggregate: Department): Department {
         var agg: Department? = null
@@ -42,15 +39,15 @@ class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
      */
     @Transactional
     override fun createDepartmentUniquely(departmentDto: DepartmentDto): DepartmentDto {
-        return departmentRepository.getByName(departmentDto.name)
+        return departmentRepository.getByNameAndDeletedFalse(departmentDto.name)
                 .map { mapEntityToDto(it) }
                 .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(departmentDto))) }
     }
 
     @Transactional
     override fun deleteDepartment(id: Long) {
-        if (employeeRepository.getAllByDepartment_Id(id).isEmpty()) {
-            val department = departmentRepository.getById(id).orElseThrow {
+        if (employeeRepository.getAllByDepartment_IdAndDeletedFalse(id).isEmpty()) {
+            val department = departmentRepository.getByIdAndDeletedFalse(id).orElseThrow {
                 Exception("The department you are trying to delete does not exist")
             }
             department.deleteDepartment()

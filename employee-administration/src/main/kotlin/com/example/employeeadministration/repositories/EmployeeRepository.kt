@@ -12,9 +12,10 @@ import java.util.*
 @Transactional(readOnly = true)
 interface EmployeeRepository : JpaRepository<Employee, Long> {
 
-    fun getAllByDepartment_Id(departmendId: Long): List<Employee>
-    fun getAllByPosition_Id(positionId: Long): List<Employee>
-    fun getAllByFirstnameContainingAndLastnameContaining(firstname: String, lastname: String): List<Employee>
-    fun getById(id: Long): Optional<Employee>
+    fun getAllByDeletedFalse(): List<Employee>
+    fun getAllByDepartment_IdAndDeletedFalse(departmendId: Long): List<Employee>
+    fun getAllByPosition_IdAndDeletedFalse(positionId: Long): List<Employee>
+    fun getAllByFirstnameContainingAndLastnameContainingAndDeletedFalse(firstname: String, lastname: String): List<Employee>
+    fun getByIdAndDeletedFalse(id: Long): Optional<Employee>
 
 }

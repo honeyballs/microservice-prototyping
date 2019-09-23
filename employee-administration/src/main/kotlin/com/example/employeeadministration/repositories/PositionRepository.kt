@@ -6,7 +6,8 @@ import java.util.*
 
 interface PositionRepository : JpaRepository<Position, Long> {
 
-    fun getById(id: Long): Optional<Position>
-    fun getByTitle(title: String): Optional<Position>
+    fun getAllByDeletedFalse(): List<Position>
+    fun getByIdAndDeletedFalse(id: Long): Optional<Position>
+    fun getByTitleAndDeletedFalse(title: String): Optional<Position>
 
 }

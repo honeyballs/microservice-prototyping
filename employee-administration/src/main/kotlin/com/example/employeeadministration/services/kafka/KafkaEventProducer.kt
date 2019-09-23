@@ -1,18 +1,18 @@
-package com.example.employeeadministration.kafka
+package com.example.employeeadministration.services.kafka
 
 import com.example.employeeadministration.configurations.TOPIC_NAME
 import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.EventAggregate
+import com.example.employeeadministration.services.EventProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
-import org.springframework.util.concurrent.ListenableFutureCallback
 
 /**
  * Service which sends Domain Events to Kafka.
  */
 @Service
-class EventProducer(val kafkaTemplate: KafkaTemplate<Long, DomainEvent>) {
+class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, DomainEvent>): EventProducer {
 
     /**
      * Send a domain Event.
@@ -30,7 +30,7 @@ class EventProducer(val kafkaTemplate: KafkaTemplate<Long, DomainEvent>) {
      * Clears the events after sending.
      * TODO: Wait for success before clearing?
      */
-    fun sendEventsOfAggregate(aggregate: EventAggregate) {
+    override fun sendEventsOfAggregate(aggregate: EventAggregate) {
         if (aggregate.events() != null) {
             aggregate.events()!!.second.forEach() {
                 sendDomainEvent(aggregate.events()!!.first, it)

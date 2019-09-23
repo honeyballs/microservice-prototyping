@@ -17,12 +17,12 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
 
     @GetMapping(positionUrl)
     override fun getAllPositions(): ResponseEntity<List<PositionDto>> {
-      return ok(positionRepository.findAll().map { positionService.mapEntityToDto(it) })
+      return ok(positionRepository.getAllByDeletedFalse().map { positionService.mapEntityToDto(it) })
     }
 
     @GetMapping("$positionUrl/{id}")
     override fun getPositionById(@PathVariable("id") id: Long): ResponseEntity<PositionDto> {
-        return ok(positionRepository.getById(id).map { positionService.mapEntityToDto(it) }.orElseThrow {
+        return ok(positionRepository.getByIdAndDeletedFalse(id).map { positionService.mapEntityToDto(it) }.orElseThrow {
             ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position using the given id")
         })
     }
@@ -34,7 +34,7 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
 
     @PutMapping("$positionUrl/{id}/title")
     override fun updatePositionTitle(@PathVariable("id") id: Long, @RequestParam("title") title: String): ResponseEntity<PositionDto> {
-        return ok(positionRepository.getById(id).map {
+        return ok(positionRepository.getByIdAndDeletedFalse(id).map {
             it.changePositionTitle(title)
             positionService.mapEntityToDto(positionService.persistWithEvents(it))
         }.orElseThrow {
@@ -44,7 +44,7 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
 
     @PutMapping("$positionUrl/{id}/range")
     override fun updatePositionWageRange(@PathVariable("id") id: Long, @RequestParam("min") min: BigDecimal, @RequestParam("max") max: BigDecimal): ResponseEntity<PositionDto> {
-        return ok(positionRepository.getById(id).map {
+        return ok(positionRepository.getByIdAndDeletedFalse(id).map {
             it.adjustWageRange(min, max)
             positionService.mapEntityToDto(positionService.persistWithEvents(it))
         }.orElseThrow {
