@@ -57,7 +57,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
      * @param newSalary If no salary is provided the mininum of the provided position is used
      */
     fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
-        val compensation = EmployeeChangedJobPositionCompensation(this.id!!, this.position.id!!)
+        val compensation = EmployeeChangedJobPositionCompensation(this.id!!, this.position.id!!, this.hourlyRate)
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
         registerEvent(id !!, EmployeeChangedJobPositionEvent(id!!, position.id!!,compensation))

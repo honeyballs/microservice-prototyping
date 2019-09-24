@@ -1,6 +1,7 @@
 package com.example.employeeadministration.model.events
 
 import com.example.employeeadministration.model.Employee
+import java.math.BigDecimal
 
 /**
  * Collection of relevant domain events and compensations for employees.
@@ -12,7 +13,7 @@ class EmployeeCreatedEvent(val employee: Employee, compensatingAction: EmployeeC
 class EmployeeSwitchedDepartmentCompensation(val employeeId: Long, val departmentId: Long): CompensatingAction(CompensatingActionType.UPDATE)
 class EmployeeSwitchedDepartmentEvent(val employeeId: Long, val departmentId: Long, compensatingAction: EmployeeSwitchedDepartmentCompensation): DomainEvent(compensatingAction)
 
-class EmployeeChangedJobPositionCompensation(val employeeId: Long, val positionId: Long): CompensatingAction(CompensatingActionType.UPDATE)
+class EmployeeChangedJobPositionCompensation(val employeeId: Long, val positionId: Long, val oldWage: BigDecimal): CompensatingAction(CompensatingActionType.UPDATE)
 class EmployeeChangedJobPositionEvent(val employeeId: Long , val positionId: Long, compensatingAction: EmployeeChangedJobPositionCompensation): DomainEvent(compensatingAction)
 
 class EmployeeChangedNameCompensation(val employeeId: Long, val firstname: String, val lastname: String, val mail: String): CompensatingAction(CompensatingActionType.UPDATE)

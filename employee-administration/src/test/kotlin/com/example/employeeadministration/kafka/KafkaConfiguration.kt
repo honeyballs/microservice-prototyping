@@ -1,4 +1,4 @@
-package com.example.employeeadministration.configurations
+package com.example.employeeadministration.kafka
 
 import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.Event
@@ -24,18 +24,24 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListenerContainer
 import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
+import org.springframework.kafka.test.EmbeddedKafkaBroker
+import org.springframework.kafka.test.context.EmbeddedKafka
+import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 const val TOPIC_NAME = "employee"
 
 @Configuration
 @EnableKafka
-@Profile("!test")
+@Profile("test")
 class KafkaConfiguration {
 
     // We have to use the spring configured object mapper which is able to map kotlin
     @Autowired
     lateinit var mapper: ObjectMapper
+
+    @Autowired
+    lateinit var embeddedKafkaBroker: EmbeddedKafkaBroker
 
     @Bean
     fun employeeTopic(): NewTopic {
@@ -45,7 +51,7 @@ class KafkaConfiguration {
     @Bean
     fun producerConfigs():Map<String, Any> {
         val configs = HashMap<String, Any>()
-        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = embeddedKafkaBroker.brokersAsString
         return configs
     }
 
@@ -62,7 +68,7 @@ class KafkaConfiguration {
     @Bean
     fun consumerConfig(): Map<String, Any> {
         val configs = HashMap<String, Any>()
-        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = embeddedKafkaBroker.brokersAsString
         return configs
     }
 

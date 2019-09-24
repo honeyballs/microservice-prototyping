@@ -11,12 +11,10 @@ spring:
       enabled: true
       path: /console
 
-#
 #  kafka:
 #    consumer:
-#      bootstrap-servers: localhost:9092
-#      group-id: employee
-#    bootstrap-servers: localhost:9092
+#      bootstrap-servers: ${spring.kafka.}
+#    bootstrap-servers: ${spring.embedded.kafka.brokers}
 
   jackson:
     serialization:

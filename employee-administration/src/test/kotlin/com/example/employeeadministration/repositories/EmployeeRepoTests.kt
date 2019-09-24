@@ -48,19 +48,19 @@ class EmployeeRepoTests {
 
     @Test
     fun shouldFindByDepartment() {
-        val list = employeeRepository.getAllByDepartment_Id(department.id!!)
+        val list = employeeRepository.getAllByDepartment_IdAndDeletedFalse(department.id!!)
         Assertions.assertThat(list.size).isEqualTo(1)
         Assertions.assertThat(list[0].firstname).isEqualTo("Max")
     }
 
     @Test
     fun shouldFindByPosition() {
-        Assertions.assertThat(employeeRepository.getAllByPosition_Id(position.id!!).size).isEqualTo(2)
+        Assertions.assertThat(employeeRepository.getAllByPosition_IdAndDeletedFalse(position.id!!).size).isEqualTo(2)
     }
 
     @Test
     fun shouldFindByPartOfLastname() {
-        Assertions.assertThat(employeeRepository.getAllByFirstnameContainingAndLastnameContaining("", "usterma").size).isEqualTo(1)
+        Assertions.assertThat(employeeRepository.getAllByFirstnameContainingAndLastnameContainingAndDeletedFalse("", "usterma").size).isEqualTo(1)
     }
 
 }
