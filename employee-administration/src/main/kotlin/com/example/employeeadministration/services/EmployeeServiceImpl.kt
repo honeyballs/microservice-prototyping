@@ -31,7 +31,6 @@ class EmployeeServiceImpl(val employeeRepository: EmployeeRepository, val depart
         }
     }
 
-
     @Transactional
     override fun deleteEmployee(id: Long) {
         val employee = employeeRepository.getByIdAndDeletedFalse(id).orElseThrow {
