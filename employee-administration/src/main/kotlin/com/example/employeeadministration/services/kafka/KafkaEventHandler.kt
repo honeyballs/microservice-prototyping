@@ -5,13 +5,13 @@ import com.example.employeeadministration.model.events.*
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
+import com.example.employeeadministration.services.EventHandler
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
-import java.util.concurrent.CountDownLatch
 
 @Service
-@KafkaListener(groupId = "EmployeeService1", topics = [TOPIC_NAME])
+@KafkaListener(groupId = "EmployeeService", topics = [TOPIC_NAME])
 class KafkaEventHandler(val departmentRepository: DepartmentRepository, val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository): EventHandler {
 
 
