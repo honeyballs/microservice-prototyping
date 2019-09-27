@@ -1,5 +1,6 @@
 package com.example.employeeadministration.model.events
 
+import com.example.employeeadministration.SERVICE_NAME
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDateTime
@@ -22,7 +23,8 @@ open class CompensatingAction(
         override val id: String,
         override var eventCreatedAt: String = "",
         var originalEventId: String? = "",
-        val type: CompensatingActionType) : Event {
+        val type: CompensatingActionType,
+        override val originatingServiceName: String = SERVICE_NAME) : Event {
 
     constructor(type: CompensatingActionType): this(UUID.randomUUID().toString(), "", "", type)
 

@@ -1,5 +1,6 @@
 package com.example.projectadministration.model.events
 
+import com.example.projectadministration.SERVICE_NAME
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -20,7 +21,8 @@ open class CompensatingAction(
         override val id: String,
         override var eventCreatedAt: String = "",
         var originalEventId: String? = "",
-        val type: CompensatingActionType) : Event {
+        val type: CompensatingActionType,
+        override val originatingServiceName: String = SERVICE_NAME) : Event {
 
     constructor(type: CompensatingActionType): this(UUID.randomUUID().toString(), "", "", type)
 

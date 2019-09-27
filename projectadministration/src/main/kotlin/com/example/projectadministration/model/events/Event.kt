@@ -5,6 +5,7 @@ package com.example.projectadministration.model.events
  */
 interface Event {
 
+    val originatingServiceName: String
     val id: String
     val eventCreatedAt: String
 }

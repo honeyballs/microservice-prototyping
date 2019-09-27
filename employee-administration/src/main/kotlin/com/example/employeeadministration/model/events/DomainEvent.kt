@@ -1,5 +1,6 @@
 package com.example.employeeadministration.model.events
 
+import com.example.employeeadministration.SERVICE_NAME
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -16,7 +17,8 @@ const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
 open class DomainEvent(
         override val id: String,
         override val eventCreatedAt: String,
-        compensatingAction: CompensatingAction) : Event {
+        compensatingAction: CompensatingAction,
+        override val originatingServiceName: String = SERVICE_NAME) : Event {
 
     open var compensatingAction: CompensatingAction? = null
         set(value) {

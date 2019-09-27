@@ -1,5 +1,6 @@
 package com.example.projectadministration.model.events
 
+import com.example.projectadministration.SERVICE_NAME
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -13,7 +14,8 @@ const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
 open class DomainEvent(
         override val id: String,
         override val eventCreatedAt: String,
-        compensatingAction: CompensatingAction) : Event {
+        compensatingAction: CompensatingAction,
+        override val originatingServiceName: String = SERVICE_NAME) : Event {
 
     open var compensatingAction: CompensatingAction? = null
         set(value) {

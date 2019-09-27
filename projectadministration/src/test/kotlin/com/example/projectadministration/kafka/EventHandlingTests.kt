@@ -1,21 +1,32 @@
 package com.example.projectadministration.kafka
 
-import com.example.projectadministration.model.events.CompensatingAction
-import com.example.projectadministration.model.events.CompensatingActionType
-import com.example.projectadministration.model.events.DomainEvent
+import com.example.projectadministration.model.employee.Department
+import com.example.projectadministration.model.events.*
+import com.example.projectadministration.repositories.employeeservice.DepartmentRepository
 import com.example.projectadministration.repositories.employeeservice.PositionRepository
 import com.example.projectadministration.services.kafka.EmployeeServiceKafkaEventHandler
 import com.example.projectadministration.services.kafka.KafkaEventProducer
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.common.serialization.LongDeserializer
 import org.assertj.core.api.Assertions
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestComponent
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory
+import org.springframework.kafka.support.serializer.JsonDeserializer
+import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.context.EmbeddedKafka
+import org.springframework.kafka.test.utils.KafkaTestUtils
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.transaction.UnexpectedRollbackException
 import java.math.BigDecimal
 
 @RunWith(SpringRunner::class)
@@ -26,6 +37,9 @@ import java.math.BigDecimal
 class EventHandlingTests {
 
     @Autowired
+    lateinit var mapper: ObjectMapper
+
+    @Autowired
     lateinit var producer: KafkaEventProducer
 
     @Autowired
@@ -34,11 +48,24 @@ class EventHandlingTests {
     @Autowired
     lateinit var positionRepository: PositionRepository
 
+    @Autowired
+    lateinit var departmentRepository: DepartmentRepository
+
+    @Autowired
+    lateinit var embeddedKafkaBroker: EmbeddedKafkaBroker
+
+    lateinit var testConsumer: Consumer<Long, Event>
+
+    @Before
+    fun setup() {
+        val consumerConfigs = HashMap(KafkaTestUtils.consumerProps("projectService123", "true", embeddedKafkaBroker))
+        testConsumer = DefaultKafkaConsumerFactory<Long, Event>(consumerConfigs, LongDeserializer(), JsonDeserializer(Event::class.java, mapper, true)).createConsumer()
+    }
+
     @Test
-    fun shouldConvertToReduced() {
-        val position = Position(12L, "Developer", BigDecimal(30.20), BigDecimal(40.50))
+    fun shouldSaveOwnPositionInDB() {
         val comp = PositionCreatedCompensation(12L)
-        val event =  PositionCreatedEvent(position, comp)
+        val event =  PositionCreatedEvent(12L, "Developer", comp)
         producer.sendDomainEvent(12L, event)
         Thread.sleep(1000)
         val createdPositions = positionRepository.findAll()
@@ -46,19 +73,15 @@ class EventHandlingTests {
         Assertions.assertThat(createdPositions[0].id).isEqualTo(12L)
     }
 
-
-
-
-
-    // Create classes as they are in the employee service to check if the conversion to its reduced equivalent works
-    class Position(val id: Long, val title: String, val minHourlyWage: BigDecimal, maxHourlyWage: BigDecimal, val deleted: Boolean = false)
-    class PositionCreatedCompensation(val positionId: Long): CompensatingAction(CompensatingActionType.DELETE)
-    class PositionCreatedEvent(val position: Position, compensatingAction: PositionCreatedCompensation): DomainEvent(compensatingAction)
-
-
-
-
-
+    @Test
+    fun shouldSendCompensation() {
+        val comp = DepartmentCreatedCompensation(11L)
+        val event = DepartmentCreatedEvent(11L, "Development", comp)
+        producer.sendDomainEvent(12L, event)
+        Thread.sleep(1000)
+        val message = KafkaTestUtils.getSingleRecord(testConsumer, TOPIC_NAME)
+        Assertions.assertThat(message.value() is DepartmentCreatedCompensation).isTrue()
+    }
 
 
 

@@ -8,6 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 
+const val SERVICE_NAME = "EMPLOYEE_SERVICE"
+
 @SpringBootApplication
 class EmployeeAdministrationApplication {
 
