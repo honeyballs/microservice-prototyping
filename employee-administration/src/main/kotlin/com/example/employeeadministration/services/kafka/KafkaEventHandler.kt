@@ -25,8 +25,8 @@ class KafkaEventHandler(val departmentRepository: DepartmentRepository, val posi
 
     @KafkaHandler
     override fun compensate(comp: DepartmentChangedNameCompensation) {
-        val department = departmentRepository.findById(comp.oldDepartment.id!!).orElseThrow()
-        department.renameDepartment(comp.oldDepartment.name)
+        val department = departmentRepository.findById(comp.departmentId).orElseThrow()
+        department.renameDepartment(comp.oldName)
         department.clearEvents()
         departmentRepository.save(department)
     }

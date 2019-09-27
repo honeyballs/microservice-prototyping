@@ -28,7 +28,7 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
     }
 
     fun renameDepartment(name: String) {
-        val compensation = DepartmentChangedNameCompensation(this)
+        val compensation = DepartmentChangedNameCompensation(this.id!!, this.name)
         this.name = name
         registerEvent(id!!, DepartmentChangedNameEvent(this.id!!, this.name, compensation))
     }
