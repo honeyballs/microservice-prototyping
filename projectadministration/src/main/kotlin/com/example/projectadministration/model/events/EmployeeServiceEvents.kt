@@ -23,7 +23,7 @@ class EmployeeDeletedEvent(val employeeId: Long, compensatingAction: EmployeeDel
 class DepartmentCreatedCompensation(val departmentId: Long): CompensatingAction(CompensatingActionType.DELETE)
 class DepartmentCreatedEvent constructor(val departmentId: Long, val name: String, compensatingAction: DepartmentCreatedCompensation): DomainEvent(compensatingAction)
 
-class DepartmentChangedNameCompensation(val oldDepartment: Department): CompensatingAction(CompensatingActionType.UPDATE)
+class DepartmentChangedNameCompensation(val departmentId: Long, val oldName: String): CompensatingAction(CompensatingActionType.UPDATE)
 class DepartmentChangedNameEvent(val departmentId: Long, val name: String, compensatingAction: DepartmentChangedNameCompensation): DomainEvent(compensatingAction)
 
 class DepartmentDeletedCompensation(val departmentId: Long): CompensatingAction(CompensatingActionType.CREATE)
