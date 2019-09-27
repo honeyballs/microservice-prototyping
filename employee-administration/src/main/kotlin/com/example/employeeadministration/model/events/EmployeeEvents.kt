@@ -8,7 +8,7 @@ import java.math.BigDecimal
  */
 
 class EmployeeCreatedCompensation(val employeeId: Long): CompensatingAction(CompensatingActionType.DELETE)
-class EmployeeCreatedEvent(val employee: Employee, compensatingAction: EmployeeCreatedCompensation): DomainEvent(compensatingAction)
+class EmployeeCreatedEvent(val employeeId: Long, val firstname: String, val lastname: String, val departmentId: Long, val positionId: Long, val mail: String, val hourlyRate: BigDecimal, compensatingAction: EmployeeCreatedCompensation): DomainEvent(compensatingAction)
 
 class EmployeeSwitchedDepartmentCompensation(val employeeId: Long, val departmentId: Long): CompensatingAction(CompensatingActionType.UPDATE)
 class EmployeeSwitchedDepartmentEvent(val employeeId: Long, val departmentId: Long, compensatingAction: EmployeeSwitchedDepartmentCompensation): DomainEvent(compensatingAction)

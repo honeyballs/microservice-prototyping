@@ -65,7 +65,7 @@ class KafkaTests {
     fun shouldSerializeCorrectly() {
         val department = Department(12L, "Development")
         val comp = DepartmentCreatedCompensation(12L)
-        val event = DepartmentCreatedEvent(department, comp)
+        val event = DepartmentCreatedEvent(department.id!!, department.name, comp)
         producer.send(ProducerRecord(TOPIC_NAME, department.id!!, event))
         val message = KafkaTestUtils.getSingleRecord(consumer, TOPIC_NAME)
         val domainEvent: DomainEvent = message.value() as DomainEvent

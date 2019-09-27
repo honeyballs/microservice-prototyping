@@ -11,6 +11,11 @@ spring:
       enabled: true
       path: /console
 
+  #
+  #  kafka:
+  #    consumer:
+  #      bootstrap-servers: localhost:9092
+  #      group-id: employee
   #    bootstrap-servers: localhost:9092
 
   jackson:

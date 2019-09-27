@@ -23,14 +23,14 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
 
     fun created() {
         if (id != null) {
-            registerEvent(id!!, DepartmentCreatedEvent(this, DepartmentCreatedCompensation(this.id!!)))
+            registerEvent(id!!, DepartmentCreatedEvent(this.id!!, this.name, DepartmentCreatedCompensation(this.id!!)))
         }
     }
 
     fun renameDepartment(name: String) {
         val compensation = DepartmentChangedNameCompensation(this)
         this.name = name
-        registerEvent(id!!, DepartmentChangedNameEvent(this, compensation))
+        registerEvent(id!!, DepartmentChangedNameEvent(this.id!!, this.name, compensation))
     }
 
     fun deleteDepartment() {
@@ -62,7 +62,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     fun created() {
         if (id != null) {
-            registerEvent(id!!, PositionCreatedEvent(this, PositionCreatedCompensation(this.id!!)))
+            registerEvent(id!!, PositionCreatedEvent(this.id!!, this.title, PositionCreatedCompensation(this.id!!)))
         }
     }
 

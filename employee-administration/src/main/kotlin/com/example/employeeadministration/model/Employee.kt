@@ -35,7 +35,16 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
 
     fun created() {
         if (id != null) {
-            registerEvent(id!!, EmployeeCreatedEvent(this, EmployeeCreatedCompensation(this.id!!)))
+            registerEvent(id!!, EmployeeCreatedEvent(
+                    this.id!!,
+                    this.firstname,
+                    this.lastname,
+                    this.department.id!!,
+                    this.position.id!!,
+                    this.companyMail.mail,
+                    this.hourlyRate,
+                    EmployeeCreatedCompensation(this.id!!))
+            )
         }
     }
 
