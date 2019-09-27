@@ -25,18 +25,18 @@ class EmployeeAdministrationApplication {
 //        }
 //    }
 
-//    @Autowired
-//    lateinit var departmentService: DepartmentService
-//
-//    @Bean
-//    fun repositoryKafkaTestRunner(): CommandLineRunner {
-//        return CommandLineRunner {
-//            var department = Department(null, "Dev", false)
-//            department = departmentService.persistWithEvents(department)
-//            department.renameDepartment("HR")
-//            departmentService.persistWithEvents(department)
-//        }
-//    }
+    @Autowired
+    lateinit var departmentService: DepartmentService
+
+    @Bean
+    fun repositoryKafkaTestRunner(): CommandLineRunner {
+        return CommandLineRunner {
+            var department = Department(null, "Dev", false)
+            department = departmentService.persistWithEvents(department)
+            department.renameDepartment("HR")
+            departmentService.persistWithEvents(department)
+        }
+    }
 
 }
 

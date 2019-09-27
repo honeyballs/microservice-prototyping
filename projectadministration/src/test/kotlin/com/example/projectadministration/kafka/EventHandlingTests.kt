@@ -48,19 +48,6 @@ class EventHandlingTests {
     @Autowired
     lateinit var positionRepository: PositionRepository
 
-    @Autowired
-    lateinit var departmentRepository: DepartmentRepository
-
-    @Autowired
-    lateinit var embeddedKafkaBroker: EmbeddedKafkaBroker
-
-    lateinit var testConsumer: Consumer<Long, Event>
-
-    @Before
-    fun setup() {
-        val consumerConfigs = HashMap(KafkaTestUtils.consumerProps("projectService123", "true", embeddedKafkaBroker))
-        testConsumer = DefaultKafkaConsumerFactory<Long, Event>(consumerConfigs, LongDeserializer(), JsonDeserializer(Event::class.java, mapper, true)).createConsumer()
-    }
 
     @Test
     fun shouldSaveOwnPositionInDB() {
@@ -72,17 +59,5 @@ class EventHandlingTests {
         Assertions.assertThat(createdPositions.size).isEqualTo(1)
         Assertions.assertThat(createdPositions[0].id).isEqualTo(12L)
     }
-
-    @Test
-    fun shouldSendCompensation() {
-        val comp = DepartmentCreatedCompensation(11L)
-        val event = DepartmentCreatedEvent(11L, "Development", comp)
-        producer.sendDomainEvent(12L, event)
-        Thread.sleep(1000)
-        val message = KafkaTestUtils.getSingleRecord(testConsumer, TOPIC_NAME)
-        Assertions.assertThat(message.value() is DepartmentCreatedCompensation).isTrue()
-    }
-
-
 
 }
