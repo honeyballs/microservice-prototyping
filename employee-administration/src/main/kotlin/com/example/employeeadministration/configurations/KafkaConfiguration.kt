@@ -1,5 +1,8 @@
 package com.example.employeeadministration.configurations
 
+import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
+import com.example.employeeadministration.model.EMPLOYEE_TOPIC_NAME
+import com.example.employeeadministration.model.POSITION_TOPIC_NAME
 import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.Event
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -26,10 +29,7 @@ import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
-const val TOPIC_NAME = "employee"
-
 @Configuration
-@EnableKafka
 @Profile("!test")
 class KafkaConfiguration {
 
@@ -39,7 +39,17 @@ class KafkaConfiguration {
 
     @Bean
     fun employeeTopic(): NewTopic {
-        return NewTopic(TOPIC_NAME, 1, 1)
+        return NewTopic(EMPLOYEE_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun departmentTopic(): NewTopic {
+        return NewTopic(DEPARTMENT_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun positionTopic(): NewTopic {
+        return NewTopic(POSITION_TOPIC_NAME, 1, 1)
     }
 
     @Bean
@@ -51,32 +61,14 @@ class KafkaConfiguration {
 
     @Bean
     fun producerFactory(): ProducerFactory<Long, Event> {
-        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), JsonSerializer<Event>(mapper))
+        val serializer = JsonSerializer<Event>(mapper)
+        serializer.isAddTypeInfo = false
+        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), serializer)
     }
 
     @Bean
     fun kafkaTemplate(): KafkaTemplate<Long, Event> {
         return KafkaTemplate<Long, Event>(producerFactory())
-    }
-
-    @Bean
-    fun consumerConfig(): Map<String, Any> {
-        val configs = HashMap<String, Any>()
-        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
-        return configs
-    }
-
-    @Bean
-    fun consumerFactory(): ConsumerFactory<Long, Event> {
-        return DefaultKafkaConsumerFactory<Long, Event>(consumerConfig(), LongDeserializer(), JsonDeserializer<Event>(Event::class.java, mapper))
-    }
-
-    @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, Event> {
-        val factory = ConcurrentKafkaListenerContainerFactory<Long, Event>()
-        factory.consumerFactory = consumerFactory()
-        factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
-        return factory
     }
 
 }

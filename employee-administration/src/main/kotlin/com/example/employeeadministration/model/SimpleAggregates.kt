@@ -13,6 +13,8 @@ import java.math.RoundingMode
 import javax.persistence.*
 import kotlin.math.min
 
+const val DEPARTMENT_TOPIC_NAME = "department"
+
 /**
  * Department Aggregate
  */
@@ -21,24 +23,35 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
                       @Column(name = "department_name") var name: String,
                       var deleted: Boolean = false): EventAggregate() {
 
+    init {
+        TOPIC_NAME = DEPARTMENT_TOPIC_NAME
+    }
+
     fun created() {
         if (id != null) {
-            registerEvent(id!!, DepartmentCreatedEvent(this.id!!, this.name, DepartmentCreatedCompensation(this.id!!)))
+            registerEvent(this.id!!, DepartmentEvent(this, DepartmentCompensation(this, EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun renameDepartment(name: String) {
-        val compensation = DepartmentChangedNameCompensation(this.id!!, this.name)
+        val compensation = DepartmentCompensation(this.copy(), EventType.UPDATE)
         this.name = name
-        registerEvent(id!!, DepartmentChangedNameEvent(this.id!!, this.name, compensation))
+        registerEvent(this.id!!, DepartmentEvent(this, compensation, EventType.UPDATE))
     }
 
     fun deleteDepartment() {
         deleted = true
-        registerEvent(id!!, DepartmentDeletedEvent(id!!, DepartmentDeletedCompensation(id!!)))
+        registerEvent(this.id!!, DepartmentEvent(this, DepartmentCompensation(this, EventType.DELETE), EventType.DELETE))
+    }
+
+    fun copy(): Department {
+        return Department(this.id, this.name, this.deleted)
     }
 
 }
+
+
+const val POSITION_TOPIC_NAME = "position"
 
 /**
  * Position aggregate
@@ -60,16 +73,20 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
             field = value.setScale(2, RoundingMode.HALF_UP)
         }
 
+    init {
+        TOPIC_NAME = POSITION_TOPIC_NAME
+    }
+
     fun created() {
         if (id != null) {
-            registerEvent(id!!, PositionCreatedEvent(this.id!!, this.title, PositionCreatedCompensation(this.id!!)))
+            registerEvent(this.id!!, PositionEvent(this, PositionCompensation(this, EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun changePositionTitle(title: String) {
-        val compensation = PositionChangedTitleCompensation(this.id!!, this.title)
+        val compensation = PositionCompensation(this.copy(), EventType.UPDATE)
         this.title = title
-        registerEvent(id!!, PositionChangedTitleEvent(id!!, this.title, compensation))
+        registerEvent(id !!, PositionEvent(this, compensation, EventType.UPDATE))
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
@@ -79,7 +96,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     fun deletePosition() {
         deleted = true
-        registerEvent(id!!, PositionDeletedEvent(id!!, PositionDeletedCompensation(this.id!!)))
+        registerEvent(this.id!!, PositionEvent(this, PositionCompensation(this, EventType.DELETE), EventType.DELETE))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -95,6 +112,9 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
         return id?.hashCode() ?: 0
     }
 
+    fun copy(): Position {
+        return Position(this.id, this.title, this.minHourlyWage, this.maxHourlyWage, this.deleted)
+    }
 
 }
 

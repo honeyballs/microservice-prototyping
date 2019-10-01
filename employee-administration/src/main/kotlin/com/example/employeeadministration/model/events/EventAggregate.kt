@@ -5,6 +5,8 @@ package com.example.employeeadministration.model.events
  */
 open class EventAggregate {
 
+    lateinit var TOPIC_NAME: String
+
     // Since events need a key property corresponding to the id of an aggregate a pair is used to store them.
     private var events: Pair<Long, MutableList<DomainEvent>>? = null
 

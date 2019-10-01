@@ -1,5 +1,8 @@
 package com.example.employeeadministration.kafka
 
+import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
+import com.example.employeeadministration.model.EMPLOYEE_TOPIC_NAME
+import com.example.employeeadministration.model.POSITION_TOPIC_NAME
 import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.Event
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -29,8 +32,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka
 import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
-const val TOPIC_NAME = "employee"
-
 @Configuration
 @EnableKafka
 @Profile("test")
@@ -45,7 +46,17 @@ class KafkaConfiguration {
 
     @Bean
     fun employeeTopic(): NewTopic {
-        return NewTopic(TOPIC_NAME, 1, 1)
+        return NewTopic(EMPLOYEE_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun departmentTopic(): NewTopic {
+        return NewTopic(DEPARTMENT_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun positionTopic(): NewTopic {
+        return NewTopic(POSITION_TOPIC_NAME, 1, 1)
     }
 
     @Bean
@@ -57,7 +68,9 @@ class KafkaConfiguration {
 
     @Bean
     fun producerFactory(): ProducerFactory<Long, Event> {
-        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), JsonSerializer<Event>(mapper))
+        val serializer = JsonSerializer<Event>(mapper)
+        serializer.isAddTypeInfo = false
+        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), serializer)
     }
 
     @Bean
@@ -74,7 +87,9 @@ class KafkaConfiguration {
 
     @Bean
     fun consumerFactory(): ConsumerFactory<Long, Event> {
-        return DefaultKafkaConsumerFactory<Long, Event>(consumerConfig(), LongDeserializer(), JsonDeserializer<Event>(Event::class.java, mapper))
+        val deserializer = JsonDeserializer<Event>(Event::class.java, mapper)
+        deserializer.setUseTypeHeaders(false)
+        return DefaultKafkaConsumerFactory<Long, Event>(consumerConfig(), LongDeserializer(), deserializer)
     }
 
     @Bean

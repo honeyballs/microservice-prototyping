@@ -6,6 +6,8 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import javax.persistence.*
 
+const val EMPLOYEE_TOPIC_NAME = "employee"
+
 /**
  * Aggregate Employee encapsulating necessary Value Objects and handling possible invariants
  *
@@ -33,18 +35,13 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     @Embedded
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
 
+    init {
+        TOPIC_NAME = EMPLOYEE_TOPIC_NAME
+    }
+
     fun created() {
         if (id != null) {
-            registerEvent(id!!, EmployeeCreatedEvent(
-                    this.id!!,
-                    this.firstname,
-                    this.lastname,
-                    this.department.id!!,
-                    this.position.id!!,
-                    this.companyMail.mail,
-                    this.hourlyRate,
-                    EmployeeCreatedCompensation(this.id!!))
-            )
+            registerEvent(this.id!!, EmployeeEvent(this, EmployeeCompensation(this, EventType.CREATE), EventType.CREATE))
         }
     }
 
@@ -66,32 +63,32 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
      * @param newSalary If no salary is provided the mininum of the provided position is used
      */
     fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
-        val compensation = EmployeeChangedJobPositionCompensation(this.id!!, this.position.id!!, this.hourlyRate)
+        val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
-        registerEvent(id !!, EmployeeChangedJobPositionEvent(id!!, position.id!!,compensation))
+        registerEvent(id !!, EmployeeEvent(this, compensation, EventType.UPDATE))
     }
 
     fun moveToAnotherDepartment(department: Department) {
-        val compensation = EmployeeSwitchedDepartmentCompensation(this.id!!, this.department.id!!)
+        val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
         this.department = department
-        registerEvent(id!!, EmployeeSwitchedDepartmentEvent(id!!, department.id!!, compensation))
+        registerEvent(id !!, EmployeeEvent(this, compensation, EventType.UPDATE))
     }
 
     /**
      * Change the name(s) of a employee which subsequently changes the mail address
      */
     fun changeName(firstname: String?, lastname: String?) {
-        val compensation = EmployeeChangedNameCompensation(this.id!!, this.firstname, this.lastname, this.companyMail.mail)
+        val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
         this.firstname = firstname ?: this.firstname
         this.lastname = lastname ?: this.lastname
         this.companyMail = CompanyMail(this.firstname, this.lastname)
-        registerEvent(id!!, EmployeeChangedNameEvent(id!!, this.firstname, this.lastname, companyMail.mail, compensation))
+        registerEvent(id !!, EmployeeEvent(this, compensation, EventType.UPDATE))
     }
 
     fun deleteEmployee() {
         deleted = true
-        registerEvent(id!!, EmployeeDeletedEvent(id!!, EmployeeDeletedCompensation(this.id!!)))
+        registerEvent(this.id!!, EmployeeEvent(this, EmployeeCompensation(this, EventType.DELETE), EventType.DELETE))
     }
 
     override fun toString(): String {
@@ -109,6 +106,21 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
 
     override fun hashCode(): Int {
         return id?.hashCode() ?: 0
+    }
+
+    fun copy(): Employee {
+        return Employee(
+                this.id,
+                this.firstname,
+                this.lastname,
+                this.birthday,
+                this.address.copy(),
+                this.bankDetails.copy(),
+                this.department.copy(),
+                this.position.copy(),
+                this.hourlyRate,
+                this.companyMail.copy(),
+                this.deleted)
     }
 
 

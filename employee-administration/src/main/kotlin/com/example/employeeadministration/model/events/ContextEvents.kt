@@ -1,11 +1,10 @@
-package com.example.projectadministration.model.events
+package com.example.employeeadministration.model.events
 
-import com.example.projectadministration.model.employee.Department
-import com.example.projectadministration.model.employee.Employee
-import com.example.projectadministration.model.employee.Position
+import com.example.employeeadministration.model.Department
+import com.example.employeeadministration.model.Employee
+import com.example.employeeadministration.model.Position
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
-import java.math.BigDecimal
 
 @JsonTypeName("employeeCompensation")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)

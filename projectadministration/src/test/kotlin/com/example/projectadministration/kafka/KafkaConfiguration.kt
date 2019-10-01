@@ -1,5 +1,8 @@
 package com.example.projectadministration.kafka
 
+import com.example.projectadministration.model.employee.DEPARTMENT_TOPIC_NAME
+import com.example.projectadministration.model.employee.EMPLOYEE_TOPIC_NAME
+import com.example.projectadministration.model.employee.POSITION_TOPIC_NAME
 import com.example.projectadministration.model.events.Event
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.admin.AdminClientConfig
@@ -44,7 +47,17 @@ class KafkaConfiguration {
 
     @Bean
     fun employeeTopic(): NewTopic {
-        return NewTopic(TOPIC_NAME, 1, 1)
+        return NewTopic(EMPLOYEE_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun departmentTopic(): NewTopic {
+        return NewTopic(DEPARTMENT_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun positionTopic(): NewTopic {
+        return NewTopic(POSITION_TOPIC_NAME, 1, 1)
     }
 
     @Bean
@@ -56,7 +69,9 @@ class KafkaConfiguration {
 
     @Bean
     fun producerFactory(): ProducerFactory<Long, Event> {
-        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), JsonSerializer<Event>(mapper))
+        val serializer = JsonSerializer<Event>(mapper)
+        serializer.isAddTypeInfo = false
+        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), serializer)
     }
 
     @Bean
@@ -74,7 +89,8 @@ class KafkaConfiguration {
     @Bean
     fun consumerFactory(): ConsumerFactory<Long, Event> {
         val deserializer = JsonDeserializer<Event>(Event::class.java, mapper)
-        deserializer.addTrustedPackages("com.example", "com.example.projectadministration.kafka")
+        //deserializer.addTrustedPackages("com.example")
+        deserializer.setUseTypeHeaders(false)
         return DefaultKafkaConsumerFactory<Long, Event>(consumerConfig(), LongDeserializer(), deserializer)
     }
 

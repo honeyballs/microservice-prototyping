@@ -1,33 +1,22 @@
 package com.example.projectadministration.kafka
 
-import com.example.projectadministration.model.employee.Department
-import com.example.projectadministration.model.events.*
-import com.example.projectadministration.repositories.employeeservice.DepartmentRepository
+import com.example.projectadministration.model.employee.Position
+import com.example.projectadministration.model.events.EventType
+import com.example.projectadministration.model.events.PositionCompensation
+import com.example.projectadministration.model.events.PositionEvent
 import com.example.projectadministration.repositories.employeeservice.PositionRepository
-import com.example.projectadministration.services.kafka.EmployeeServiceKafkaEventHandler
 import com.example.projectadministration.services.kafka.KafkaEventProducer
+import com.example.projectadministration.services.kafka.employee.EmployeeServiceDepartmentKafkaEventHandler
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.kafka.clients.consumer.Consumer
-import org.apache.kafka.common.serialization.LongDeserializer
 import org.assertj.core.api.Assertions
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.TestComponent
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory
-import org.springframework.kafka.support.serializer.JsonDeserializer
-import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.context.EmbeddedKafka
-import org.springframework.kafka.test.utils.KafkaTestUtils
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.transaction.UnexpectedRollbackException
-import java.math.BigDecimal
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -43,7 +32,7 @@ class EventHandlingTests {
     lateinit var producer: KafkaEventProducer
 
     @Autowired
-    lateinit var consumer: EmployeeServiceKafkaEventHandler
+    lateinit var departmentConsumer: EmployeeServiceDepartmentKafkaEventHandler
 
     @Autowired
     lateinit var positionRepository: PositionRepository
@@ -51,8 +40,9 @@ class EventHandlingTests {
 
     @Test
     fun shouldSaveOwnPositionInDB() {
-        val comp = PositionCreatedCompensation(12L)
-        val event =  PositionCreatedEvent(12L, "Developer", comp)
+        val position = Position(null, 12L, "Developer")
+        val comp = PositionCompensation(position, EventType.CREATE)
+        val event =  PositionEvent(position, comp, EventType.CREATE)
         producer.sendDomainEvent(12L, event)
         Thread.sleep(1000)
         val createdPositions = positionRepository.findAll()
