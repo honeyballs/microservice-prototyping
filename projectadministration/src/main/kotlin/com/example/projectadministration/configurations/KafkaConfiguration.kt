@@ -1,5 +1,6 @@
 package com.example.projectadministration.configurations
 
+import com.example.projectadministration.model.PROJECT_TOPIC_NAME
 import com.example.projectadministration.model.employee.DEPARTMENT_TOPIC_NAME
 import com.example.projectadministration.model.employee.EMPLOYEE_TOPIC_NAME
 import com.example.projectadministration.model.employee.POSITION_TOPIC_NAME
@@ -45,6 +46,11 @@ class KafkaConfiguration {
     @Bean
     fun positionTopic(): NewTopic {
         return NewTopic(POSITION_TOPIC_NAME, 1, 1)
+    }
+
+    @Bean
+    fun projectTopic(): NewTopic {
+        return NewTopic(PROJECT_TOPIC_NAME, 1, 1)
     }
 
     @Bean

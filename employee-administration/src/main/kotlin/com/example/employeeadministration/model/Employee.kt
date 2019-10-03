@@ -41,7 +41,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, EmployeeEvent(this, EmployeeCompensation(this, EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, EmployeeEvent(this.copy(), EmployeeCompensation(this.copy(), EventType.CREATE), EventType.CREATE))
         }
     }
 
@@ -66,13 +66,13 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
-        registerEvent(id !!, EmployeeEvent(this, compensation, EventType.UPDATE))
+        registerEvent(id !!, EmployeeEvent(this.copy(), compensation, EventType.UPDATE))
     }
 
     fun moveToAnotherDepartment(department: Department) {
         val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
         this.department = department
-        registerEvent(id !!, EmployeeEvent(this, compensation, EventType.UPDATE))
+        registerEvent(id !!, EmployeeEvent(this.copy(), compensation, EventType.UPDATE))
     }
 
     /**
@@ -83,12 +83,12 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         this.firstname = firstname ?: this.firstname
         this.lastname = lastname ?: this.lastname
         this.companyMail = CompanyMail(this.firstname, this.lastname)
-        registerEvent(id !!, EmployeeEvent(this, compensation, EventType.UPDATE))
+        registerEvent(id !!, EmployeeEvent(this.copy(), compensation, EventType.UPDATE))
     }
 
     fun deleteEmployee() {
         deleted = true
-        registerEvent(this.id!!, EmployeeEvent(this, EmployeeCompensation(this, EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, EmployeeEvent(this.copy(), EmployeeCompensation(this, EventType.DELETE), EventType.DELETE))
     }
 
     override fun toString(): String {

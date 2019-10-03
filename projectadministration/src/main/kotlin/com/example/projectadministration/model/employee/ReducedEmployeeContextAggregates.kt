@@ -24,7 +24,7 @@ class Position(@Id @GeneratedValue(strategy = GenerationType.AUTO) @JsonIgnore v
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Employee(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) @JsonIgnore var dbId: Long?,
-        @JsonProperty("id")  val employeeId: Long,
+        @JsonProperty("id") val employeeId: Long,
         var firstname: String,
         var lastname: String,
         @ManyToOne @JoinColumn(name = "fk_department") var department: Department,
@@ -32,6 +32,7 @@ class Employee(
         companyMail: String?,
         var deleted: Boolean = false
 ) {
+
     lateinit var companyMail: String
 
     init {

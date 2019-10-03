@@ -29,19 +29,19 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, DepartmentEvent(this, DepartmentCompensation(this, EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, DepartmentEvent(this.copy(), DepartmentCompensation(this, EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun renameDepartment(name: String) {
         val compensation = DepartmentCompensation(this.copy(), EventType.UPDATE)
         this.name = name
-        registerEvent(this.id!!, DepartmentEvent(this, compensation, EventType.UPDATE))
+        registerEvent(this.id!!, DepartmentEvent(this.copy(), compensation, EventType.UPDATE))
     }
 
     fun deleteDepartment() {
         deleted = true
-        registerEvent(this.id!!, DepartmentEvent(this, DepartmentCompensation(this, EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, DepartmentEvent(this.copy(), DepartmentCompensation(this, EventType.DELETE), EventType.DELETE))
     }
 
     fun copy(): Department {
@@ -79,14 +79,14 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, PositionEvent(this, PositionCompensation(this, EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, PositionEvent(this.copy(), PositionCompensation(this.copy(), EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun changePositionTitle(title: String) {
         val compensation = PositionCompensation(this.copy(), EventType.UPDATE)
         this.title = title
-        registerEvent(id !!, PositionEvent(this, compensation, EventType.UPDATE))
+        registerEvent(id !!, PositionEvent(this.copy(), compensation, EventType.UPDATE))
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
@@ -96,7 +96,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     fun deletePosition() {
         deleted = true
-        registerEvent(this.id!!, PositionEvent(this, PositionCompensation(this, EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, PositionEvent(this.copy(), PositionCompensation(this.copy(), EventType.DELETE), EventType.DELETE))
     }
 
     override fun equals(other: Any?): Boolean {

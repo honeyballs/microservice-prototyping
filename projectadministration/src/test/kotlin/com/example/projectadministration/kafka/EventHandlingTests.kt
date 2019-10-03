@@ -47,7 +47,7 @@ class EventHandlingTests {
         Thread.sleep(1000)
         val createdPositions = positionRepository.findAll()
         Assertions.assertThat(createdPositions.size).isEqualTo(1)
-        Assertions.assertThat(createdPositions[0].id).isEqualTo(12L)
+        Assertions.assertThat(createdPositions[0].positionId).isEqualTo(12L)
     }
 
 }
