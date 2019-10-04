@@ -7,17 +7,24 @@ import com.example.employeeadministration.model.events.EmployeeCompensation
 import com.example.employeeadministration.model.events.EventType
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.services.EventHandler
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
+import org.springframework.transaction.annotation.Transactional
+
 @Service
 @KafkaListener(groupId = "EmployeeService", topics = [EMPLOYEE_TOPIC_NAME])
-class KafkaEmployeeEventHandler(val employeeRepository: EmployeeRepository): EventHandler {
+class KafkaEmployeeEventHandler(val employeeRepository: EmployeeRepository) : EventHandler {
+
+    val logger = LoggerFactory.getLogger(KafkaEmployeeEventHandler::class.java)
 
     @KafkaHandler
+    @Transactional
     fun compensate(comp: EmployeeCompensation, ack: Acknowledgment) {
+        logger.info("Employee Compensation received. Type: ${comp.type}, Id: ${comp.employee.id}")
         val employee = comp.employee
         try {
             when (comp.type) {

@@ -7,18 +7,24 @@ import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.services.EventHandler
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 @KafkaListener(groupId = "EmployeeService", topics = [DEPARTMENT_TOPIC_NAME])
 class KafkaDepartmentEventHandler(val departmentRepository: DepartmentRepository): EventHandler {
 
+    val logger = LoggerFactory.getLogger(KafkaDepartmentEventHandler::class.java)
+
     @KafkaHandler
+    @Transactional
     fun compensate(comp: DepartmentCompensation, ack: Acknowledgment) {
+        logger.info("Department Compensation received. Type: ${comp.type}, Id: ${comp.department.id}")
         val department = comp.department
         try {
             when (comp.type) {

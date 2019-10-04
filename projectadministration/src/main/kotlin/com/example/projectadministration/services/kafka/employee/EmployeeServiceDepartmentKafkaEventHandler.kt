@@ -11,11 +11,13 @@ import com.example.projectadministration.repositories.employeeservice.Department
 import com.example.projectadministration.repositories.employeeservice.EmployeeRepository
 import com.example.projectadministration.repositories.employeeservice.PositionRepository
 import com.example.projectadministration.services.kafka.KafkaEventProducer
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
@@ -25,10 +27,12 @@ class EmployeeServiceDepartmentKafkaEventHandler(
         val producer: KafkaEventProducer,
         val departmentRepository: DepartmentRepository): EventHandler {
 
+    val logger = LoggerFactory.getLogger(EmployeeServiceDepartmentKafkaEventHandler::class.java)
 
     @KafkaHandler
+    @Transactional
     fun handle(event: DepartmentEvent, ack: Acknowledgment) {
-        println(event.department.name)
+        logger.info("Department Event received. Type: ${event.type}, Id: ${event.department.departmentId}")
         val eventDepartment = event.department
         try {
 
