@@ -9,6 +9,7 @@ import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.services.EventHandler
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 
@@ -17,7 +18,7 @@ import org.springframework.transaction.UnexpectedRollbackException
 class KafkaDepartmentEventHandler(val departmentRepository: DepartmentRepository): EventHandler {
 
     @KafkaHandler
-    fun compensate(comp: DepartmentCompensation) {
+    fun compensate(comp: DepartmentCompensation, ack: Acknowledgment) {
         val department = comp.department
         try {
             when (comp.type) {
@@ -37,6 +38,8 @@ class KafkaDepartmentEventHandler(val departmentRepository: DepartmentRepository
             }
         } catch (exception: UnexpectedRollbackException) {
             exception.printStackTrace()
+        } finally {
+            ack.acknowledge()
         }
     }
 

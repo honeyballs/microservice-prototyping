@@ -13,6 +13,7 @@ import com.example.projectadministration.repositories.employeeservice.PositionRe
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import java.time.LocalDateTime
@@ -27,7 +28,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
         val positionRepository: PositionRepository): EventHandler {
 
     @KafkaHandler
-    fun handle(event: EmployeeEvent) {
+    fun handle(event: EmployeeEvent, ack: Acknowledgment) {
         println(event.employee.firstname)
         val eventEmployee = event.employee
         try {
@@ -44,6 +45,8 @@ class EmployeeServiceEmployeeKafkaEventHandler(
         } catch (exception: Exception) {
             exception.printStackTrace()
             handleCompensation(event)
+        } finally {
+            ack.acknowledge()
         }
     }
 

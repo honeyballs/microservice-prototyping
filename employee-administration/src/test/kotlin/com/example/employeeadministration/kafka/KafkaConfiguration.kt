@@ -82,6 +82,8 @@ class KafkaConfiguration {
     fun consumerConfig(): Map<String, Any> {
         val configs = HashMap<String, Any>()
         configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = embeddedKafkaBroker.brokersAsString
+        configs[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+        configs[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
         return configs
     }
 
@@ -96,7 +98,7 @@ class KafkaConfiguration {
     fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, Event> {
         val factory = ConcurrentKafkaListenerContainerFactory<Long, Event>()
         factory.consumerFactory = consumerFactory()
-        factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
+        factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
         return factory
     }
 
