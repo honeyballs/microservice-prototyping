@@ -15,6 +15,7 @@ import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -52,23 +53,23 @@ class KafkaConfiguration {
         return NewTopic(POSITION_TOPIC_NAME, 1, 1)
     }
 
-    @Bean
-    fun producerConfigs():Map<String, Any> {
-        val configs = HashMap<String, Any>()
-        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
-        return configs
-    }
+//    @Bean
+//    fun producerConfigs():Map<String, Any> {
+//        val configs = HashMap<String, Any>()
+//        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+//        return configs
+//    }
 
     @Bean
-    fun producerFactory(): ProducerFactory<Long, Event> {
+    fun producerFactory(props: Map<String, Any>): ProducerFactory<Long, Event> {
         val serializer = JsonSerializer<Event>(mapper)
         serializer.isAddTypeInfo = false
-        return DefaultKafkaProducerFactory<Long, Event>(producerConfigs(), LongSerializer(), serializer)
+        return DefaultKafkaProducerFactory<Long, Event>(props, LongSerializer(), serializer)
     }
 
     @Bean
-    fun kafkaTemplate(): KafkaTemplate<Long, Event> {
-        return KafkaTemplate<Long, Event>(producerFactory())
+    fun kafkaTemplate(props: KafkaProperties): KafkaTemplate<Long, Event> {
+        return KafkaTemplate<Long, Event>(producerFactory(props.buildProducerProperties()))
     }
 
 }

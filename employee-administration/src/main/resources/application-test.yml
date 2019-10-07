@@ -11,11 +11,6 @@ spring:
       enabled: true
       path: /console
 
-#  kafka:
-#    consumer:
-#      bootstrap-servers: ${spring.kafka.}
-#    bootstrap-servers: ${spring.embedded.kafka.brokers}
-
   jackson:
     serialization:
       write-dates-as-timestamps: false
