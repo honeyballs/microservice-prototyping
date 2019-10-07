@@ -11,13 +11,15 @@ spring:
       enabled: true
       path: /console
 
-  kafka:
-    consumer:
-      bootstrap-servers: localhost:9092
-      group-id: employee
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-    bootstrap-servers: localhost:9092
+kafka:
+
+#  kafka:
+#    consumer:
+#      bootstrap-servers: localhost:9092
+#      group-id: employee
+#      auto-offset-reset: earliest
+#      enable-auto-commit: false
+#    bootstrap-servers: localhost:9092
 
   jackson:
     serialization:

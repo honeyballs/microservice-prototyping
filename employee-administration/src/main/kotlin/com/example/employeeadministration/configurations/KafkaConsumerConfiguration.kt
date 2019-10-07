@@ -7,10 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.context.annotation.PropertySource
+import org.springframework.core.env.Environment
+import org.springframework.core.env.get
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
@@ -27,26 +31,29 @@ class KafkaConsumerConfiguration {
     @Autowired
     lateinit var mapper: ObjectMapper
 
-//    @Bean
-//    fun consumerConfig(): Map<String, Any> {
-//        val configs = HashMap<String, Any>()
-//        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
-//        configs[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-//        configs[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
-//        return configs
-//    }
+    @Autowired
+    lateinit var env: Environment
 
     @Bean
-    fun consumerFactory(props: Map<String, Any>): ConsumerFactory<Long, Event> {
-        val deserializer = JsonDeserializer<Event>(Event::class.java, mapper)
-        deserializer.setUseTypeHeaders(false)
-        return DefaultKafkaConsumerFactory<Long, Event>(props, LongDeserializer(), deserializer)
+    fun consumerConfig(): Map<String, Any> {
+        val configs = HashMap<String, Any>()
+        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = env.getProperty("KAFKA_URL", "localhost:9092")
+        configs[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+        configs[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
+        return configs
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(props: KafkaProperties): ConcurrentKafkaListenerContainerFactory<Long, Event> {
+    fun consumerFactory(): ConsumerFactory<Long, Event> {
+        val deserializer = JsonDeserializer<Event>(Event::class.java, mapper)
+        deserializer.setUseTypeHeaders(false)
+        return DefaultKafkaConsumerFactory<Long, Event>(consumerConfig(), LongDeserializer(), deserializer)
+    }
+
+    @Bean
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, Event> {
         val factory = ConcurrentKafkaListenerContainerFactory<Long, Event>()
-        factory.consumerFactory = consumerFactory(props.buildConsumerProperties())
+        factory.consumerFactory = consumerFactory()
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
         return factory
     }

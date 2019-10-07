@@ -11,13 +11,13 @@ spring:
       enabled: true
       path: /console
 
-  kafka:
-    consumer:
-      bootstrap-servers: ${KAFKA_URL}
-      group-id: employee
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-    bootstrap-servers: ${KAFKA_URL}
+  #  kafka:
+#    consumer:
+#      bootstrap-servers: ${KAFKA_URL}
+#      group-id: employee
+#      auto-offset-reset: earliest
+#      enable-auto-commit: false
+#    bootstrap-servers: ${KAFKA_URL}
 
   jackson:
     serialization:
