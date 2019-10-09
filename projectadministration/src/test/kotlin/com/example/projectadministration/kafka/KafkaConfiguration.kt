@@ -68,6 +68,11 @@ class KafkaConfiguration {
     }
 
     @Bean
+    fun admin(): KafkaAdmin {
+        return KafkaAdmin(producerConfigs())
+    }
+
+    @Bean
     fun producerFactory(): ProducerFactory<Long, Event> {
         val serializer = JsonSerializer<Event>(mapper)
         serializer.isAddTypeInfo = false

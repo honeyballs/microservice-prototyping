@@ -2,10 +2,7 @@ package com.example.projectadministration.services.kafka.employee
 
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.configurations.TOPIC_NAME
-import com.example.projectadministration.model.employee.DEPARTMENT_TOPIC_NAME
-import com.example.projectadministration.model.employee.Department
-import com.example.projectadministration.model.employee.POSITION_TOPIC_NAME
-import com.example.projectadministration.model.employee.Position
+import com.example.projectadministration.model.employee.*
 import com.example.projectadministration.model.events.DepartmentEvent
 import com.example.projectadministration.model.events.EventType
 import com.example.projectadministration.model.events.PositionEvent
@@ -33,7 +30,7 @@ class EmployeeServicePositionKafkaEventHandler(
     @KafkaHandler
     @Transactional
     fun handle(event: PositionEvent, ack: Acknowledgment) {
-        logger.info("Position Event received. Type: ${event.type}, Id: ${event.position.positionId}")
+        logger.info("Position Event received. Type: ${event.type}, Id: ${event.position.id}")
         val eventPosition = event.position
         try {
 
@@ -55,21 +52,22 @@ class EmployeeServicePositionKafkaEventHandler(
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun createPosition(eventPosition: Position) {
-        positionRepository.save(eventPosition)
+    fun createPosition(eventPosition: PositionKfk) {
+        val pos = Position(null, eventPosition.id, eventPosition.title)
+        positionRepository.save(pos)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun updatePosition(eventPosition: Position) {
+    fun updatePosition(eventPosition: PositionKfk) {
         // If we would not load beforehand a new db row would be created because dbId is only set in this service
-        val pos = positionRepository.findByPositionId(eventPosition.positionId).orElseThrow()
-        eventPosition.dbId = pos.dbId
-        positionRepository.save(eventPosition)
+        val pos = positionRepository.findByPositionId(eventPosition.id).orElseThrow()
+        pos.title = eventPosition.title
+        positionRepository.save(pos)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun deletePosition(eventPosition: Position) {
-        val pos = positionRepository.findByPositionId(eventPosition.positionId).orElseThrow()
+    fun deletePosition(eventPosition: PositionKfk) {
+        val pos = positionRepository.findByPositionId(eventPosition.id).orElseThrow()
         pos.deleted = true
         positionRepository.save(pos)
     }
@@ -77,7 +75,7 @@ class EmployeeServicePositionKafkaEventHandler(
     fun handleCompensation(event: PositionEvent) {
         val comp = event.compensatingAction
         comp!!.rollbackOccurredAt(LocalDateTime.now())
-        producer.sendDomainEvent(event.position.positionId, event.compensatingAction!!)
+        producer.sendDomainEvent(event.position.id, event.compensatingAction!!, POSITION_TOPIC_NAME)
     }
 
 

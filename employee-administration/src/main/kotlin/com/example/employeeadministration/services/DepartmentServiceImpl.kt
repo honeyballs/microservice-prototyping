@@ -3,6 +3,7 @@ package com.example.employeeadministration.services
 import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.DepartmentDto
+import com.example.employeeadministration.model.DepartmentKfk
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import org.springframework.stereotype.Service

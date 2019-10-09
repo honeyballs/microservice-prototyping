@@ -5,6 +5,6 @@ import com.example.employeeadministration.model.events.EventAggregate
 
 interface EventProducer {
 
-    fun sendEventsOfAggregate(aggregate: EventAggregate)
+    fun <KafkaDtoType> sendEventsOfAggregate(aggregate: EventAggregate<KafkaDtoType>)
 
 }

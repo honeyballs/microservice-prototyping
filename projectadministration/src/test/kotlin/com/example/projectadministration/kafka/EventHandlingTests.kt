@@ -1,6 +1,8 @@
 package com.example.projectadministration.kafka
 
+import com.example.projectadministration.model.employee.POSITION_TOPIC_NAME
 import com.example.projectadministration.model.employee.Position
+import com.example.projectadministration.model.employee.PositionKfk
 import com.example.projectadministration.model.events.EventType
 import com.example.projectadministration.model.events.PositionCompensation
 import com.example.projectadministration.model.events.PositionEvent
@@ -40,10 +42,10 @@ class EventHandlingTests {
 
     @Test
     fun shouldSaveOwnPositionInDB() {
-        val position = Position(null, 12L, "Developer")
+        val position = PositionKfk(12L, "Developer", false)
         val comp = PositionCompensation(position, EventType.CREATE)
         val event =  PositionEvent(position, comp, EventType.CREATE)
-        producer.sendDomainEvent(12L, event)
+        producer.sendDomainEvent(12L, event, POSITION_TOPIC_NAME)
         Thread.sleep(1000)
         val createdPositions = positionRepository.findAll()
         Assertions.assertThat(createdPositions.size).isEqualTo(1)

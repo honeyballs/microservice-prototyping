@@ -34,7 +34,8 @@ class KafkaDepartmentEventHandler(val departmentRepository: DepartmentRepository
                     departmentRepository.save(dep)
                 }
                 EventType.UPDATE -> {
-                    departmentRepository.save(department)
+                    val dep = Department(department.id, department.name, department.deleted)
+                    departmentRepository.save(dep)
                 }
                 EventType.DELETE -> {
                     val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()

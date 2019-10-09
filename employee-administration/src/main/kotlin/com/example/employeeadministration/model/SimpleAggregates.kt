@@ -21,7 +21,7 @@ const val DEPARTMENT_TOPIC_NAME = "department"
 @Entity
 data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
                       @Column(name = "department_name") var name: String,
-                      var deleted: Boolean = false): EventAggregate() {
+                      var deleted: Boolean = false): EventAggregate<DepartmentKfk>() {
 
     init {
         TOPIC_NAME = DEPARTMENT_TOPIC_NAME
@@ -29,24 +29,38 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, DepartmentEvent(this.copy(), DepartmentCompensation(this, EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, DepartmentEvent(mapAggregateToKafkaDto(), DepartmentCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun renameDepartment(name: String) {
-        val compensation = DepartmentCompensation(this.copy(), EventType.UPDATE)
+        val compensation = DepartmentCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.name = name
-        registerEvent(this.id!!, DepartmentEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(this.id!!, DepartmentEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun deleteDepartment() {
         deleted = true
-        registerEvent(this.id!!, DepartmentEvent(this.copy(), DepartmentCompensation(this, EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, DepartmentEvent(mapAggregateToKafkaDto(), DepartmentCompensation(mapAggregateToKafkaDto(), EventType.DELETE), EventType.DELETE))
     }
 
-    fun copy(): Department {
-        return Department(this.id, this.name, this.deleted)
+    override fun mapAggregateToKafkaDto(): DepartmentKfk {
+        return DepartmentKfk(this.id!!, this.name, this.deleted)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Department) return false
+
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
+    }
+
 
 }
 
@@ -61,7 +75,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
                                  var title: String,
                                  minHourlyWage: BigDecimal,
                                  maxHourlyWage: BigDecimal,
-                                 var deleted: Boolean = false): EventAggregate() {
+                                 var deleted: Boolean = false): EventAggregate<PositionKfk>() {
 
     var minHourlyWage: BigDecimal = minHourlyWage.setScale(2, RoundingMode.HALF_UP)
         set(value) {
@@ -79,24 +93,30 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, PositionEvent(this.copy(), PositionCompensation(this.copy(), EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, PositionEvent(mapAggregateToKafkaDto(), PositionCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun changePositionTitle(title: String) {
-        val compensation = PositionCompensation(this.copy(), EventType.UPDATE)
+        val compensation = PositionCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.title = title
-        registerEvent(id !!, PositionEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(id !!, PositionEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
+        val compensation = PositionCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         minHourlyWage = min ?: minHourlyWage
         maxHourlyWage = max ?: maxHourlyWage
+        registerEvent(id !!, PositionEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun deletePosition() {
         deleted = true
-        registerEvent(this.id!!, PositionEvent(this.copy(), PositionCompensation(this.copy(), EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, PositionEvent(mapAggregateToKafkaDto(), PositionCompensation(mapAggregateToKafkaDto(), EventType.DELETE), EventType.DELETE))
+    }
+
+    override fun mapAggregateToKafkaDto(): PositionKfk {
+        return PositionKfk(this.id!!, this.title, this.minHourlyWage, this.maxHourlyWage, this.deleted)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -110,10 +130,6 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     override fun hashCode(): Int {
         return id?.hashCode() ?: 0
-    }
-
-    fun copy(): Position {
-        return Position(this.id, this.title, this.minHourlyWage, this.maxHourlyWage, this.deleted)
     }
 
 }

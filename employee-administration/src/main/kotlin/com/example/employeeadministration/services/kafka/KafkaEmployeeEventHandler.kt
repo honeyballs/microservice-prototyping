@@ -2,10 +2,13 @@ package com.example.employeeadministration.services.kafka
 
 import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
 import com.example.employeeadministration.model.EMPLOYEE_TOPIC_NAME
+import com.example.employeeadministration.model.Employee
 import com.example.employeeadministration.model.events.DepartmentCompensation
 import com.example.employeeadministration.model.events.EmployeeCompensation
 import com.example.employeeadministration.model.events.EventType
+import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
+import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.services.EventHandler
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -17,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 @KafkaListener(groupId = "EmployeeService", topics = [EMPLOYEE_TOPIC_NAME])
-class KafkaEmployeeEventHandler(val employeeRepository: EmployeeRepository) : EventHandler {
+class KafkaEmployeeEventHandler(val employeeRepository: EmployeeRepository, val departmentRepository: DepartmentRepository, val positionRepository: PositionRepository) : EventHandler {
 
     val logger = LoggerFactory.getLogger(KafkaEmployeeEventHandler::class.java)
 
@@ -30,14 +33,17 @@ class KafkaEmployeeEventHandler(val employeeRepository: EmployeeRepository) : Ev
             when (comp.type) {
                 EventType.CREATE -> {
                     val emp = employeeRepository.getByIdAndDeletedFalse(employee.id!!).orElseThrow()
-                    employee.deleted = true
+                    emp.deleted = true
                     employeeRepository.save(emp)
                 }
                 EventType.UPDATE -> {
-                    employeeRepository.save(employee)
+                    val dep = departmentRepository.getByIdAndDeletedFalse(employee.department).orElseThrow()
+                    val pos = positionRepository.getByIdAndDeletedFalse(employee.position).orElseThrow()
+                    val emp = Employee(employee.id, employee.firstname, employee.lastname, employee.birthday, employee.address, employee.bankDetails, dep, pos, employee.hourlyRate, employee.companyMail, employee.deleted)
+                    employeeRepository.save(emp)
                 }
                 EventType.DELETE -> {
-                    val emp = employeeRepository.getByIdAndDeletedFalse(employee.id!!).orElseThrow()
+                    val emp = employeeRepository.findById(employee.id).orElseThrow()
                     emp.deleted = false
                     employeeRepository.save(emp)
                 }

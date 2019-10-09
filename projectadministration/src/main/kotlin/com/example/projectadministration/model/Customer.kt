@@ -1,26 +1,58 @@
 package com.example.projectadministration.model
 
+import com.example.projectadministration.model.events.*
 import java.lang.Exception
 import java.util.*
 import javax.persistence.*
 
+
+const val CUSTOMER_TOPIC_NAME = "customer"
+
 @Entity
-data class Customer(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?, var customerName: String, @Embedded var address: Address, @Embedded var contact: CustomerContact, var deleted: Boolean = false) {
+data class Customer(
+        @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+        var customerName: String,
+        @Embedded var address: Address,
+        @Embedded var contact: CustomerContact,
+        var deleted: Boolean = false
+): EventAggregate<CustomerKfk>() {
+
+    init {
+        TOPIC_NAME = CUSTOMER_TOPIC_NAME
+    }
+
+    fun created() {
+        if (id != null) {
+            registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), CustomerCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
+        }
+    }
 
     fun changeCustomerContact(contact: CustomerContact) {
+        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.contact = contact
+        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.UPDATE))
     }
 
     fun moveCompanyLocation(address: Address) {
+        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.address = address
+        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.UPDATE))
     }
 
     fun changeName(name: String) {
+        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.customerName = name
+        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.UPDATE))
     }
 
     fun deleteCustomer() {
+        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.DELETE)
         this.deleted = true
+        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.DELETE))
+    }
+
+    override fun mapAggregateToKafkaDto(): CustomerKfk {
+        return CustomerKfk(this.id!!, this.customerName, this.address, this.contact, this.deleted)
     }
 
 }

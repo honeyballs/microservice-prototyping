@@ -34,7 +34,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     @KafkaHandler
     @Transactional
     fun handle(event: EmployeeEvent, ack: Acknowledgment) {
-        logger.info("Employee Event received. Type: ${event.type}, Id: ${event.employee.employeeId}")
+        logger.info("Employee Event received. Type: ${event.type}, Id: ${event.employee.id}")
         val eventEmployee = event.employee
         try {
 
@@ -56,31 +56,32 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun createEmployee(eventEmployee: Employee) {
-        val department = departmentRepository.findByDepartmentId(eventEmployee.department.departmentId).orElseThrow()
-        val position = positionRepository.findByPositionId(eventEmployee.position.positionId).orElseThrow()
-        eventEmployee.department = department
-        eventEmployee.position = position
-        employeeRepository.save(eventEmployee)
+    fun createEmployee(eventEmployee: EmployeeKfk) {
+        val department = departmentRepository.findByDepartmentId(eventEmployee.department).orElseThrow()
+        val position = positionRepository.findByPositionId(eventEmployee.position).orElseThrow()
+        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, department, position, eventEmployee.companyMail)
+        employeeRepository.save(emp)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun updateEmployee(eventEmployee: Employee) {
+    fun updateEmployee(eventEmployee: EmployeeKfk) {
         // If we would not load beforehand a new db row would be created because dbId is only set in this service
-        val emp = employeeRepository.findByEmployeeId(eventEmployee.employeeId).orElseThrow()
-        if (emp.department.departmentId != eventEmployee.department.departmentId) {
-            eventEmployee.department = departmentRepository.findByDepartmentId(eventEmployee.department.departmentId).orElseThrow()
+        val emp = employeeRepository.findByEmployeeId(eventEmployee.id).orElseThrow()
+        if (emp.department.departmentId != eventEmployee.department) {
+            emp.department = departmentRepository.findByDepartmentId(eventEmployee.department).orElseThrow()
         }
-        if (emp.position.positionId != eventEmployee.position.positionId) {
-            eventEmployee.position = positionRepository.findByPositionId(eventEmployee.position.positionId).orElseThrow()
+        if (emp.position.positionId != eventEmployee.position) {
+            emp.position = positionRepository.findByPositionId(eventEmployee.position).orElseThrow()
         }
-        eventEmployee.dbId = emp.dbId
-        employeeRepository.save(eventEmployee)
+        emp.firstname = eventEmployee.firstname
+        emp.lastname = eventEmployee.lastname
+        emp.companyMail = eventEmployee.companyMail
+        employeeRepository.save(emp)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun deleteEmployee(eventEmployee: Employee) {
-        val emp = employeeRepository.findByEmployeeId(eventEmployee.employeeId).orElseThrow()
+    fun deleteEmployee(eventEmployee: EmployeeKfk) {
+        val emp = employeeRepository.findByEmployeeId(eventEmployee.id).orElseThrow()
         emp.deleted = true
         employeeRepository.save(emp)
     }
@@ -88,7 +89,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     fun handleCompensation(event: EmployeeEvent) {
         val comp = event.compensatingAction
         comp!!.rollbackOccurredAt(LocalDateTime.now())
-        producer.sendDomainEvent(event.employee.employeeId, event.compensatingAction!!)
+        producer.sendDomainEvent(event.employee.id, event.compensatingAction!!, EMPLOYEE_TOPIC_NAME)
     }
 
     @KafkaHandler(isDefault = true)

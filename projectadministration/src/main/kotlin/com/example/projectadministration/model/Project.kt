@@ -22,7 +22,7 @@ data class Project(
         @ManyToOne @JoinColumn(name = "fk_po") var projectOwner: Employee,
         @ManyToOne @JoinColumn(name = "fk_customer") val customer: Customer,
         var deleted: Boolean = false
-): EventAggregate() {
+): EventAggregate<ProjectKfk>() {
 
     init {
         TOPIC_NAME = PROJECT_TOPIC_NAME
@@ -30,30 +30,36 @@ data class Project(
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, ProjectEvent(this.copy(), ProjectCompensation(this.copy(), EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, ProjectEvent(mapAggregateToKafkaDto(), ProjectCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun delayProject(newProjectedDate: LocalDate) {
-        val compensation = ProjectCompensation(this.copy(), EventType.UPDATE)
+        val compensation = ProjectCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.projectedEndDate = newProjectedDate
-        registerEvent(this.id!!, ProjectEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(this.id!!, ProjectEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun finishProject(endDate: LocalDate) {
-        val compensation = ProjectCompensation(this.copy(), EventType.UPDATE)
+        val compensation = ProjectCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.endDate = endDate
-        registerEvent(this.id!!, ProjectEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(this.id!!, ProjectEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun updateProjectDescription(description: String) {
+        val compensation = ProjectCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.description = description
+        registerEvent(this.id!!, ProjectEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun deleteProject() {
-        val compensation = ProjectCompensation(this.copy(), EventType.DELETE)
+        val compensation = ProjectCompensation(mapAggregateToKafkaDto(), EventType.DELETE)
         this.deleted = true
-        registerEvent(this.id!!, ProjectEvent(this.copy(), compensation, EventType.DELETE))
+        registerEvent(this.id!!, ProjectEvent(mapAggregateToKafkaDto(), compensation, EventType.DELETE))
+    }
+
+    override fun mapAggregateToKafkaDto(): ProjectKfk {
+        return ProjectKfk(this.id!!, this.name, this.description, this.startDate, this.projectedEndDate, this.endDate, this.projectOwner.employeeId, this.customer.id!!, this.deleted)
     }
 
 }

@@ -62,7 +62,7 @@ class KafkaApplicationTests {
 
     @Test
     fun shouldSendDepartmentCompensation() {
-        val comp = DepartmentCompensation(department, EventType.CREATE)
+        val comp = DepartmentCompensation(department.mapAggregateToKafkaDto(), EventType.CREATE)
         producer.sendDomainEvent(department.id!!, comp, DEPARTMENT_TOPIC_NAME)
         Thread.sleep(1000)
         val deletedDepartment = departmentRepository.findById(department.id!!).get()
@@ -71,7 +71,7 @@ class KafkaApplicationTests {
 
     @Test
     fun shouldSendPositionCompensation() {
-        val comp = PositionCompensation(Position(position.id, position.title, position.minHourlyWage, position.maxHourlyWage), EventType.UPDATE)
+        val comp = PositionCompensation(position.mapAggregateToKafkaDto(), EventType.UPDATE)
         position.title = "Java Development"
         positionRepository.save(position)
         producer.sendDomainEvent(position.id!!, comp, POSITION_TOPIC_NAME)
@@ -85,10 +85,10 @@ class KafkaApplicationTests {
         employee.deleted = true
         employeeRepository.save(employee)
         employee.deleted = false
-        val comp = EmployeeCompensation(employee, EventType.DELETE)
+        val comp = EmployeeCompensation(employee.mapAggregateToKafkaDto(), EventType.DELETE)
         producer.sendDomainEvent(employee.id!!, comp, EMPLOYEE_TOPIC_NAME)
         Thread.sleep(1000)
-        val pos = positionRepository.findById(position.id!!).get()
+        employee = employeeRepository.getByIdAndDeletedFalse(employee.id!!).orElseThrow()
         Assertions.assertThat(employee.deleted).isFalse()
     }
 

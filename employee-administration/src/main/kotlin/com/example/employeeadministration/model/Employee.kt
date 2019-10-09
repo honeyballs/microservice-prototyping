@@ -23,7 +23,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                @ManyToOne @JoinColumn(name = "fk_position") var position: Position,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?,
-               var deleted: Boolean = false) : EventAggregate() {
+               var deleted: Boolean = false) : EventAggregate<EmployeeKfk>() {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)
@@ -41,20 +41,26 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, EmployeeEvent(this.copy(), EmployeeCompensation(this.copy(), EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, EmployeeEvent(mapAggregateToKafkaDto(), EmployeeCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
         }
     }
 
     fun moveToNewAddress(address: Address) {
+        val compensation = EmployeeCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.address = address
+        registerEvent(id !!, EmployeeEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun receiveRaiseBy(raiseAmount: BigDecimal) {
+        val compensation = EmployeeCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.hourlyRate = hourlyRate.add(raiseAmount)
+        registerEvent(id !!, EmployeeEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun switchBankDetails(bankDetails: BankDetails) {
+        val compensation = EmployeeCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.bankDetails = bankDetails
+        registerEvent(id !!, EmployeeEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     /**
@@ -63,32 +69,36 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
      * @param newSalary If no salary is provided the mininum of the provided position is used
      */
     fun changeJobPosition(position: Position, newSalary: BigDecimal?) {
-        val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
+        val compensation = EmployeeCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.position = position
         this.hourlyRate = newSalary ?: position.minHourlyWage
-        registerEvent(id !!, EmployeeEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(id !!, EmployeeEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun moveToAnotherDepartment(department: Department) {
-        val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
+        val compensation = EmployeeCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.department = department
-        registerEvent(id !!, EmployeeEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(id !!, EmployeeEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     /**
      * Change the name(s) of a employee which subsequently changes the mail address
      */
     fun changeName(firstname: String?, lastname: String?) {
-        val compensation = EmployeeCompensation(this.copy(), EventType.UPDATE)
+        val compensation = EmployeeCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
         this.firstname = firstname ?: this.firstname
         this.lastname = lastname ?: this.lastname
         this.companyMail = CompanyMail(this.firstname, this.lastname)
-        registerEvent(id !!, EmployeeEvent(this.copy(), compensation, EventType.UPDATE))
+        registerEvent(id !!, EmployeeEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
     }
 
     fun deleteEmployee() {
         deleted = true
-        registerEvent(this.id!!, EmployeeEvent(this.copy(), EmployeeCompensation(this, EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, EmployeeEvent(mapAggregateToKafkaDto(), EmployeeCompensation(mapAggregateToKafkaDto(), EventType.DELETE), EventType.DELETE))
+    }
+
+    override fun mapAggregateToKafkaDto(): EmployeeKfk {
+        return EmployeeKfk(this.id!!, this.firstname, this.lastname, this.birthday, this.address, this.bankDetails, this.department.id!!, this.position.id!!, this.hourlyRate, this.companyMail, this.deleted)
     }
 
     override fun toString(): String {
@@ -107,21 +117,5 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     override fun hashCode(): Int {
         return id?.hashCode() ?: 0
     }
-
-    fun copy(): Employee {
-        return Employee(
-                this.id,
-                this.firstname,
-                this.lastname,
-                this.birthday,
-                this.address.copy(),
-                this.bankDetails.copy(),
-                this.department.copy(),
-                this.position.copy(),
-                this.hourlyRate,
-                this.companyMail.copy(),
-                this.deleted)
-    }
-
 
 }

@@ -3,6 +3,7 @@ package com.example.employeeadministration.services.kafka
 import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
 import com.example.employeeadministration.model.EMPLOYEE_TOPIC_NAME
 import com.example.employeeadministration.model.POSITION_TOPIC_NAME
+import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.model.events.DepartmentCompensation
 import com.example.employeeadministration.model.events.EmployeeCompensation
 import com.example.employeeadministration.model.events.EventType
@@ -33,11 +34,12 @@ class KafkaPositionEventHandler(val positionRepository: PositionRepository): Eve
             when (comp.type) {
                 EventType.CREATE -> {
                     val pos = positionRepository.getByIdAndDeletedFalse(position.id!!).orElseThrow()
-                    position.deleted = true
+                    pos.deleted = true
                     positionRepository.save(pos)
                 }
                 EventType.UPDATE -> {
-                    positionRepository.save(position)
+                    val pos = Position(position.id, position.title, position.minHourlyWage, position.maxHourlyWage, position.deleted)
+                    positionRepository.save(pos)
                 }
                 EventType.DELETE -> {
                     val pos = positionRepository.getByIdAndDeletedFalse(position.id!!).orElseThrow()

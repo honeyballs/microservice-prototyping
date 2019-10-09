@@ -30,7 +30,7 @@ class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>): EventPr
      * Clears the events after sending.
      * TODO: Wait for success before clearing?
      */
-    override fun sendEventsOfAggregate(aggregate: EventAggregate) {
+    override fun <KafkaDtoType> sendEventsOfAggregate(aggregate: EventAggregate<KafkaDtoType>) {
         println("Send Events")
         if (aggregate.events() != null) {
             aggregate.events()!!.second.forEach() {

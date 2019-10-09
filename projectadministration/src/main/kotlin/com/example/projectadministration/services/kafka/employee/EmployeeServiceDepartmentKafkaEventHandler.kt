@@ -2,9 +2,7 @@ package com.example.projectadministration.services.kafka.employee
 
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.configurations.TOPIC_NAME
-import com.example.projectadministration.model.employee.DEPARTMENT_TOPIC_NAME
-import com.example.projectadministration.model.employee.Department
-import com.example.projectadministration.model.employee.Position
+import com.example.projectadministration.model.employee.*
 import com.example.projectadministration.model.events.DepartmentEvent
 import com.example.projectadministration.model.events.EventType
 import com.example.projectadministration.repositories.employeeservice.DepartmentRepository
@@ -32,7 +30,7 @@ class EmployeeServiceDepartmentKafkaEventHandler(
     @KafkaHandler
     @Transactional
     fun handle(event: DepartmentEvent, ack: Acknowledgment) {
-        logger.info("Department Event received. Type: ${event.type}, Id: ${event.department.departmentId}")
+        logger.info("Department Event received. Type: ${event.type}, Id: ${event.department.id}")
         val eventDepartment = event.department
         try {
 
@@ -54,21 +52,22 @@ class EmployeeServiceDepartmentKafkaEventHandler(
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun createDepartment(eventDepartment: Department) {
-        departmentRepository.save(eventDepartment)
+    fun createDepartment(eventDepartment: DepartmentKfk) {
+        val dep = Department(null, eventDepartment.id, eventDepartment.name, eventDepartment.deleted)
+        departmentRepository.save(dep)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun updateDepartment(eventDepartment: Department) {
+    fun updateDepartment(eventDepartment: DepartmentKfk) {
         // If we would not load beforehand a new db row would be created because dbId is only set in this service
-        val dep = departmentRepository.findByDepartmentId(eventDepartment.departmentId).orElseThrow()
-        eventDepartment.dbId = dep.dbId
-        departmentRepository.save(eventDepartment)
+        val dep = departmentRepository.findByDepartmentId(eventDepartment.id).orElseThrow()
+        dep.name = eventDepartment.name
+        departmentRepository.save(dep)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun deleteDepartment(eventDepartment: Department) {
-        val dep = departmentRepository.findByDepartmentId(eventDepartment.departmentId).orElseThrow()
+    fun deleteDepartment(eventDepartment: DepartmentKfk) {
+        val dep = departmentRepository.findByDepartmentId(eventDepartment.id).orElseThrow()
         dep.deleted = true
         departmentRepository.save(dep)
     }
@@ -76,7 +75,7 @@ class EmployeeServiceDepartmentKafkaEventHandler(
     fun handleCompensation(event: DepartmentEvent) {
         val comp = event.compensatingAction
         comp!!.rollbackOccurredAt(LocalDateTime.now())
-        producer.sendDomainEvent(event.department.departmentId, event.compensatingAction!!)
+        producer.sendDomainEvent(event.department.id, event.compensatingAction!!, DEPARTMENT_TOPIC_NAME)
     }
 
     @KafkaHandler(isDefault = true)

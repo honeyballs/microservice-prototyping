@@ -5,7 +5,7 @@ import com.example.projectadministration.model.events.DomainEvent
 /**
  * Defines base functionality of an aggregate which emits events.
  */
-open class EventAggregate {
+abstract class EventAggregate<KafkaDtoType> {
 
     lateinit var TOPIC_NAME: String
 
@@ -26,5 +26,7 @@ open class EventAggregate {
     fun clearEvents() {
         events = null
     }
+
+    abstract fun mapAggregateToKafkaDto(): KafkaDtoType
 
 }
