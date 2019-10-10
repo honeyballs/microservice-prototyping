@@ -1,6 +1,7 @@
 package com.example.employeeadministration.model
 
 import com.example.employeeadministration.model.events.*
+import com.example.employeeadministration.services.getEventTypeFromProperties
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -25,23 +26,25 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
 
     init {
         TOPIC_NAME = DEPARTMENT_TOPIC_NAME
+        aggregate = "department"
     }
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, DepartmentEvent(mapAggregateToKafkaDto(), DepartmentCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, "created", null)
         }
     }
 
     fun renameDepartment(name: String) {
-        val compensation = DepartmentCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
+        val from = mapAggregateToKafkaDto()
         this.name = name
-        registerEvent(this.id!!, DepartmentEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
+        registerEvent(this.id!!, "updated", from)
     }
 
     fun deleteDepartment() {
+        val from = mapAggregateToKafkaDto()
         deleted = true
-        registerEvent(this.id!!, DepartmentEvent(mapAggregateToKafkaDto(), DepartmentCompensation(mapAggregateToKafkaDto(), EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, "deleted", from)
     }
 
     override fun mapAggregateToKafkaDto(): DepartmentKfk {
@@ -89,30 +92,32 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
 
     init {
         TOPIC_NAME = POSITION_TOPIC_NAME
+        aggregate = "position"
     }
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, PositionEvent(mapAggregateToKafkaDto(), PositionCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, "created", null)
         }
     }
 
     fun changePositionTitle(title: String) {
-        val compensation = PositionCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
+        val from = mapAggregateToKafkaDto()
         this.title = title
-        registerEvent(id !!, PositionEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
+        registerEvent(this.id!!, "updated", from)
     }
 
     fun adjustWageRange(min: BigDecimal?, max: BigDecimal?) {
-        val compensation = PositionCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
+        val from = mapAggregateToKafkaDto()
         minHourlyWage = min ?: minHourlyWage
         maxHourlyWage = max ?: maxHourlyWage
-        registerEvent(id !!, PositionEvent(mapAggregateToKafkaDto(), compensation, EventType.UPDATE))
+        registerEvent(this.id!!, "updated", from)
     }
 
     fun deletePosition() {
+        val from = mapAggregateToKafkaDto()
         deleted = true
-        registerEvent(this.id!!, PositionEvent(mapAggregateToKafkaDto(), PositionCompensation(mapAggregateToKafkaDto(), EventType.DELETE), EventType.DELETE))
+        registerEvent(this.id!!, "deleted", from)
     }
 
     override fun mapAggregateToKafkaDto(): PositionKfk {

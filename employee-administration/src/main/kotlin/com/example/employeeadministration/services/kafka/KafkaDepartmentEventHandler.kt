@@ -21,34 +21,34 @@ class KafkaDepartmentEventHandler(val departmentRepository: DepartmentRepository
 
     val logger = LoggerFactory.getLogger(KafkaDepartmentEventHandler::class.java)
 
-    @KafkaHandler
-    @Transactional
-    fun compensate(comp: DepartmentCompensation, ack: Acknowledgment) {
-        logger.info("Department Compensation received. Type: ${comp.type}, Id: ${comp.department.id}")
-        val department = comp.department
-        try {
-            when (comp.type) {
-                EventType.CREATE -> {
-                    val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()
-                    dep.deleted = true
-                    departmentRepository.save(dep)
-                }
-                EventType.UPDATE -> {
-                    val dep = Department(department.id, department.name, department.deleted)
-                    departmentRepository.save(dep)
-                }
-                EventType.DELETE -> {
-                    val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()
-                    dep.deleted = false
-                    departmentRepository.save(dep)
-                }
-            }
-        } catch (exception: UnexpectedRollbackException) {
-            exception.printStackTrace()
-        } finally {
-            ack.acknowledge()
-        }
-    }
+//    @KafkaHandler
+//    @Transactional
+//    fun compensate(comp: DepartmentCompensation, ack: Acknowledgment) {
+//        logger.info("Department Compensation received. Type: ${comp.type}, Id: ${comp.department.id}")
+//        val department = comp.department
+//        try {
+//            when (comp.type) {
+//                EventType.CREATE -> {
+//                    val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()
+//                    dep.deleted = true
+//                    departmentRepository.save(dep)
+//                }
+//                EventType.UPDATE -> {
+//                    val dep = Department(department.id, department.name, department.deleted)
+//                    departmentRepository.save(dep)
+//                }
+//                EventType.DELETE -> {
+//                    val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()
+//                    dep.deleted = false
+//                    departmentRepository.save(dep)
+//                }
+//            }
+//        } catch (exception: UnexpectedRollbackException) {
+//            exception.printStackTrace()
+//        } finally {
+//            ack.acknowledge()
+//        }
+//    }
 
     @KafkaHandler(isDefault = true)
     fun defaultHandler(message: Any) {

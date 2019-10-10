@@ -59,39 +59,39 @@ class KafkaApplicationTests {
         employee = employeeRepository.save(employee)
     }
 
-
-    @Test
-    fun shouldSendDepartmentCompensation() {
-        val comp = DepartmentCompensation(department.mapAggregateToKafkaDto(), EventType.CREATE)
-        producer.sendDomainEvent(department.id!!, comp, DEPARTMENT_TOPIC_NAME)
-        Thread.sleep(1000)
-        val deletedDepartment = departmentRepository.findById(department.id!!).get()
-        Assertions.assertThat(deletedDepartment.deleted).isTrue()
-    }
-
-    @Test
-    fun shouldSendPositionCompensation() {
-        val comp = PositionCompensation(position.mapAggregateToKafkaDto(), EventType.UPDATE)
-        position.title = "Java Development"
-        positionRepository.save(position)
-        producer.sendDomainEvent(position.id!!, comp, POSITION_TOPIC_NAME)
-        Thread.sleep(1000)
-        val pos = positionRepository.findById(position.id!!).get()
-        Assertions.assertThat(pos.title).isEqualTo("Development")
-    }
-
-    @Test
-    fun shouldSendEmployeeCompensation() {
-        employee.deleted = true
-        employeeRepository.save(employee)
-        employee.deleted = false
-        val comp = EmployeeCompensation(employee.mapAggregateToKafkaDto(), EventType.DELETE)
-        producer.sendDomainEvent(employee.id!!, comp, EMPLOYEE_TOPIC_NAME)
-        Thread.sleep(1000)
-        employee = employeeRepository.getByIdAndDeletedFalse(employee.id!!).orElseThrow()
-        Assertions.assertThat(employee.deleted).isFalse()
-    }
-
+//
+//    @Test
+//    fun shouldSendDepartmentCompensation() {
+//        val comp = DepartmentCompensation(department.mapAggregateToKafkaDto(), EventType.CREATE)
+//        producer.sendDomainEvent(department.id!!, comp, DEPARTMENT_TOPIC_NAME)
+//        Thread.sleep(1000)
+//        val deletedDepartment = departmentRepository.findById(department.id!!).get()
+//        Assertions.assertThat(deletedDepartment.deleted).isTrue()
+//    }
+//
+//    @Test
+//    fun shouldSendPositionCompensation() {
+//        val comp = PositionCompensation(position.mapAggregateToKafkaDto(), EventType.UPDATE)
+//        position.title = "Java Development"
+//        positionRepository.save(position)
+//        producer.sendDomainEvent(position.id!!, comp, POSITION_TOPIC_NAME)
+//        Thread.sleep(1000)
+//        val pos = positionRepository.findById(position.id!!).get()
+//        Assertions.assertThat(pos.title).isEqualTo("Development")
+//    }
+//
+//    @Test
+//    fun shouldSendEmployeeCompensation() {
+//        employee.deleted = true
+//        employeeRepository.save(employee)
+//        employee.deleted = false
+//        val comp = EmployeeCompensation(employee.mapAggregateToKafkaDto(), EventType.DELETE)
+//        producer.sendDomainEvent(employee.id!!, comp, EMPLOYEE_TOPIC_NAME)
+//        Thread.sleep(1000)
+//        employee = employeeRepository.getByIdAndDeletedFalse(employee.id!!).orElseThrow()
+//        Assertions.assertThat(employee.deleted).isFalse()
+//    }
+//
 
 
 }

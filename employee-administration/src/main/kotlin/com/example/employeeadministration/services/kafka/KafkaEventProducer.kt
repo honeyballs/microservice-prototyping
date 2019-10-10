@@ -3,8 +3,13 @@ package com.example.employeeadministration.services.kafka
 import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.Event
 import com.example.employeeadministration.model.events.EventAggregate
+import com.example.employeeadministration.model.saga.Saga
+import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventProducer
+import com.example.employeeadministration.services.getRequiredSuccessEvents
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 
@@ -12,7 +17,9 @@ import org.springframework.stereotype.Service
  * Service which sends Domain Events to Kafka.
  */
 @Service
-class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>): EventProducer {
+class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>, val mapper: ObjectMapper, val sagaRepository: SagaRepository) : EventProducer {
+
+    val logger = LoggerFactory.getLogger("KafkaEventProducer")
 
     /**
      * Send a domain Event.
@@ -31,13 +38,27 @@ class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>): EventPr
      * TODO: Wait for success before clearing?
      */
     override fun <KafkaDtoType> sendEventsOfAggregate(aggregate: EventAggregate<KafkaDtoType>) {
-        println("Send Events")
+        logger.info("Sending Aggregate Events")
         if (aggregate.events() != null) {
             aggregate.events()!!.second.forEach() {
+                createSagaOfEvent(it, aggregate.events()!!.first)
                 sendDomainEvent(aggregate.events()!!.first, it, aggregate.TOPIC_NAME)
             }
             aggregate.clearEvents()
         }
+    }
+
+    private fun <KafkaDtoType> createSagaOfEvent(event: DomainEvent<KafkaDtoType>, aggregateId: Long) {
+        val saga = Saga(
+                null,
+                event.id,
+                event.type,
+                aggregateId,
+                mapper.writeValueAsString(event.from),
+                mapper.writeValueAsString(event.to),
+                getRequiredSuccessEvents(event.type)
+        )
+        sagaRepository.save(saga)
     }
 
 }
