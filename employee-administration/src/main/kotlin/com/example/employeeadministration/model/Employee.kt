@@ -6,8 +6,9 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import javax.persistence.*
+import kotlin.math.E
 
-const val EMPLOYEE_TOPIC_NAME = "employee"
+const val EMPLOYEE_AGGREGATE_NAME = "employee"
 
 /**
  * Aggregate Employee encapsulating necessary Value Objects and handling possible invariants
@@ -37,8 +38,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
 
     init {
-        TOPIC_NAME = EMPLOYEE_TOPIC_NAME
-        aggregate = "employee"
+        aggregateName = EMPLOYEE_AGGREGATE_NAME
     }
 
     fun created() {

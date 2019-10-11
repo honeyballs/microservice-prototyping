@@ -4,9 +4,7 @@ import com.example.employeeadministration.model.*
 import com.example.employeeadministration.model.events.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.Consumer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.*
-import org.assertj.core.api.Assertions
 import org.junit.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,7 +25,7 @@ class KafkaTests {
     public companion object {
         @ClassRule
         @JvmField
-        public val embeddedKafka = EmbeddedKafkaRule(1, true, DEPARTMENT_TOPIC_NAME, EMPLOYEE_TOPIC_NAME, POSITION_TOPIC_NAME)
+        public val embeddedKafka = EmbeddedKafkaRule(1, true, DEPARTMENT_AGGREGATE_NAME, EMPLOYEE_AGGREGATE_NAME, POSITION_AGGREGATE_NAME)
     }
 
     @Autowired

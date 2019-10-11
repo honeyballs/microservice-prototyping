@@ -11,8 +11,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 @JsonTypeName("event")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes(
-        JsonSubTypes.Type(value = DomainEvent::class, name = "domainEvent")
-//        JsonSubTypes.Type(value = CompensatingAction::class, name = "compensatingAction")
+        JsonSubTypes.Type(value = DomainEvent::class, name = "domainEvent"),
+        JsonSubTypes.Type(value = ResponseEvent::class, name = "responseEvent"),
+        JsonSubTypes.Type(value = UpdateStateEvent::class, name = "updateStateEvent")
 )
 interface Event {
 

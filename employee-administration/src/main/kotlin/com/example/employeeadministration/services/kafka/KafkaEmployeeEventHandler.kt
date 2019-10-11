@@ -1,56 +1,88 @@
 package com.example.employeeadministration.services.kafka
 
-import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
-import com.example.employeeadministration.model.EMPLOYEE_TOPIC_NAME
-import com.example.employeeadministration.model.Employee
+import com.example.employeeadministration.SERVICE_NAME
+import com.example.employeeadministration.model.EMPLOYEE_AGGREGATE_NAME
+import com.example.employeeadministration.model.EmployeeKfk
+import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.events.ResponseEvent
+import com.example.employeeadministration.model.events.UpdateStateEvent
+import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
+import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventHandler
+import com.example.employeeadministration.services.getResponseEventKeyword
+import com.example.employeeadministration.services.getSagaCompleteType
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
-import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-@KafkaListener(groupId = "EmployeeService", topics = [EMPLOYEE_TOPIC_NAME])
-class KafkaEmployeeEventHandler(val employeeRepository: EmployeeRepository, val departmentRepository: DepartmentRepository, val positionRepository: PositionRepository) : EventHandler {
+@KafkaListener(groupId = SERVICE_NAME, topics = [EMPLOYEE_AGGREGATE_NAME])
+class KafkaEmployeeEventHandler(
+        val employeeRepository: EmployeeRepository,
+        val departmentRepository: DepartmentRepository,
+        val positionRepository: PositionRepository,
+        val sagaRepository: SagaRepository,
+        val mapper: ObjectMapper,
+        val eventProducer: KafkaEventProducer
+) : EventHandler {
 
     val logger = LoggerFactory.getLogger(KafkaEmployeeEventHandler::class.java)
 
-//    @KafkaHandler
-//    @Transactional
-//    fun compensate(comp: EmployeeCompensation, ack: Acknowledgment) {
-//        logger.info("Employee Compensation received. Type: ${comp.type}, Id: ${comp.employee.id}")
-//        val employee = comp.employee
-//        try {
-//            when (comp.type) {
-//                EventType.CREATE -> {
-//                    val emp = employeeRepository.getByIdAndDeletedFalse(employee.id!!).orElseThrow()
-//                    emp.deleted = true
-//                    employeeRepository.save(emp)
-//                }
-//                EventType.UPDATE -> {
-//                    val dep = departmentRepository.getByIdAndDeletedFalse(employee.department).orElseThrow()
-//                    val pos = positionRepository.getByIdAndDeletedFalse(employee.position).orElseThrow()
-//                    val emp = Employee(employee.id, employee.firstname, employee.lastname, employee.birthday, employee.address, employee.bankDetails, dep, pos, employee.hourlyRate, employee.companyMail, employee.deleted)
-//                    employeeRepository.save(emp)
-//                }
-//                EventType.DELETE -> {
-//                    val emp = employeeRepository.findById(employee.id).orElseThrow()
-//                    emp.deleted = false
-//                    employeeRepository.save(emp)
-//                }
-//            }
-//        } catch (exception: UnexpectedRollbackException) {
-//            exception.printStackTrace()
-//        } finally {
-//            ack.acknowledge()
-//        }
-//    }
+    @KafkaHandler
+    @Transactional
+    fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
+        try {
+            val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
+            if (getResponseEventKeyword(responseEvent.type) == "success") {
+                val state = saga.receivedSuccessEvent(responseEvent.consumerName)
+                if (state == SagaState.COMPLETED) {
+                    activateEmployee(saga.aggregateId, saga.id!!)
+                }
+            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                saga.receivedFailureEvent()
+                rollbackEmployee(saga.aggregateId, saga.leftAggregate)
+            }
+            ack.acknowledge()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+    }
+
+    @Throws(Exception::class)
+    fun activateEmployee(id: Long, sagaId: Long) {
+        val emp = employeeRepository.findById(id).orElseThrow()
+        emp.state = AggregateState.ACTIVE
+        employeeRepository.save(emp)
+        eventProducer.sendDomainEvent(id, UpdateStateEvent(getSagaCompleteType(EMPLOYEE_AGGREGATE_NAME), id, sagaId, AggregateState.ACTIVE), EMPLOYEE_AGGREGATE_NAME)
+    }
+
+    @Throws(Exception::class)
+    fun rollbackEmployee(id: Long, data: String) {
+        val employeeKfk = mapper.readValue<EmployeeKfk>(data)
+        val emp = employeeRepository.findById(id).orElseThrow()
+        emp.firstname = employeeKfk.firstname
+        emp.lastname = employeeKfk.lastname
+        emp.address = employeeKfk.address
+        emp.bankDetails = employeeKfk.bankDetails
+        emp.companyMail = employeeKfk.companyMail!!
+        emp.hourlyRate = employeeKfk.hourlyRate
+        emp.deleted = employeeKfk.deleted
+        if (emp.department.id!! != employeeKfk.department) {
+            emp.department = departmentRepository.findById(employeeKfk.id).orElseThrow()
+        }
+        if (emp.position.id!! != employeeKfk.position) {
+            emp.position = positionRepository.findById(employeeKfk.position).orElseThrow()
+        }
+        employeeRepository.save(emp)
+    }
 
     @KafkaHandler(isDefault = true)
     fun defaultHandler(message: Any) {

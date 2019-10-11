@@ -4,8 +4,15 @@ import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.Department
 import com.example.employeeadministration.model.DepartmentDto
 import com.example.employeeadministration.model.DepartmentKfk
+import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.events.DomainEvent
+import com.example.employeeadministration.model.saga.Saga
+import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
+import com.example.employeeadministration.repositories.SagaRepository
+import com.example.employeeadministration.services.kafka.SagaService
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -13,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
                             val employeeRepository: EmployeeRepository,
+                            val sagaService: SagaService,
                             val eventProducer: KafkaEventProducer) : DepartmentService {
 
+    @Transactional
     override fun persistWithEvents(aggregate: Department): Department {
         var agg: Department? = null
         try {
@@ -25,7 +34,26 @@ class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
             } else {
                 agg = departmentRepository.save(aggregate)
             }
+
+            // If services must send response events to changes in the aggregate we create a saga
+            var canBeMadeActive = true
+            aggregate.events()!!.second.forEach {
+                val responseEvents = getRequiredSuccessEvents(it.type)
+                if (responseEvents != "") {
+                    sagaService.createSagaOfEvent(it, agg.id!!, responseEvents)
+                    canBeMadeActive = false
+                }
+            }
+
+            // If no saga was necessary the aggregate can immediately become active
+            if (canBeMadeActive) {
+                agg.state = AggregateState.ACTIVE
+                departmentRepository.save(agg)
+            }
+
+            // Send all events
             eventProducer.sendEventsOfAggregate(aggregate)
+
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
         } catch (ex: Exception) {

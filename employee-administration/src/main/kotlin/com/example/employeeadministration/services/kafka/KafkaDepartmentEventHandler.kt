@@ -1,12 +1,20 @@
 package com.example.employeeadministration.services.kafka
 
-import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
-import com.example.employeeadministration.model.Department
-import com.example.employeeadministration.model.events.*
+import com.example.employeeadministration.SERVICE_NAME
+import com.example.employeeadministration.model.DEPARTMENT_AGGREGATE_NAME
+import com.example.employeeadministration.model.DepartmentKfk
+import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.events.ResponseEvent
+import com.example.employeeadministration.model.events.UpdateStateEvent
+import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.DepartmentRepository
-import com.example.employeeadministration.repositories.EmployeeRepository
-import com.example.employeeadministration.repositories.PositionRepository
+import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventHandler
+import com.example.employeeadministration.services.getResponseEventKeyword
+import com.example.employeeadministration.services.getResponseEventType
+import com.example.employeeadministration.services.getSagaCompleteType
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
@@ -16,39 +24,53 @@ import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-@KafkaListener(groupId = "EmployeeService", topics = [DEPARTMENT_TOPIC_NAME])
-class KafkaDepartmentEventHandler(val departmentRepository: DepartmentRepository): EventHandler {
+@KafkaListener(groupId = SERVICE_NAME, topics = [DEPARTMENT_AGGREGATE_NAME])
+class KafkaDepartmentEventHandler(
+        val departmentRepository: DepartmentRepository,
+        val sagaRepository: SagaRepository,
+        val mapper: ObjectMapper,
+        val eventProducer: KafkaEventProducer
+): EventHandler {
 
     val logger = LoggerFactory.getLogger(KafkaDepartmentEventHandler::class.java)
 
-//    @KafkaHandler
-//    @Transactional
-//    fun compensate(comp: DepartmentCompensation, ack: Acknowledgment) {
-//        logger.info("Department Compensation received. Type: ${comp.type}, Id: ${comp.department.id}")
-//        val department = comp.department
-//        try {
-//            when (comp.type) {
-//                EventType.CREATE -> {
-//                    val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()
-//                    dep.deleted = true
-//                    departmentRepository.save(dep)
-//                }
-//                EventType.UPDATE -> {
-//                    val dep = Department(department.id, department.name, department.deleted)
-//                    departmentRepository.save(dep)
-//                }
-//                EventType.DELETE -> {
-//                    val dep = departmentRepository.getByIdAndDeletedFalse(department.id!!).orElseThrow()
-//                    dep.deleted = false
-//                    departmentRepository.save(dep)
-//                }
-//            }
-//        } catch (exception: UnexpectedRollbackException) {
-//            exception.printStackTrace()
-//        } finally {
-//            ack.acknowledge()
-//        }
-//    }
+    @KafkaHandler
+    @Transactional
+    fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
+        try {
+            val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
+            if (getResponseEventKeyword(responseEvent.type) == "success") {
+                val state = saga.receivedSuccessEvent(responseEvent.consumerName)
+                if (state == SagaState.COMPLETED) {
+                    activateDepartment(saga.aggregateId, saga.id!!)
+                }
+            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                saga.receivedFailureEvent()
+                rollbackDepartment(saga.aggregateId, saga.leftAggregate)
+            }
+            ack.acknowledge()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+    }
+
+    @Throws(Exception::class)
+    fun activateDepartment(id: Long, sagaId: Long) {
+        val dep = departmentRepository.findById(id).orElseThrow()
+        dep.state = AggregateState.ACTIVE
+        departmentRepository.save(dep)
+        eventProducer.sendDomainEvent(id, UpdateStateEvent(getSagaCompleteType(DEPARTMENT_AGGREGATE_NAME), id, sagaId, AggregateState.ACTIVE), DEPARTMENT_AGGREGATE_NAME)
+    }
+
+    @Throws(Exception::class)
+    fun rollbackDepartment(id: Long, data: String) {
+        val departmentKfk = mapper.readValue<DepartmentKfk>(data)
+        val dep = departmentRepository.findById(id).orElseThrow()
+        dep.deleted = departmentKfk.deleted
+        dep.name = departmentKfk.name
+        departmentRepository.save(dep)
+    }
+
 
     @KafkaHandler(isDefault = true)
     fun defaultHandler(message: Any) {

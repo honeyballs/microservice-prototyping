@@ -3,14 +3,21 @@ package com.example.employeeadministration.services
 import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.Position
 import com.example.employeeadministration.model.PositionDto
+import com.example.employeeadministration.model.events.AggregateState
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
+import com.example.employeeadministration.services.kafka.SagaService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class PositionServiceImpl(val positionRepository: PositionRepository, val employeeRepository: EmployeeRepository, val eventProducer: KafkaEventProducer) : PositionService {
+class PositionServiceImpl(
+        val positionRepository: PositionRepository,
+        val employeeRepository: EmployeeRepository,
+        val sagaService: SagaService,
+        val eventProducer: KafkaEventProducer
+) : PositionService {
 
     override fun persistWithEvents(aggregate: Position): Position {
         var agg: Position? = null
@@ -22,7 +29,26 @@ class PositionServiceImpl(val positionRepository: PositionRepository, val employ
             } else {
                 agg = positionRepository.save(aggregate)
             }
+
+            // If services must send response events to changes in the aggregate we create a saga
+            var canBeMadeActive = true
+            aggregate.events()!!.second.forEach {
+                val responseEvents = getRequiredSuccessEvents(it.type)
+                if (responseEvents != "") {
+                    sagaService.createSagaOfEvent(it, agg.id!!, responseEvents)
+                    canBeMadeActive = false
+                }
+            }
+
+            // If no saga was necessary the aggregate can immediately become active
+            if (canBeMadeActive) {
+                agg.state = AggregateState.ACTIVE
+                positionRepository.save(agg)
+            }
+
+            // Send all events
             eventProducer.sendEventsOfAggregate(aggregate)
+
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
         } catch (ex: Exception) {

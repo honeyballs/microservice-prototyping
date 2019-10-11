@@ -4,6 +4,7 @@ import org.apache.kafka.common.protocol.types.Field
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.support.PropertiesLoaderUtils
 import java.util.*
+import kotlin.NoSuchElementException
 
 /**
  * Contains helper functions to extract event types from a properties file
@@ -22,15 +23,33 @@ fun getResponseEventType(eventType: String, fail: Boolean): String {
     }
 }
 
+fun getResponseEventKeyword(eventType: String): String {
+    val props = getEventTypeProperties()
+    val key = getKeyFromEventType(props, eventType)
+    return key.substringAfterLast(".")
+}
+
 fun getSpecificEventResponseType(eventType: String, responseType: String): String {
     val props = getEventTypeProperties()
     return props["${getKeyFromEventType(props, eventType)}.$responseType"] as String
 }
 
-fun getRequiredSuccessEvents(eventType: String): Int {
+fun getSagaCompleteType(aggregateName: String): String {
+    val props = getEventTypeProperties()
+    return props["$aggregateName.completed"] as String
+}
+
+fun getRequiredSuccessEvents(eventType: String): String {
     val typeProps = getEventTypeProperties()
     val props = getRequiredSuccessProperties()
-    return (props[getKeyFromEventType(typeProps, eventType)] as String).toInt()
+    var eventsString = ""
+    try {
+        val events = props[getKeyFromEventType(typeProps, eventType)] as String?
+        eventsString = events ?: ""
+    } catch (ex: NoSuchElementException) {
+        ex.printStackTrace()
+    }
+    return eventsString
 }
 
 fun getEventTypeProperties(): Properties {

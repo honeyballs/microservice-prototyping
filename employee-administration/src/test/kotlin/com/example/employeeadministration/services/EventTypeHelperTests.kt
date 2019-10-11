@@ -1,8 +1,8 @@
 package com.example.employeeadministration.services
 
-import com.example.employeeadministration.model.DEPARTMENT_TOPIC_NAME
-import com.example.employeeadministration.model.EMPLOYEE_TOPIC_NAME
-import com.example.employeeadministration.model.POSITION_TOPIC_NAME
+import com.example.employeeadministration.model.DEPARTMENT_AGGREGATE_NAME
+import com.example.employeeadministration.model.EMPLOYEE_AGGREGATE_NAME
+import com.example.employeeadministration.model.POSITION_AGGREGATE_NAME
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,7 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @SpringBootTest
 @DirtiesContext
 @ActiveProfiles("test")
-@EmbeddedKafka(partitions = 1, topics = [EMPLOYEE_TOPIC_NAME, DEPARTMENT_TOPIC_NAME, POSITION_TOPIC_NAME])
+@EmbeddedKafka(partitions = 1, topics = [EMPLOYEE_AGGREGATE_NAME, DEPARTMENT_AGGREGATE_NAME, POSITION_AGGREGATE_NAME])
 class EventTypeHelperTests {
 
     val aggregate = "department"
@@ -29,9 +29,26 @@ class EventTypeHelperTests {
         Assertions.assertThat(eventType).isEqualTo("Department created")
     }
 
+    @Test
     fun shouldGetSuccessEvent() {
-        val eventType = getResponseEventType(eventTypeKey, false)
+        val eventType = getResponseEventType("Department created", false)
         Assertions.assertThat(eventType).isEqualTo("Department created successfully")
+    }
+
+    @Test
+    fun shouldGetEmptyWhenAccessingNonExistingResponseEvents() {
+        Assertions.assertThat(getRequiredSuccessEvents("asdf")).isEqualTo("")
+    }
+
+    @Test
+    fun shouldGetResponseKeyword() {
+        val event = "Employee deletion failed"
+        Assertions.assertThat(getResponseEventKeyword(event)).isEqualTo("fail")
+    }
+
+    @Test
+    fun shouldGetCompletionType() {
+        Assertions.assertThat(getSagaCompleteType(DEPARTMENT_AGGREGATE_NAME)).isEqualTo("Department saga completed")
     }
 
 }

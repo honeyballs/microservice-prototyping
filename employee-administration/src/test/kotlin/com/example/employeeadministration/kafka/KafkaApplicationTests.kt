@@ -1,15 +1,12 @@
 package com.example.employeeadministration.kafka
 
 import com.example.employeeadministration.model.*
-import com.example.employeeadministration.model.events.*
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.services.kafka.KafkaDepartmentEventHandler
 import com.example.employeeadministration.services.kafka.KafkaEventProducer
-import org.assertj.core.api.Assertions
 import org.junit.Before
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,7 +21,7 @@ import java.time.LocalDate
 @SpringBootTest
 @DirtiesContext
 @ActiveProfiles("test")
-@EmbeddedKafka(partitions = 1, topics = [EMPLOYEE_TOPIC_NAME, DEPARTMENT_TOPIC_NAME, POSITION_TOPIC_NAME])
+@EmbeddedKafka(partitions = 1, topics = [EMPLOYEE_AGGREGATE_NAME, DEPARTMENT_AGGREGATE_NAME, POSITION_AGGREGATE_NAME])
 class KafkaApplicationTests {
 
     @Autowired

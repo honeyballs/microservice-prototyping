@@ -41,24 +41,10 @@ class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>, val mapp
         logger.info("Sending Aggregate Events")
         if (aggregate.events() != null) {
             aggregate.events()!!.second.forEach() {
-                createSagaOfEvent(it, aggregate.events()!!.first)
-                sendDomainEvent(aggregate.events()!!.first, it, aggregate.TOPIC_NAME)
+                sendDomainEvent(aggregate.events()!!.first, it, aggregate.aggregateName)
             }
             aggregate.clearEvents()
         }
-    }
-
-    private fun <KafkaDtoType> createSagaOfEvent(event: DomainEvent<KafkaDtoType>, aggregateId: Long) {
-        val saga = Saga(
-                null,
-                event.id,
-                event.type,
-                aggregateId,
-                mapper.writeValueAsString(event.from),
-                mapper.writeValueAsString(event.to),
-                getRequiredSuccessEvents(event.type)
-        )
-        sagaRepository.save(saga)
     }
 
 }

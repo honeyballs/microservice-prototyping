@@ -1,20 +1,12 @@
 package com.example.employeeadministration.model
 
 import com.example.employeeadministration.model.events.*
-import com.example.employeeadministration.services.getEventTypeFromProperties
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonIdentityInfo
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
-import org.springframework.data.domain.AbstractAggregateRoot
-import org.springframework.data.domain.AfterDomainEventPublication
-import org.springframework.data.domain.DomainEvents
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.persistence.*
-import kotlin.math.min
 
-const val DEPARTMENT_TOPIC_NAME = "department"
+const val DEPARTMENT_AGGREGATE_NAME = "department"
 
 /**
  * Department Aggregate
@@ -25,8 +17,7 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
                       var deleted: Boolean = false): EventAggregate<DepartmentKfk>() {
 
     init {
-        TOPIC_NAME = DEPARTMENT_TOPIC_NAME
-        aggregate = "department"
+        aggregateName = DEPARTMENT_AGGREGATE_NAME
     }
 
     fun created() {
@@ -68,7 +59,7 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
 }
 
 
-const val POSITION_TOPIC_NAME = "position"
+const val POSITION_AGGREGATE_NAME = "position"
 
 /**
  * Position aggregate
@@ -91,8 +82,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
         }
 
     init {
-        TOPIC_NAME = POSITION_TOPIC_NAME
-        aggregate = "position"
+        aggregateName = POSITION_AGGREGATE_NAME
     }
 
     fun created() {
