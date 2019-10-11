@@ -1,7 +1,7 @@
 package com.example.employeeadministration.services
 
-import com.example.employeeadministration.model.Position
-import com.example.employeeadministration.model.PositionDto
+import com.example.employeeadministration.model.aggregates.Position
+import com.example.employeeadministration.model.dto.PositionDto
 
 interface PositionService : MappingService<Position, PositionDto>, EventProducingPersistenceService<Position> {
 

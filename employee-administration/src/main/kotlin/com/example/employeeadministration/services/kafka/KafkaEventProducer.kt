@@ -1,12 +1,9 @@
 package com.example.employeeadministration.services.kafka
 
-import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.Event
-import com.example.employeeadministration.model.events.EventAggregate
-import com.example.employeeadministration.model.saga.Saga
+import com.example.employeeadministration.model.aggregates.EventAggregate
 import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventProducer
-import com.example.employeeadministration.services.getRequiredSuccessEvents
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory

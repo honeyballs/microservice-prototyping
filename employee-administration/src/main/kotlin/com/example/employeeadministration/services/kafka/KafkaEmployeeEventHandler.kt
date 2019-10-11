@@ -1,9 +1,9 @@
 package com.example.employeeadministration.services.kafka
 
 import com.example.employeeadministration.SERVICE_NAME
-import com.example.employeeadministration.model.EMPLOYEE_AGGREGATE_NAME
-import com.example.employeeadministration.model.EmployeeKfk
-import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.aggregates.EMPLOYEE_AGGREGATE_NAME
+import com.example.employeeadministration.model.dto.EmployeeKfk
+import com.example.employeeadministration.model.aggregates.AggregateState
 import com.example.employeeadministration.model.events.ResponseEvent
 import com.example.employeeadministration.model.events.UpdateStateEvent
 import com.example.employeeadministration.model.saga.SagaState

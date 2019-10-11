@@ -1,6 +1,7 @@
 package com.example.employeeadministration.model.events
 
 import com.example.employeeadministration.SERVICE_NAME
+import com.example.employeeadministration.model.aggregates.AggregateState
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import java.time.LocalDateTime

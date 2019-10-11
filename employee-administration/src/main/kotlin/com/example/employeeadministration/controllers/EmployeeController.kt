@@ -1,6 +1,8 @@
 package com.example.employeeadministration.controllers
 
-import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.dto.EmployeeDto
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
 import org.springframework.http.ResponseEntity
 import java.math.BigDecimal
 

@@ -1,6 +1,6 @@
 package com.example.employeeadministration.controllers
 
-import com.example.employeeadministration.model.PositionDto
+import com.example.employeeadministration.model.dto.PositionDto
 import org.springframework.http.ResponseEntity
 import java.math.BigDecimal
 

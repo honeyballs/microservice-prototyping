@@ -1,12 +1,13 @@
-package com.example.employeeadministration.model.events
+package com.example.employeeadministration.model.aggregates
 
+import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.services.getEventTypeFromProperties
 import javax.persistence.MappedSuperclass
 import javax.persistence.Transient
-import javax.xml.crypto.Data
 
 /**
  * Defines base functionality of an aggregate which emits events.
+ * Aggregates have a state which controls whether changes can be made on it.
  */
 @MappedSuperclass
 abstract class EventAggregate<DataType> {

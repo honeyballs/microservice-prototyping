@@ -1,6 +1,6 @@
 package com.example.employeeadministration.controllers
 
-import com.example.employeeadministration.model.DepartmentDto
+import com.example.employeeadministration.model.dto.DepartmentDto
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.services.DepartmentService
 import org.springframework.http.HttpStatus

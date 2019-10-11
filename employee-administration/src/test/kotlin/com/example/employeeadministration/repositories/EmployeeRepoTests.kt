@@ -1,6 +1,11 @@
 package com.example.employeeadministration.repositories
 
-import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.aggregates.Department
+import com.example.employeeadministration.model.aggregates.Employee
+import com.example.employeeadministration.model.aggregates.Position
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
+import com.example.employeeadministration.model.valueobjects.ZipCode
 import org.assertj.core.api.Assertions
 import org.junit.Before
 import org.junit.Test

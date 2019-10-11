@@ -1,8 +1,6 @@
 package com.example.employeeadministration.repositories
 
-import com.example.employeeadministration.model.Department
-import com.example.employeeadministration.model.Employee
-import com.example.employeeadministration.model.Position
+import com.example.employeeadministration.model.aggregates.Employee
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional

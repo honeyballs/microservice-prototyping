@@ -1,6 +1,9 @@
 package com.example.employeeadministration.kafka
 
-import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.aggregates.*
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
+import com.example.employeeadministration.model.valueobjects.ZipCode
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository

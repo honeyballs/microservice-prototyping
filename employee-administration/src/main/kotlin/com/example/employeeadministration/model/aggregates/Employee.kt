@@ -1,12 +1,13 @@
-package com.example.employeeadministration.model
+package com.example.employeeadministration.model.aggregates
 
-import com.example.employeeadministration.model.events.*
-import com.example.employeeadministration.services.getEventTypeFromProperties
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
+import com.example.employeeadministration.model.valueobjects.CompanyMail
+import com.example.employeeadministration.model.dto.EmployeeKfk
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import javax.persistence.*
-import kotlin.math.E
 
 const val EMPLOYEE_AGGREGATE_NAME = "employee"
 

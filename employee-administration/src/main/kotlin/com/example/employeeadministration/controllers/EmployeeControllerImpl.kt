@@ -1,6 +1,9 @@
 package com.example.employeeadministration.controllers
 
-import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.aggregates.Employee
+import com.example.employeeadministration.model.dto.EmployeeDto
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository

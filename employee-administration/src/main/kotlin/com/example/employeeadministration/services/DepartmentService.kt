@@ -1,9 +1,7 @@
 package com.example.employeeadministration.services
 
-import com.example.employeeadministration.model.Department
-import com.example.employeeadministration.model.DepartmentDto
-import com.example.employeeadministration.model.Position
-import com.example.employeeadministration.model.PositionDto
+import com.example.employeeadministration.model.aggregates.Department
+import com.example.employeeadministration.model.dto.DepartmentDto
 
 interface DepartmentService : MappingService<Department, DepartmentDto>, EventProducingPersistenceService<Department> {
 

@@ -1,6 +1,11 @@
 package com.example.employeeadministration
 
-import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.aggregates.Department
+import com.example.employeeadministration.model.aggregates.Employee
+import com.example.employeeadministration.model.aggregates.Position
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
+import com.example.employeeadministration.model.valueobjects.ZipCode
 import com.example.employeeadministration.services.DepartmentService
 import com.example.employeeadministration.services.EmployeeService
 import com.example.employeeadministration.services.PositionService

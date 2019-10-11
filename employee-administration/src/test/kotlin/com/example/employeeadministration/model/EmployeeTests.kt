@@ -1,5 +1,12 @@
 package com.example.employeeadministration.model
 
+import com.example.employeeadministration.model.aggregates.Department
+import com.example.employeeadministration.model.aggregates.Employee
+import com.example.employeeadministration.model.aggregates.Position
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
+import com.example.employeeadministration.model.valueobjects.CompanyMail
+import com.example.employeeadministration.model.valueobjects.ZipCode
 import org.assertj.core.api.Assertions
 import org.junit.Before
 import org.junit.Test
@@ -49,7 +56,7 @@ class EmployeeTests {
 
     @Test
     fun employeeShouldBeMovedToNewPosition() {
-        val positionTest = Position(31L,"Senior Consultant", BigDecimal(55.00), BigDecimal(70.90))
+        val positionTest = Position(31L, "Senior Consultant", BigDecimal(55.00), BigDecimal(70.90))
         employee!!.changeJobPosition(positionTest, null)
         Assertions.assertThat(employee!!.position).isEqualTo(positionTest)
         Assertions.assertThat(employee!!.hourlyRate).isEqualTo(positionTest.minHourlyWage.setScale(2, RoundingMode.HALF_UP))

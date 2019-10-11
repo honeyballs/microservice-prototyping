@@ -1,6 +1,6 @@
 package com.example.employeeadministration.repositories
 
-import com.example.employeeadministration.model.Position
+import com.example.employeeadministration.model.aggregates.Position
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 

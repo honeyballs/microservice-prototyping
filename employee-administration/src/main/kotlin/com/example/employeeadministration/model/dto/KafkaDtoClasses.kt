@@ -1,5 +1,8 @@
-package com.example.employeeadministration.model
+package com.example.employeeadministration.model.dto
 
+import com.example.employeeadministration.model.valueobjects.Address
+import com.example.employeeadministration.model.valueobjects.BankDetails
+import com.example.employeeadministration.model.valueobjects.CompanyMail
 import java.math.BigDecimal
 import java.time.LocalDate
 

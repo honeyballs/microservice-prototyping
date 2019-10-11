@@ -1,10 +1,7 @@
-package com.example.employeeadministration.model
+package com.example.employeeadministration.model.valueobjects
 
 import java.lang.Exception
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.util.*
-import javax.persistence.Column
 import javax.persistence.Embeddable
 
 /**

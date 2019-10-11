@@ -1,11 +1,10 @@
 package com.example.employeeadministration.services
 
 import com.example.employeeadministration.services.kafka.KafkaEventProducer
-import com.example.employeeadministration.model.Employee
-import com.example.employeeadministration.model.EmployeeDto
-import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.aggregates.Employee
+import com.example.employeeadministration.model.dto.EmployeeDto
+import com.example.employeeadministration.model.aggregates.AggregateState
 import com.example.employeeadministration.repositories.EmployeeRepository
-import com.example.employeeadministration.services.kafka.SagaService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional

@@ -1,8 +1,8 @@
 package com.example.employeeadministration.services.kafka
 
-import com.example.employeeadministration.model.POSITION_AGGREGATE_NAME
-import com.example.employeeadministration.model.PositionKfk
-import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.aggregates.POSITION_AGGREGATE_NAME
+import com.example.employeeadministration.model.dto.PositionKfk
+import com.example.employeeadministration.model.aggregates.AggregateState
 import com.example.employeeadministration.model.events.ResponseEvent
 import com.example.employeeadministration.model.events.UpdateStateEvent
 import com.example.employeeadministration.model.saga.SagaState

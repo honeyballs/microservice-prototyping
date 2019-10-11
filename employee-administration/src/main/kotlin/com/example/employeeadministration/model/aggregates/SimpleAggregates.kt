@@ -1,6 +1,7 @@
-package com.example.employeeadministration.model
+package com.example.employeeadministration.model.aggregates
 
-import com.example.employeeadministration.model.events.*
+import com.example.employeeadministration.model.dto.DepartmentKfk
+import com.example.employeeadministration.model.dto.PositionKfk
 import com.fasterxml.jackson.annotation.JsonCreator
 import java.math.BigDecimal
 import java.math.RoundingMode

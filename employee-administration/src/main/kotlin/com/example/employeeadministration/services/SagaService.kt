@@ -1,6 +1,5 @@
-package com.example.employeeadministration.services.kafka
+package com.example.employeeadministration.services
 
-import com.example.employeeadministration.model.DepartmentKfk
 import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.saga.Saga
 import com.example.employeeadministration.repositories.SagaRepository

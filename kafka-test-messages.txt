@@ -1,0 +1,11 @@
+Test Events Json
+
+override val originatingServiceName: String,
+        override val id: String,
+        override val eventCreatedAt: String,
+        override val type: String,
+        val rootEventId: String
+
+Response Events
+
+{"@type":"responseEvent","originatingServiceName":"EMPLOYEE_SERVICE","id":"40847a69-d8d8-47b1-bf5f-0a81f85c2dca","eventCreatedAt":"11.10.2019 12:17:00:000","type":"Department updated successfully","rootEventId":"85c6b61d-acd6-435a-9e3f-d0a2a31cd3bd","consumerName":"PROJECT_SERVICE"}

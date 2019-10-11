@@ -17,15 +17,13 @@ const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
 
 /**
  * Represents an event occurring in the domain.
- * It implements the base [Event] interface and contains a compensating event in case a participant is unable to process it.
+ * It implements the base [Event] interface and contains [ResponseEvent]s another service can answer with.
+ * Per default each DomainEvent contains a success and failure response. Further responses can be registered.
+ *
+ * @see [ResponseEvent] Check the Response Event for configuration and additional information
  */
 @JsonTypeName("domainEvent")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes(
-//        JsonSubTypes.Type(value = EmployeeEvent::class, name = "employeeEvent"),
-//        JsonSubTypes.Type(value = DepartmentEvent::class, name = "departmentEvent"),
-//        JsonSubTypes.Type(value = PositionEvent::class, name = "positionEvent")
-)
 open class DomainEvent<DataType>(
         override val id: String,
         override val eventCreatedAt: String,

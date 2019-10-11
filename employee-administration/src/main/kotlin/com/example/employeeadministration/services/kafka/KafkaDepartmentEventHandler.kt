@@ -1,9 +1,9 @@
 package com.example.employeeadministration.services.kafka
 
 import com.example.employeeadministration.SERVICE_NAME
-import com.example.employeeadministration.model.DEPARTMENT_AGGREGATE_NAME
-import com.example.employeeadministration.model.DepartmentKfk
-import com.example.employeeadministration.model.events.AggregateState
+import com.example.employeeadministration.model.aggregates.DEPARTMENT_AGGREGATE_NAME
+import com.example.employeeadministration.model.dto.DepartmentKfk
+import com.example.employeeadministration.model.aggregates.AggregateState
 import com.example.employeeadministration.model.events.ResponseEvent
 import com.example.employeeadministration.model.events.UpdateStateEvent
 import com.example.employeeadministration.model.saga.SagaState
@@ -11,7 +11,6 @@ import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventHandler
 import com.example.employeeadministration.services.getResponseEventKeyword
-import com.example.employeeadministration.services.getResponseEventType
 import com.example.employeeadministration.services.getSagaCompleteType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -20,7 +19,6 @@ import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
-import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service

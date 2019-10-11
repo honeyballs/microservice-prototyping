@@ -1,11 +1,11 @@
 package com.example.employeeadministration.model
 
+import com.example.employeeadministration.model.valueobjects.CompanyMail
+import com.example.employeeadministration.model.valueobjects.ZipCode
 import org.assertj.core.api.Assertions
 import org.junit.Rule
 import org.junit.Test
-import org.junit.internal.runners.statements.ExpectException
 import org.junit.rules.ExpectedException
-import java.math.BigDecimal
 import java.util.*
 
 class VOTests {

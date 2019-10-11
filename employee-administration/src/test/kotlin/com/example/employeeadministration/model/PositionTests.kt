@@ -1,5 +1,7 @@
 package com.example.employeeadministration.model
 
+import com.example.employeeadministration.model.aggregates.Position
+import com.example.employeeadministration.model.aggregates.isRateInRange
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.math.BigDecimal

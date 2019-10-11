@@ -1,6 +1,8 @@
 package com.example.employeeadministration.kafka
 
-import com.example.employeeadministration.model.*
+import com.example.employeeadministration.model.aggregates.DEPARTMENT_AGGREGATE_NAME
+import com.example.employeeadministration.model.aggregates.EMPLOYEE_AGGREGATE_NAME
+import com.example.employeeadministration.model.aggregates.POSITION_AGGREGATE_NAME
 import com.example.employeeadministration.model.events.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.Consumer
