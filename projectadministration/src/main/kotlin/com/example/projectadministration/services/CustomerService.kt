@@ -1,9 +1,10 @@
 package com.example.projectadministration.services
 
-import com.example.projectadministration.model.Customer
-import com.example.projectadministration.model.CustomerDto
+import com.example.projectadministration.model.aggregates.Customer
+import com.example.projectadministration.model.dto.CustomerDto
 
-interface CustomerService: MappingService<Customer, CustomerDto> {
+interface CustomerService: MappingService<Customer, CustomerDto>, EventProducingPersistenceService<Customer> {
 
+    fun deleteCustomer(id: Long)
 
 }

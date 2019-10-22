@@ -1,6 +1,6 @@
 package com.example.projectadministration.services
 
-import com.example.projectadministration.model.events.EventAggregate
+import com.example.projectadministration.model.aggregates.EventAggregate
 
 interface EventProducer {
 

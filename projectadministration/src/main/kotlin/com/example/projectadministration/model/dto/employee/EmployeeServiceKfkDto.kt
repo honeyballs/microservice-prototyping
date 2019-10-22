@@ -1,5 +1,6 @@
-package com.example.projectadministration.model.employee
+package com.example.projectadministration.model.dto.employee
 
+import com.example.projectadministration.model.aggregates.AggregateState
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -14,10 +15,10 @@ import javax.persistence.*
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class DepartmentKfk(val id: Long, val name: String, val deleted: Boolean)
+data class DepartmentKfk(val id: Long, val name: String, val deleted: Boolean, val state: AggregateState)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PositionKfk(val id: Long, val title: String, val deleted: Boolean)
+data class PositionKfk(val id: Long, val title: String, val deleted: Boolean, val state: AggregateState)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class EmployeeKfk(
@@ -26,7 +27,8 @@ class EmployeeKfk(
         val lastname: String,
         val department: Long,
         val position: Long,
-        val deleted: Boolean
+        val deleted: Boolean,
+        val state: AggregateState
 ) {
 
     lateinit var companyMail: String

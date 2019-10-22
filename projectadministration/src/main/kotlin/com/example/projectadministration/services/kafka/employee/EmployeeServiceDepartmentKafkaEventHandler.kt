@@ -1,13 +1,14 @@
 package com.example.projectadministration.services.kafka.employee
 
+import com.example.projectadministration.SERVICE_NAME
+import com.example.projectadministration.model.aggregates.AggregateState
+import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.Department
 import com.example.projectadministration.services.EventHandler
-import com.example.projectadministration.configurations.TOPIC_NAME
-import com.example.projectadministration.model.employee.*
-import com.example.projectadministration.model.events.DepartmentEvent
-import com.example.projectadministration.model.events.EventType
-import com.example.projectadministration.repositories.employeeservice.DepartmentRepository
-import com.example.projectadministration.repositories.employeeservice.EmployeeRepository
-import com.example.projectadministration.repositories.employeeservice.PositionRepository
+import com.example.projectadministration.model.dto.employee.DepartmentKfk
+import com.example.projectadministration.model.events.*
+import com.example.projectadministration.repositories.employee.DepartmentRepository
+import com.example.projectadministration.services.getActionOfConsumedEvent
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -16,11 +17,10 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
-@KafkaListener(groupId = "ProjectService", topics = [DEPARTMENT_TOPIC_NAME])
+@KafkaListener(groupId = "ProjectService", topics = [DEPARTMENT_AGGREGATE_NAME])
 class EmployeeServiceDepartmentKafkaEventHandler(
         val producer: KafkaEventProducer,
         val departmentRepository: DepartmentRepository): EventHandler {
@@ -29,53 +29,79 @@ class EmployeeServiceDepartmentKafkaEventHandler(
 
     @KafkaHandler
     @Transactional
-    fun handle(event: DepartmentEvent, ack: Acknowledgment) {
-        logger.info("Department Event received. Type: ${event.type}, Id: ${event.department.id}")
-        val eventDepartment = event.department
+    fun handle(event: DomainEvent<DepartmentKfk>, ack: Acknowledgment) {
+        logger.info("Department Event received. Type: ${event.type}, Id: ${event.to.id}")
+        val action = getActionOfConsumedEvent(event.type)
+        val eventDepartment = event.to
         try {
 
-            when (event.type) {
-                EventType.CREATE -> createDepartment(eventDepartment)
-                EventType.UPDATE -> updateDepartment(eventDepartment)
-                EventType.DELETE -> deleteDepartment(eventDepartment)
+            when(action) {
+                "created" -> createDepartment(eventDepartment)
+                "updated" -> updateDepartment(eventDepartment)
+                "deleted" -> deleteDepartment(eventDepartment)
             }
+
+            val success = event.successEvent
+            success.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventDepartment.id, success, DEPARTMENT_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            handleCompensation(event)
+            val failure = event.failureEvent
+            failure.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            handleCompensation(event)
+            val failure = event.failureEvent
+            failure.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
+        } finally {
+            ack.acknowledge()
+        }
+    }
+
+    @KafkaHandler
+    @Transactional
+    fun handle(event: UpdateStateEvent, ack: Acknowledgment) {
+        logger.info("Department Saga State Event received")
+        try {
+            changeAggregateState(event.aggregateId, event.state)
+        } catch (rollback: UnexpectedRollbackException) {
+            rollback.printStackTrace()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
         } finally {
             ack.acknowledge()
         }
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun createDepartment(eventDepartment: DepartmentKfk) {
-        val dep = Department(null, eventDepartment.id, eventDepartment.name, eventDepartment.deleted)
-        departmentRepository.save(dep)
+    fun createDepartment(eventDep: DepartmentKfk) {
+        val department = Department(null, eventDep.id, eventDep.name, eventDep.deleted, eventDep.state)
+        departmentRepository.save(department)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun updateDepartment(eventDepartment: DepartmentKfk) {
-        // If we would not load beforehand a new db row would be created because dbId is only set in this service
-        val dep = departmentRepository.findByDepartmentId(eventDepartment.id).orElseThrow()
-        dep.name = eventDepartment.name
-        departmentRepository.save(dep)
+    fun updateDepartment(eventDep: DepartmentKfk) {
+        val department = departmentRepository.findByDepartmentId(eventDep.id).orElseThrow()
+        department.name = eventDep.name
+        department.state = eventDep.state
+        departmentRepository.save(department)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun deleteDepartment(eventDepartment: DepartmentKfk) {
-        val dep = departmentRepository.findByDepartmentId(eventDepartment.id).orElseThrow()
-        dep.deleted = true
-        departmentRepository.save(dep)
+    fun deleteDepartment(eventDep: DepartmentKfk) {
+        val department = departmentRepository.findByDepartmentId(eventDep.id).orElseThrow()
+        department.deleted = true
+        department.state = eventDep.state
+        departmentRepository.save(department)
     }
 
-    fun handleCompensation(event: DepartmentEvent) {
-        val comp = event.compensatingAction
-        comp!!.rollbackOccurredAt(LocalDateTime.now())
-        producer.sendDomainEvent(event.department.id, event.compensatingAction!!, DEPARTMENT_TOPIC_NAME)
+    @Throws(RollbackException::class, Exception::class)
+    fun changeAggregateState(id: Long, state: AggregateState) {
+        val department = departmentRepository.findByDepartmentId(id).orElseThrow()
+        department.state = state
+        departmentRepository.save(department)
     }
 
     @KafkaHandler(isDefault = true)

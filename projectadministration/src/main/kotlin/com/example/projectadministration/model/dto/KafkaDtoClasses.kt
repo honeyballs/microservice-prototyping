@@ -1,5 +1,7 @@
-package com.example.projectadministration.model
+package com.example.projectadministration.model.dto
 
+import com.example.projectadministration.model.aggregates.Address
+import com.example.projectadministration.model.aggregates.CustomerContact
 import java.time.LocalDate
 
 /**
@@ -14,7 +16,7 @@ data class ProjectKfk(
         val startDate: LocalDate,
         val projectedEndDate: LocalDate,
         val endDate: LocalDate?,
-        val projectOwner: Long,
+        val employees: Set<Long>,
         val customer: Long,
         val deleted: Boolean
 )

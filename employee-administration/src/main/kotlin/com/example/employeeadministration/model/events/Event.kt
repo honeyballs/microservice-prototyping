@@ -23,10 +23,3 @@ interface Event {
     val type: String
 
 }
-
-/**
- * Defines possible compensation actions.
- */
-//enum class EventType {
-//    CREATE, UPDATE, DELETE
-//}

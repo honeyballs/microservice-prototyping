@@ -1,13 +1,18 @@
 package com.example.projectadministration.services.kafka.employee
 
+import com.example.projectadministration.SERVICE_NAME
+import com.example.projectadministration.model.aggregates.AggregateState
+import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.Department
+import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.Position
+import com.example.projectadministration.model.dto.employee.DepartmentKfk
 import com.example.projectadministration.services.EventHandler
-import com.example.projectadministration.configurations.TOPIC_NAME
-import com.example.projectadministration.model.employee.*
-import com.example.projectadministration.model.events.DepartmentEvent
-import com.example.projectadministration.model.events.EventType
-import com.example.projectadministration.model.events.PositionEvent
-import com.example.projectadministration.repositories.employeeservice.EmployeeRepository
-import com.example.projectadministration.repositories.employeeservice.PositionRepository
+import com.example.projectadministration.model.dto.employee.PositionKfk
+import com.example.projectadministration.model.events.DomainEvent
+import com.example.projectadministration.model.events.UpdateStateEvent
+import com.example.projectadministration.repositories.employee.PositionRepository
+import com.example.projectadministration.services.getActionOfConsumedEvent
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -20,7 +25,7 @@ import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
-@KafkaListener(groupId = "ProjectService", topics = [POSITION_TOPIC_NAME])
+@KafkaListener(groupId = "ProjectService", topics = [POSITION_AGGREGATE_NAME])
 class EmployeeServicePositionKafkaEventHandler(
         val producer: KafkaEventProducer,
         val positionRepository: PositionRepository): EventHandler {
@@ -29,53 +34,79 @@ class EmployeeServicePositionKafkaEventHandler(
 
     @KafkaHandler
     @Transactional
-    fun handle(event: PositionEvent, ack: Acknowledgment) {
-        logger.info("Position Event received. Type: ${event.type}, Id: ${event.position.id}")
-        val eventPosition = event.position
+    fun handle(event: DomainEvent<PositionKfk>, ack: Acknowledgment) {
+        logger.info("Position Event received. Type: ${event.type}, Id: ${event.to.id}")
+        val action = getActionOfConsumedEvent(event.type)
+        val eventPos = event.to
         try {
 
-            when (event.type) {
-                EventType.CREATE -> createPosition(eventPosition)
-                EventType.UPDATE -> updatePosition(eventPosition)
-                EventType.DELETE -> deletePosition(eventPosition)
+            when(action) {
+                "created" -> createPosition(eventPos)
+                "updated" -> updatePosition(eventPos)
+                "deleted" -> deletePosition(eventPos)
             }
+
+            val success = event.successEvent
+            success.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventPos.id, success, POSITION_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            handleCompensation(event)
+            val failure = event.failureEvent
+            failure.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventPos.id, failure, POSITION_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            handleCompensation(event)
+            val failure = event.failureEvent
+            failure.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventPos.id, failure, POSITION_AGGREGATE_NAME)
+        } finally {
+            ack.acknowledge()
+        }
+    }
+
+    @KafkaHandler
+    @Transactional
+    fun handle(event: UpdateStateEvent, ack: Acknowledgment) {
+        logger.info("Position Saga State Event received")
+        try {
+            changeAggregateState(event.aggregateId, event.state)
+        } catch (rollback: UnexpectedRollbackException) {
+            rollback.printStackTrace()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
         } finally {
             ack.acknowledge()
         }
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun createPosition(eventPosition: PositionKfk) {
-        val pos = Position(null, eventPosition.id, eventPosition.title)
-        positionRepository.save(pos)
+    fun createPosition(eventPos: PositionKfk) {
+        val position = Position(null, eventPos.id, eventPos.title, eventPos.deleted, eventPos.state)
+        positionRepository.save(position)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun updatePosition(eventPosition: PositionKfk) {
-        // If we would not load beforehand a new db row would be created because dbId is only set in this service
-        val pos = positionRepository.findByPositionId(eventPosition.id).orElseThrow()
-        pos.title = eventPosition.title
-        positionRepository.save(pos)
+    fun updatePosition(eventPos: PositionKfk) {
+        val position = positionRepository.findByPositionId(eventPos.id).orElseThrow()
+        position.title = eventPos.title
+        position.state = eventPos.state
+        positionRepository.save(position)
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun deletePosition(eventPosition: PositionKfk) {
-        val pos = positionRepository.findByPositionId(eventPosition.id).orElseThrow()
-        pos.deleted = true
-        positionRepository.save(pos)
+    fun deletePosition(eventPos: PositionKfk) {
+        val position = positionRepository.findByPositionId(eventPos.id).orElseThrow()
+        position.deleted = true
+        position.state = eventPos.state
+        positionRepository.save(position)
     }
 
-    fun handleCompensation(event: PositionEvent) {
-        val comp = event.compensatingAction
-        comp!!.rollbackOccurredAt(LocalDateTime.now())
-        producer.sendDomainEvent(event.position.id, event.compensatingAction!!, POSITION_TOPIC_NAME)
+    @Throws(RollbackException::class, Exception::class)
+    fun changeAggregateState(id: Long, state: AggregateState) {
+        val position = positionRepository.findByPositionId(id).orElseThrow()
+        position.state = state
+        positionRepository.save(position)
     }
 
 

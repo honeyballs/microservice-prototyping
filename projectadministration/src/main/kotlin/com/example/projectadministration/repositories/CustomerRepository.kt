@@ -1,6 +1,6 @@
 package com.example.projectadministration.repositories
 
-import com.example.projectadministration.model.Customer
+import com.example.projectadministration.model.aggregates.Customer
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.*

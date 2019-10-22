@@ -1,9 +1,9 @@
-package com.example.employeeadministration.model.aggregates
+package com.example.projectadministration.model.aggregates
 
-import com.example.employeeadministration.model.events.DomainEvent
-import com.example.employeeadministration.model.events.ResponseEvent
-import com.example.employeeadministration.services.getEventTypeFromProperties
-import com.example.employeeadministration.services.getResponseEventType
+import com.example.projectadministration.model.events.DomainEvent
+import com.example.projectadministration.model.events.ResponseEvent
+import com.example.projectadministration.services.getEventTypeFromProperties
+import com.example.projectadministration.services.getResponseEventType
 import javax.persistence.MappedSuperclass
 import javax.persistence.Transient
 

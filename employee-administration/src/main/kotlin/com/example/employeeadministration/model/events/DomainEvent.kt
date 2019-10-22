@@ -30,19 +30,22 @@ open class DomainEvent<DataType>(
         override val type: String,
         val from: DataType?,
         val to: DataType,
-        override val originatingServiceName: String = SERVICE_NAME) : Event {
-
-    val responseEvents = mutableListOf<ResponseEvent>()
+        val successEvent: ResponseEvent,
+        val failureEvent: ResponseEvent,
+        override val originatingServiceName: String = SERVICE_NAME
+) : Event {
 
     init {
-        responseEvents.add(ResponseEvent(getResponseEventType(type, false), id))
-        responseEvents.add(ResponseEvent(getResponseEventType(type, true), id))
+        successEvent.rootEventId = id
+        failureEvent.rootEventId = id
     }
 
-    constructor(type: String, from: DataType?, to: DataType): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to)
+    var additionalResponseEvents = setOf<ResponseEvent>()
 
-    fun addSpecificResponse(response: ResponseEvent) {
-        responseEvents.add(response)
+    constructor(type: String, from: DataType?, to: DataType, successEvent: ResponseEvent, failureEvent: ResponseEvent): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
+
+    fun addResponseEvent(response: ResponseEvent) {
+        additionalResponseEvents = additionalResponseEvents.plus(response)
     }
 
 }

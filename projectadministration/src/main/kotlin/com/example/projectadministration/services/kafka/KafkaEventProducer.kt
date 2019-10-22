@@ -1,11 +1,12 @@
 package com.example.projectadministration.services.kafka
 
-
-import com.example.projectadministration.configurations.TOPIC_NAME
+import com.example.projectadministration.model.aggregates.EventAggregate
 import com.example.projectadministration.model.events.Event
-import com.example.projectadministration.model.events.EventAggregate
+import com.example.projectadministration.repositories.SagaRepository
 import com.example.projectadministration.services.EventProducer
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service
  * Service which sends Domain Events to Kafka.
  */
 @Service
-class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>): EventProducer {
+class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>, val mapper: ObjectMapper, val sagaRepository: SagaRepository) : EventProducer {
+
+    val logger = LoggerFactory.getLogger("KafkaEventProducer")
 
     /**
      * Send a domain Event.
@@ -32,9 +35,10 @@ class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>): EventPr
      * TODO: Wait for success before clearing?
      */
     override fun <KafkaDtoType> sendEventsOfAggregate(aggregate: EventAggregate<KafkaDtoType>) {
+        logger.info("Sending Aggregate Events")
         if (aggregate.events() != null) {
             aggregate.events()!!.second.forEach() {
-                sendDomainEvent(aggregate.events()!!.first, it, aggregate.TOPIC_NAME)
+                sendDomainEvent(aggregate.events()!!.first, it, aggregate.aggregateName)
             }
             aggregate.clearEvents()
         }

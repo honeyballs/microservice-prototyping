@@ -1,12 +1,11 @@
 package com.example.projectadministration.kafka
 
-import com.example.projectadministration.model.employee.POSITION_TOPIC_NAME
-import com.example.projectadministration.model.employee.Position
-import com.example.projectadministration.model.employee.PositionKfk
+import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
+import com.example.projectadministration.model.dto.employee.PositionKfk
 import com.example.projectadministration.model.events.EventType
 import com.example.projectadministration.model.events.PositionCompensation
 import com.example.projectadministration.model.events.PositionEvent
-import com.example.projectadministration.repositories.employeeservice.PositionRepository
+import com.example.projectadministration.repositories.employee.PositionRepository
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import com.example.projectadministration.services.kafka.employee.EmployeeServiceDepartmentKafkaEventHandler
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -45,7 +44,7 @@ class EventHandlingTests {
         val position = PositionKfk(12L, "Developer", false)
         val comp = PositionCompensation(position, EventType.CREATE)
         val event =  PositionEvent(position, comp, EventType.CREATE)
-        producer.sendDomainEvent(12L, event, POSITION_TOPIC_NAME)
+        producer.sendDomainEvent(12L, event, POSITION_AGGREGATE_NAME)
         Thread.sleep(1000)
         val createdPositions = positionRepository.findAll()
         Assertions.assertThat(createdPositions.size).isEqualTo(1)

@@ -1,8 +1,8 @@
-package com.example.projectadministration.repositories.employeeservice
+package com.example.projectadministration.repositories.employee
 
-import com.example.projectadministration.model.employee.Department
-import com.example.projectadministration.model.employee.Employee
-import com.example.projectadministration.model.employee.Position
+import com.example.projectadministration.model.aggregates.employee.Department
+import com.example.projectadministration.model.aggregates.employee.Employee
+import com.example.projectadministration.model.aggregates.employee.Position
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.*
@@ -11,6 +11,7 @@ import java.util.*
 interface EmployeeRepository: JpaRepository<Employee, Long> {
 
     fun findByEmployeeId(id: Long): Optional<Employee>
+    fun findByEmployeeIdIn(ids: List<Long>): List<Employee>
 
 }
 

@@ -54,10 +54,10 @@ class EmployeeAdministrationApplication {
             val bankDetails = BankDetails("128319815719", "4712841", "Sparkasse")
             var employee = Employee(null, "Max", "Mustermann", LocalDate.now().minusYears(25), address, bankDetails, department, position, BigDecimal(40.34), null)
             employee = employeeService.persistWithEvents(employee)
-            department.renameDepartment("Java Development")
-            departmentService.persistWithEvents(department)
-            position.changePositionTitle("Java Developer")
-            positionService.persistWithEvents(position)
+//            department.renameDepartment("Java Development")
+//            departmentService.persistWithEvents(department)
+//            position.changePositionTitle("Java Developer")
+//            positionService.persistWithEvents(position)
         }
     }
 

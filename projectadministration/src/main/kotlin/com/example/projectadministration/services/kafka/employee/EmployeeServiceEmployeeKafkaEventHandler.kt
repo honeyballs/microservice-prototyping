@@ -1,15 +1,19 @@
 package com.example.projectadministration.services.kafka.employee
 
+import com.example.projectadministration.SERVICE_NAME
+import com.example.projectadministration.model.aggregates.AggregateState
+import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.Employee
+import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
 import com.example.projectadministration.services.EventHandler
-import com.example.projectadministration.configurations.TOPIC_NAME
-import com.example.projectadministration.model.employee.*
-import com.example.projectadministration.model.events.DepartmentEvent
-import com.example.projectadministration.model.events.EmployeeEvent
-import com.example.projectadministration.model.events.EventType
-import com.example.projectadministration.model.events.PositionEvent
-import com.example.projectadministration.repositories.employeeservice.DepartmentRepository
-import com.example.projectadministration.repositories.employeeservice.EmployeeRepository
-import com.example.projectadministration.repositories.employeeservice.PositionRepository
+import com.example.projectadministration.model.dto.employee.EmployeeKfk
+import com.example.projectadministration.model.events.DomainEvent
+import com.example.projectadministration.model.events.UpdateStateEvent
+import com.example.projectadministration.repositories.employee.DepartmentRepository
+import com.example.projectadministration.repositories.employee.EmployeeRepository
+import com.example.projectadministration.repositories.employee.PositionRepository
+import com.example.projectadministration.services.getActionOfConsumedEvent
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -22,7 +26,7 @@ import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
-@KafkaListener(groupId = "ProjectService", topics = [EMPLOYEE_TOPIC_NAME])
+@KafkaListener(groupId = "ProjectService", topics = [EMPLOYEE_AGGREGATE_NAME])
 class EmployeeServiceEmployeeKafkaEventHandler(
         val producer: KafkaEventProducer,
         val employeeRepository: EmployeeRepository,
@@ -33,23 +37,47 @@ class EmployeeServiceEmployeeKafkaEventHandler(
 
     @KafkaHandler
     @Transactional
-    fun handle(event: EmployeeEvent, ack: Acknowledgment) {
-        logger.info("Employee Event received. Type: ${event.type}, Id: ${event.employee.id}")
-        val eventEmployee = event.employee
+    fun handle(event: DomainEvent<EmployeeKfk>, ack: Acknowledgment) {
+        logger.info("Employee Event received. Type: ${event.type}, Id: ${event.to.id}")
+        val action = getActionOfConsumedEvent(event.type)
+        val eventEmployee = event.to
         try {
 
-            when (event.type) {
-                EventType.CREATE -> createEmployee(eventEmployee)
-                EventType.UPDATE -> updateEmployee(eventEmployee)
-                EventType.DELETE -> deleteEmployee(eventEmployee)
+            when(action) {
+                "created" -> createEmployee(eventEmployee)
+                "updated" -> updateEmployee(eventEmployee)
+                "deleted" -> deleteEmployee(eventEmployee)
             }
+
+            val success = event.successEvent
+            success.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventEmployee.id, success, EMPLOYEE_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            handleCompensation(event)
+            val failure = event.failureEvent
+            failure.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            handleCompensation(event)
+            val failure = event.failureEvent
+            failure.consumerName = SERVICE_NAME
+            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
+        } finally {
+            ack.acknowledge()
+        }
+    }
+
+    @KafkaHandler
+    @Transactional
+    fun handle(event: UpdateStateEvent, ack: Acknowledgment) {
+        logger.info("Employee Saga State Event received")
+        try {
+            changeAggregateState(event.aggregateId, event.state)
+        } catch (rollback: UnexpectedRollbackException) {
+            rollback.printStackTrace()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
         } finally {
             ack.acknowledge()
         }
@@ -59,7 +87,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     fun createEmployee(eventEmployee: EmployeeKfk) {
         val department = departmentRepository.findByDepartmentId(eventEmployee.department).orElseThrow()
         val position = positionRepository.findByPositionId(eventEmployee.position).orElseThrow()
-        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, department, position, eventEmployee.companyMail)
+        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, department, position, eventEmployee.companyMail, eventEmployee.deleted, eventEmployee.state)
         employeeRepository.save(emp)
     }
 
@@ -76,6 +104,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
         emp.firstname = eventEmployee.firstname
         emp.lastname = eventEmployee.lastname
         emp.companyMail = eventEmployee.companyMail
+        emp.state = eventEmployee.state
         employeeRepository.save(emp)
     }
 
@@ -83,13 +112,15 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     fun deleteEmployee(eventEmployee: EmployeeKfk) {
         val emp = employeeRepository.findByEmployeeId(eventEmployee.id).orElseThrow()
         emp.deleted = true
+        emp.state = eventEmployee.state
         employeeRepository.save(emp)
     }
 
-    fun handleCompensation(event: EmployeeEvent) {
-        val comp = event.compensatingAction
-        comp!!.rollbackOccurredAt(LocalDateTime.now())
-        producer.sendDomainEvent(event.employee.id, event.compensatingAction!!, EMPLOYEE_TOPIC_NAME)
+    @Throws(RollbackException::class, Exception::class)
+    fun changeAggregateState(id: Long, state: AggregateState) {
+        val employee = employeeRepository.findByEmployeeId(id).orElseThrow()
+        employee.state = state
+        employeeRepository.save(employee)
     }
 
     @KafkaHandler(isDefault = true)

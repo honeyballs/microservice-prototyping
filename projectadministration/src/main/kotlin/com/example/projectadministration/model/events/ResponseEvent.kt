@@ -1,6 +1,6 @@
-package com.example.employeeadministration.model.events
+package com.example.projectadministration.model.events
 
-import com.example.employeeadministration.SERVICE_NAME
+import com.example.projectadministration.SERVICE_NAME
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName

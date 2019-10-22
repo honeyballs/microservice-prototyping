@@ -11,20 +11,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes(
         JsonSubTypes.Type(value = DomainEvent::class, name = "domainEvent"),
-        JsonSubTypes.Type(value = CompensatingAction::class, name = "compensatingAction")
+        JsonSubTypes.Type(value = ResponseEvent::class, name = "responseEvent"),
+        JsonSubTypes.Type(value = UpdateStateEvent::class, name = "updateStateEvent")
 )
 interface Event {
 
     val originatingServiceName: String
     val id: String
     val eventCreatedAt: String
-    val type: EventType
+    val type: String
 
-}
-
-/**
- * Defines possible compensation actions.
- */
-enum class EventType {
-    CREATE, UPDATE, DELETE
 }

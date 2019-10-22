@@ -1,35 +1,26 @@
 package com.example.projectadministration.kafka
 
-import com.example.projectadministration.model.employee.DEPARTMENT_TOPIC_NAME
-import com.example.projectadministration.model.employee.EMPLOYEE_TOPIC_NAME
-import com.example.projectadministration.model.employee.POSITION_TOPIC_NAME
+import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
+import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
 import com.example.projectadministration.model.events.Event
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
-import org.springframework.kafka.config.KafkaListenerContainerFactory
 import org.springframework.kafka.core.*
 import org.springframework.kafka.listener.ContainerProperties
-import org.springframework.kafka.listener.KafkaMessageListenerContainer
-import org.springframework.kafka.listener.MessageListenerContainer
 import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
 import org.springframework.kafka.test.EmbeddedKafkaBroker
-import org.springframework.kafka.test.context.EmbeddedKafka
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 const val TOPIC_NAME = "employee"
 
@@ -47,17 +38,17 @@ class KafkaConfiguration {
 
     @Bean
     fun employeeTopic(): NewTopic {
-        return NewTopic(EMPLOYEE_TOPIC_NAME, 1, 1)
+        return NewTopic(EMPLOYEE_AGGREGATE_NAME, 1, 1)
     }
 
     @Bean
     fun departmentTopic(): NewTopic {
-        return NewTopic(DEPARTMENT_TOPIC_NAME, 1, 1)
+        return NewTopic(DEPARTMENT_AGGREGATE_NAME, 1, 1)
     }
 
     @Bean
     fun positionTopic(): NewTopic {
-        return NewTopic(POSITION_TOPIC_NAME, 1, 1)
+        return NewTopic(POSITION_AGGREGATE_NAME, 1, 1)
     }
 
     @Bean

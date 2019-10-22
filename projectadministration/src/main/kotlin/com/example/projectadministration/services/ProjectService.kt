@@ -1,7 +1,7 @@
 package com.example.projectadministration.services
 
-import com.example.projectadministration.model.Project
-import com.example.projectadministration.model.ProjectDto
+import com.example.projectadministration.model.aggregates.Project
+import com.example.projectadministration.model.dto.ProjectDto
 import org.springframework.stereotype.Service
 
 @Service

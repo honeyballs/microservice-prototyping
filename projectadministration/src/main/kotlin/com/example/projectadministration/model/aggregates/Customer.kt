@@ -1,12 +1,12 @@
-package com.example.projectadministration.model
+package com.example.projectadministration.model.aggregates
 
-import com.example.projectadministration.model.events.*
+import com.example.projectadministration.model.dto.CustomerKfk
 import java.lang.Exception
 import java.util.*
 import javax.persistence.*
 
 
-const val CUSTOMER_TOPIC_NAME = "customer"
+const val CUSTOMER_AGGREGATE_NAME = "customer"
 
 @Entity
 data class Customer(
@@ -18,37 +18,37 @@ data class Customer(
 ): EventAggregate<CustomerKfk>() {
 
     init {
-        TOPIC_NAME = CUSTOMER_TOPIC_NAME
+        aggregateName = CUSTOMER_AGGREGATE_NAME
     }
 
     fun created() {
         if (id != null) {
-            registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), CustomerCompensation(mapAggregateToKafkaDto(), EventType.CREATE), EventType.CREATE))
+            registerEvent(this.id!!, "created", null)
         }
     }
 
     fun changeCustomerContact(contact: CustomerContact) {
-        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
+        val from = mapAggregateToKafkaDto()
         this.contact = contact
-        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.UPDATE))
+        registerEvent(this.id!!, "updated", from)
     }
 
     fun moveCompanyLocation(address: Address) {
-        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
+        val from = mapAggregateToKafkaDto()
         this.address = address
-        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.UPDATE))
+        registerEvent(this.id!!, "updated", from)
     }
 
     fun changeName(name: String) {
-        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.UPDATE)
+        val from = mapAggregateToKafkaDto()
         this.customerName = name
-        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.UPDATE))
+        registerEvent(this.id!!, "updated", from)
     }
 
     fun deleteCustomer() {
-        val comp = CustomerCompensation(mapAggregateToKafkaDto(), EventType.DELETE)
+        val from = mapAggregateToKafkaDto()
         this.deleted = true
-        registerEvent(this.id!!, CustomerEvent(mapAggregateToKafkaDto(), comp, EventType.DELETE))
+        registerEvent(this.id!!, "deleted", from)
     }
 
     override fun mapAggregateToKafkaDto(): CustomerKfk {
