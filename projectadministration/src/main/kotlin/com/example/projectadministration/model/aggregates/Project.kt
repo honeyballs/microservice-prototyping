@@ -23,7 +23,7 @@ data class Project(
         var employees: Set<Employee>,
         @ManyToOne @JoinColumn(name = "fk_customer") val customer: Customer,
         var deleted: Boolean = false
-): EventAggregate<ProjectKfk>() {
+): EventAggregate() {
 
     init {
         aggregateName = PROJECT_AGGREGATE_NAME

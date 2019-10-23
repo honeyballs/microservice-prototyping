@@ -26,7 +26,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                @ManyToOne @JoinColumn(name = "fk_position") var position: Position,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?,
-               var deleted: Boolean = false) : EventAggregate<EmployeeKfk>() {
+               var deleted: Boolean = false) : EventAggregate() {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)
@@ -102,7 +102,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     }
 
     override fun mapAggregateToKafkaDto(): EmployeeKfk {
-        return EmployeeKfk(this.id!!, this.firstname, this.lastname, this.birthday, this.address, this.bankDetails, this.department.id!!, this.position.id!!, this.hourlyRate, this.companyMail, this.deleted)
+        return EmployeeKfk(this.id!!, this.firstname, this.lastname, this.birthday, this.address, this.bankDetails, this.department.id!!, this.position.id!!, this.hourlyRate, this.companyMail, this.deleted, this.state)
     }
 
     override fun toString(): String {

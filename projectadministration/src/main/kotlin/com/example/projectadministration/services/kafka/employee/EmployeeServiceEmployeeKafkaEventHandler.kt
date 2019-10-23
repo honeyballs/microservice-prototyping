@@ -37,16 +37,16 @@ class EmployeeServiceEmployeeKafkaEventHandler(
 
     @KafkaHandler
     @Transactional
-    fun handle(event: DomainEvent<EmployeeKfk>, ack: Acknowledgment) {
+    fun handle(event: DomainEvent, ack: Acknowledgment) {
         logger.info("Employee Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
         val eventEmployee = event.to
         try {
 
             when(action) {
-                "created" -> createEmployee(eventEmployee)
-                "updated" -> updateEmployee(eventEmployee)
-                "deleted" -> deleteEmployee(eventEmployee)
+                "created" -> createEmployee(eventEmployee as EmployeeKfk)
+                "updated" -> updateEmployee(eventEmployee as EmployeeKfk)
+                "deleted" -> deleteEmployee(eventEmployee as EmployeeKfk)
             }
 
             val success = event.successEvent

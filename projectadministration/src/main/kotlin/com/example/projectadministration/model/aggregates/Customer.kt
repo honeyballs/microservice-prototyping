@@ -15,7 +15,7 @@ data class Customer(
         @Embedded var address: Address,
         @Embedded var contact: CustomerContact,
         var deleted: Boolean = false
-): EventAggregate<CustomerKfk>() {
+): EventAggregate() {
 
     init {
         aggregateName = CUSTOMER_AGGREGATE_NAME

@@ -34,16 +34,16 @@ class EmployeeServicePositionKafkaEventHandler(
 
     @KafkaHandler
     @Transactional
-    fun handle(event: DomainEvent<PositionKfk>, ack: Acknowledgment) {
+    fun handle(event: DomainEvent, ack: Acknowledgment) {
         logger.info("Position Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
         val eventPos = event.to
         try {
 
             when(action) {
-                "created" -> createPosition(eventPos)
-                "updated" -> updatePosition(eventPos)
-                "deleted" -> deletePosition(eventPos)
+                "created" -> createPosition(eventPos as PositionKfk)
+                "updated" -> updatePosition(eventPos as PositionKfk)
+                "deleted" -> deletePosition(eventPos as PositionKfk)
             }
 
             val success = event.successEvent

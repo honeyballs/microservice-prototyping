@@ -1,6 +1,7 @@
 package com.example.projectadministration.model.events
 
 import com.example.projectadministration.SERVICE_NAME
+import com.example.projectadministration.model.dto.BaseKfkDto
 import com.fasterxml.jackson.annotation.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -17,12 +18,12 @@ const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
  */
 @JsonTypeName("domainEvent")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
-open class DomainEvent<DataType>(
+open class DomainEvent(
         override val id: String,
         override val eventCreatedAt: String,
         override val type: String,
-        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY) val from: DataType?,
-        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY) val to: DataType,
+        val from: BaseKfkDto?,
+        val to: BaseKfkDto,
         val successEvent: ResponseEvent,
         val failureEvent: ResponseEvent,
         override val originatingServiceName: String = SERVICE_NAME
@@ -35,7 +36,7 @@ open class DomainEvent<DataType>(
 
     var additionalResponseEvents = setOf<ResponseEvent>()
 
-    constructor(type: String, from: DataType?, to: DataType, successEvent: ResponseEvent, failureEvent: ResponseEvent): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
+    constructor(type: String, from: BaseKfkDto?, to: BaseKfkDto, successEvent: ResponseEvent, failureEvent: ResponseEvent): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
 
     fun addResponseEvent(response: ResponseEvent) {
         additionalResponseEvents = additionalResponseEvents.plus(response)

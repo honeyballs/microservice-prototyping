@@ -29,16 +29,16 @@ class EmployeeServiceDepartmentKafkaEventHandler(
 
     @KafkaHandler
     @Transactional
-    fun handle(event: DomainEvent<DepartmentKfk>, ack: Acknowledgment) {
+    fun handle(event: DomainEvent, ack: Acknowledgment) {
         logger.info("Department Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
         val eventDepartment = event.to
         try {
 
             when(action) {
-                "created" -> createDepartment(eventDepartment)
-                "updated" -> updateDepartment(eventDepartment)
-                "deleted" -> deleteDepartment(eventDepartment)
+                "created" -> createDepartment(eventDepartment as DepartmentKfk)
+                "updated" -> updateDepartment(eventDepartment as DepartmentKfk)
+                "deleted" -> deleteDepartment(eventDepartment as DepartmentKfk)
             }
 
             val success = event.successEvent

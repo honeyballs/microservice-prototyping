@@ -1,10 +1,8 @@
 package com.example.projectadministration.model.dto.employee
 
 import com.example.projectadministration.model.aggregates.AggregateState
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.example.projectadministration.model.dto.BaseKfkDto
+import com.fasterxml.jackson.annotation.*
 import javax.persistence.*
 
 
@@ -14,22 +12,28 @@ import javax.persistence.*
  * The JSON received from events is parsed into these classes.
  */
 
+@JsonTypeName("departmentKfk")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class DepartmentKfk(val id: Long, val name: String, val deleted: Boolean, val state: AggregateState)
+data class DepartmentKfk(override val id: Long, val name: String, val deleted: Boolean, val state: AggregateState): BaseKfkDto
 
+@JsonTypeName("positionKfk")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PositionKfk(val id: Long, val title: String, val deleted: Boolean, val state: AggregateState)
+data class PositionKfk(override val id: Long, val title: String, val deleted: Boolean, val state: AggregateState): BaseKfkDto
 
+@JsonTypeName("employeeKfk")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 class EmployeeKfk(
-        val id: Long,
+        override val id: Long,
         val firstname: String,
         val lastname: String,
         val department: Long,
         val position: Long,
         val deleted: Boolean,
         val state: AggregateState
-) {
+): BaseKfkDto {
 
     lateinit var companyMail: String
 

@@ -15,7 +15,7 @@ const val DEPARTMENT_AGGREGATE_NAME = "department"
 @Entity
 data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
                       @Column(name = "department_name") var name: String,
-                      var deleted: Boolean = false): EventAggregate<DepartmentKfk>() {
+                      var deleted: Boolean = false): EventAggregate() {
 
     init {
         aggregateName = DEPARTMENT_AGGREGATE_NAME
@@ -40,7 +40,7 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
     }
 
     override fun mapAggregateToKafkaDto(): DepartmentKfk {
-        return DepartmentKfk(this.id!!, this.name, this.deleted)
+        return DepartmentKfk(this.id!!, this.name, this.deleted, this.state)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -70,7 +70,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
                                  var title: String,
                                  minHourlyWage: BigDecimal,
                                  maxHourlyWage: BigDecimal,
-                                 var deleted: Boolean = false): EventAggregate<PositionKfk>() {
+                                 var deleted: Boolean = false): EventAggregate() {
 
     var minHourlyWage: BigDecimal = minHourlyWage.setScale(2, RoundingMode.HALF_UP)
         set(value) {
@@ -112,7 +112,7 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
     }
 
     override fun mapAggregateToKafkaDto(): PositionKfk {
-        return PositionKfk(this.id!!, this.title, this.minHourlyWage, this.maxHourlyWage, this.deleted)
+        return PositionKfk(this.id!!, this.title, this.minHourlyWage, this.maxHourlyWage, this.deleted, this.state)
     }
 
     override fun equals(other: Any?): Boolean {

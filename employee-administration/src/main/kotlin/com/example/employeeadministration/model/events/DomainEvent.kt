@@ -1,17 +1,11 @@
 package com.example.employeeadministration.model.events
 
 import com.example.employeeadministration.SERVICE_NAME
-import com.example.employeeadministration.services.getResponseEventType
+import com.example.employeeadministration.model.dto.BaseKfkDto
 import com.fasterxml.jackson.annotation.*
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.Resource
-import org.springframework.core.io.support.PropertiesLoaderUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-import javax.xml.crypto.Data
 
 const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
 
@@ -24,12 +18,12 @@ const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm:ss:SSS"
  */
 @JsonTypeName("domainEvent")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
-open class DomainEvent<DataType>(
+open class DomainEvent(
         override val id: String,
         override val eventCreatedAt: String,
         override val type: String,
-        val from: DataType?,
-        val to: DataType,
+        val from: BaseKfkDto?,
+        val to: BaseKfkDto,
         val successEvent: ResponseEvent,
         val failureEvent: ResponseEvent,
         override val originatingServiceName: String = SERVICE_NAME
@@ -42,7 +36,7 @@ open class DomainEvent<DataType>(
 
     var additionalResponseEvents = setOf<ResponseEvent>()
 
-    constructor(type: String, from: DataType?, to: DataType, successEvent: ResponseEvent, failureEvent: ResponseEvent): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
+    constructor(type: String, from: BaseKfkDto?, to: BaseKfkDto, successEvent: ResponseEvent, failureEvent: ResponseEvent): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
 
     fun addResponseEvent(response: ResponseEvent) {
         additionalResponseEvents = additionalResponseEvents.plus(response)

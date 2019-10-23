@@ -2,6 +2,8 @@ package com.example.projectadministration.model.dto
 
 import com.example.projectadministration.model.aggregates.Address
 import com.example.projectadministration.model.aggregates.CustomerContact
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
 import java.time.LocalDate
 
 /**
@@ -9,8 +11,10 @@ import java.time.LocalDate
  * These classes should mirror the aggregates completely but reduce references between aggregates to IDs.
  */
 
+@JsonTypeName("projectKfk")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 data class ProjectKfk(
-        val id: Long,
+        override val id: Long,
         val name: String,
         val description: String,
         val startDate: LocalDate,
@@ -19,6 +23,8 @@ data class ProjectKfk(
         val employees: Set<Long>,
         val customer: Long,
         val deleted: Boolean
-)
+): BaseKfkDto
 
-data class CustomerKfk(val id: Long, val customerName: String, val address: Address, val contact: CustomerContact, val deleted: Boolean)
+@JsonTypeName("customerKfk")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+data class CustomerKfk(override val id: Long, val customerName: String, val address: Address, val contact: CustomerContact, val deleted: Boolean): BaseKfkDto

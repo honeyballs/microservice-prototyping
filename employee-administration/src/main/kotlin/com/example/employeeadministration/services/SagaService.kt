@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 @Service
 class SagaService(val sagaRepository: SagaRepository, val mapper: ObjectMapper) {
 
-    fun <DataType> createSagaOfEvent(event: DomainEvent<DataType>, aggregateId: Long, requiredEvents: String) {
+    fun createSagaOfEvent(event: DomainEvent, aggregateId: Long, requiredEvents: String) {
         val saga = Saga(
                 null,
                 event.id,
