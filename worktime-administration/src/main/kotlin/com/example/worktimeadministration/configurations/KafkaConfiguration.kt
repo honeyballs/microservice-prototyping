@@ -1,5 +1,8 @@
 package com.example.worktimeadministration.configurations
 
+import com.example.worktimeadministration.model.aggregates.WORKTIME_AGGREGATE_NAME
+import com.example.worktimeadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
+import com.example.worktimeadministration.model.aggregates.project.PROJECT_AGGREGATE_NAME
 import com.example.worktimeadministration.model.events.Event
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.admin.NewTopic
@@ -30,27 +33,17 @@ class KafkaConfiguration {
 
     @Bean
     fun employeeTopic(): NewTopic {
-        return NewTopic("", 1, 1)
-    }
-
-    @Bean
-    fun departmentTopic(): NewTopic {
-        return NewTopic("", 1, 1)
-    }
-
-    @Bean
-    fun positionTopic(): NewTopic {
-        return NewTopic("", 1, 1)
-    }
-
-    @Bean
-    fun customerTopic(): NewTopic {
-        return NewTopic("", 1, 1)
+        return NewTopic(EMPLOYEE_AGGREGATE_NAME, 1, 1)
     }
 
     @Bean
     fun projectTopic(): NewTopic {
-        return NewTopic("", 1, 1)
+        return NewTopic(PROJECT_AGGREGATE_NAME, 1, 1)
+    }
+
+    @Bean
+    fun worktimeTopic(): NewTopic {
+        return NewTopic(WORKTIME_AGGREGATE_NAME, 1, 1)
     }
 
     @Bean

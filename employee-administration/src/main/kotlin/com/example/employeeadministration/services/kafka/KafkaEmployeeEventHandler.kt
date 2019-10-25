@@ -12,6 +12,7 @@ import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventHandler
+import com.example.employeeadministration.services.SagaService
 import com.example.employeeadministration.services.getResponseEventKeyword
 import com.example.employeeadministration.services.getSagaCompleteType
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -30,6 +31,7 @@ class KafkaEmployeeEventHandler(
         val departmentRepository: DepartmentRepository,
         val positionRepository: PositionRepository,
         val sagaRepository: SagaRepository,
+        val sagaService: SagaService,
         val mapper: ObjectMapper,
         val eventProducer: KafkaEventProducer
 ) : EventHandler {
@@ -43,7 +45,7 @@ class KafkaEmployeeEventHandler(
             val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
             if (getResponseEventKeyword(responseEvent.type) == "success") {
                 val state = saga.receivedSuccessEvent(responseEvent.consumerName)
-                if (state == SagaState.COMPLETED) {
+                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(saga.id!!, saga.aggregateId)) {
                     activateEmployee(saga.aggregateId, saga.id!!)
                 }
             } else if (getResponseEventKeyword(responseEvent.type) == "fail") {

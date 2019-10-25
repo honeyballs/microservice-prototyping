@@ -10,6 +10,7 @@ import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.SagaRepository
 import com.example.employeeadministration.services.EventHandler
+import com.example.employeeadministration.services.SagaService
 import com.example.employeeadministration.services.getResponseEventKeyword
 import com.example.employeeadministration.services.getSagaCompleteType
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional
 class KafkaDepartmentEventHandler(
         val departmentRepository: DepartmentRepository,
         val sagaRepository: SagaRepository,
+        val sagaService: SagaService,
         val mapper: ObjectMapper,
         val eventProducer: KafkaEventProducer
 ): EventHandler {
@@ -39,7 +41,7 @@ class KafkaDepartmentEventHandler(
             val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
             if (getResponseEventKeyword(responseEvent.type) == "success") {
                 val state = saga.receivedSuccessEvent(responseEvent.consumerName)
-                if (state == SagaState.COMPLETED) {
+                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(saga.id!!, saga.aggregateId)) {
                     activateDepartment(saga.aggregateId, saga.id!!)
                 }
             } else if (getResponseEventKeyword(responseEvent.type) == "fail") {

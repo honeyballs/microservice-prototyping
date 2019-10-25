@@ -26,7 +26,8 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                @ManyToOne @JoinColumn(name = "fk_position") var position: Position,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?,
-               var deleted: Boolean = false) : EventAggregate() {
+               var deleted: Boolean = false
+) : EventAggregate() {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)

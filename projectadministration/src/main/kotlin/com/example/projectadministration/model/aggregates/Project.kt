@@ -72,7 +72,7 @@ data class Project(
     }
 
     override fun mapAggregateToKafkaDto(): ProjectKfk {
-        return ProjectKfk(this.id!!, this.name, this.description, this.startDate, this.projectedEndDate, this.endDate, this.employees.map { it.employeeId }.toSet(), this.customer.id!!, this.deleted)
+        return ProjectKfk(this.id!!, this.name, this.description, this.startDate, this.projectedEndDate, this.endDate, this.employees.map { it.employeeId }.toSet(), this.customer.id!!, this.deleted, this.state)
     }
 
 }

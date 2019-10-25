@@ -9,5 +9,6 @@ interface SagaRepository: JpaRepository<Saga, Long> {
 
     fun getBySagaEventId(eventId: String): Optional<Saga>
     fun getByAggregateIdAndSagaState(aggregateId: Long, state: SagaState): List<Saga>
+    fun existsAllByIdNotAndAggregateIdAndSagaStateIn(id: Long, aggregateId: Long, states: List<SagaState>): Boolean
 
 }

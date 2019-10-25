@@ -52,7 +52,7 @@ data class Customer(
     }
 
     override fun mapAggregateToKafkaDto(): CustomerKfk {
-        return CustomerKfk(this.id!!, this.customerName, this.address, this.contact, this.deleted)
+        return CustomerKfk(this.id!!, this.customerName, this.address, this.contact, this.deleted, this.state)
     }
 
 }

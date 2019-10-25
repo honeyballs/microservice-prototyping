@@ -15,7 +15,8 @@ const val DEPARTMENT_AGGREGATE_NAME = "department"
 @Entity
 data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
                       @Column(name = "department_name") var name: String,
-                      var deleted: Boolean = false): EventAggregate() {
+                      var deleted: Boolean = false
+): EventAggregate() {
 
     init {
         aggregateName = DEPARTMENT_AGGREGATE_NAME
