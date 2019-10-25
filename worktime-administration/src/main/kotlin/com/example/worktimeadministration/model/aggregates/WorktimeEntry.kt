@@ -31,6 +31,9 @@ data class WorktimeEntry(
         if (type == EntryType.WORK && !isPauseSufficient(startTime, endTime)) {
             throw Exception("Insufficient Pause time")
         }
+        if (!timeFitsWithinProjectSpan(startTime) || !timeFitsWithinProjectSpan(endTime)) {
+            throw Exception("Timeframe not within project dates")
+        }
         aggregateName = WORKTIME_AGGREGATE_NAME
     }
 
@@ -45,6 +48,9 @@ data class WorktimeEntry(
         if (type == EntryType.WORK && !isPauseSufficient(newStartTime, endTime)) {
             throw Exception("Insufficient Pause time")
         }
+        if (!timeFitsWithinProjectSpan(newStartTime) || !timeFitsWithinProjectSpan(endTime)) {
+            throw Exception("Timeframe not within project dates")
+        }
         val from = mapAggregateToKafkaDto()
         startTime = newStartTime
         registerEvent(this.id!!, "updated", from)
@@ -55,6 +61,9 @@ data class WorktimeEntry(
         if (type == EntryType.WORK && !isPauseSufficient(startTime, newEndTime)) {
             throw Exception("Insufficient Pause time")
         }
+        if (!timeFitsWithinProjectSpan(startTime) || !timeFitsWithinProjectSpan(newEndTime)) {
+            throw Exception("Timeframe not within project dates")
+        }
         val from = mapAggregateToKafkaDto()
         endTime = newEndTime
         registerEvent(this.id!!, "updated", from)
@@ -63,6 +72,9 @@ data class WorktimeEntry(
     fun changeProject(newProject: Project) {
         val from = mapAggregateToKafkaDto()
         this.project = project
+        if (!timeFitsWithinProjectSpan(startTime) || !timeFitsWithinProjectSpan(endTime)) {
+            throw Exception("Timeframe not within project dates")
+        }
         registerEvent(this.id!!, "updated", from)
     }
 
@@ -85,9 +97,15 @@ data class WorktimeEntry(
                 || timespan >= 10 && pauseTimeInMinutes >= 60
     }
 
+    fun timeFitsWithinProjectSpan(time: LocalDateTime): Boolean {
+        return startTime.toLocalDate().isAfter(project.startDate) && startTime.toLocalDate().isBefore(project.endDate)
+    }
+
     override fun mapAggregateToKafkaDto(): WorktimeEntryKfk {
         return WorktimeEntryKfk(id!!, startTime, endTime, pauseTimeInMinutes, project.projectId, employee.employeeId, description, type, deleted, state)
     }
+
+
 
 }
 
