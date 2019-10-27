@@ -23,6 +23,7 @@ class ResponseEvent(
 ): Event {
 
     var consumerName = ""
+    var consumerMessage: String? = null
     lateinit var rootEventId: String
 
     constructor(type: String): this(SERVICE_NAME, UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type)

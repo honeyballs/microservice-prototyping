@@ -1,8 +1,7 @@
 package com.example.worktimeadministration.model.events
 
 import com.example.worktimeadministration.SERVICE_NAME
-import com.example.worktimeadministration.model.events.DATE_TIME_PATTERN
-import com.example.worktimeadministration.model.events.Event
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import java.time.LocalDateTime
@@ -24,6 +23,7 @@ class ResponseEvent(
 ): Event {
 
     var consumerName = ""
+    var consumerMessage: String? = null
     lateinit var rootEventId: String
 
     constructor(type: String): this(SERVICE_NAME, UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type)
