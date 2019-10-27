@@ -25,7 +25,7 @@ import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
-@KafkaListener(groupId = "ProjectService", topics = [POSITION_AGGREGATE_NAME])
+@KafkaListener(groupId = SERVICE_NAME, topics = [POSITION_AGGREGATE_NAME])
 class EmployeeServicePositionKafkaEventHandler(
         val producer: KafkaEventProducer,
         val positionRepository: PositionRepository): EventHandler {

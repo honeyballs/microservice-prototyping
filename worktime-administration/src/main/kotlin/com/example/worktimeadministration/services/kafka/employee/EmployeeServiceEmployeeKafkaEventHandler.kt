@@ -1,20 +1,16 @@
-package com.example.projectadministration.services.kafka.employee
+package com.example.worktimeadministration.services.kafka.employee
 
-import com.example.projectadministration.SERVICE_NAME
-import com.example.projectadministration.model.aggregates.AggregateState
-import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
-import com.example.projectadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
-import com.example.projectadministration.model.aggregates.employee.Employee
-import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
-import com.example.projectadministration.services.EventHandler
-import com.example.projectadministration.model.dto.employee.EmployeeKfk
-import com.example.projectadministration.model.events.DomainEvent
-import com.example.projectadministration.model.events.UpdateStateEvent
-import com.example.projectadministration.repositories.employee.DepartmentRepository
-import com.example.projectadministration.repositories.employee.EmployeeRepository
-import com.example.projectadministration.repositories.employee.PositionRepository
-import com.example.projectadministration.services.getActionOfConsumedEvent
-import com.example.projectadministration.services.kafka.KafkaEventProducer
+import com.example.worktimeadministration.SERVICE_NAME
+import com.example.worktimeadministration.model.aggregates.AggregateState
+import com.example.worktimeadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
+import com.example.worktimeadministration.model.aggregates.employee.Employee
+import com.example.worktimeadministration.model.dto.employee.EmployeeKfk
+import com.example.worktimeadministration.model.events.DomainEvent
+import com.example.worktimeadministration.model.events.UpdateStateEvent
+import com.example.worktimeadministration.repositories.employee.EmployeeRepository
+import com.example.worktimeadministration.services.EventHandler
+import com.example.worktimeadministration.services.getActionOfConsumedEvent
+import com.example.worktimeadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
@@ -29,9 +25,7 @@ import javax.persistence.RollbackException
 @KafkaListener(groupId = SERVICE_NAME, topics = [EMPLOYEE_AGGREGATE_NAME])
 class EmployeeServiceEmployeeKafkaEventHandler(
         val producer: KafkaEventProducer,
-        val employeeRepository: EmployeeRepository,
-        val departmentRepository: DepartmentRepository,
-        val positionRepository: PositionRepository): EventHandler {
+        val employeeRepository: EmployeeRepository): EventHandler {
 
     val logger = LoggerFactory.getLogger(EmployeeServiceEmployeeKafkaEventHandler::class.java)
 
@@ -85,9 +79,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
 
     @Throws(RollbackException::class, Exception::class)
     fun createEmployee(eventEmployee: EmployeeKfk) {
-        val department = departmentRepository.findByDepartmentId(eventEmployee.department).orElseThrow()
-        val position = positionRepository.findByPositionId(eventEmployee.position).orElseThrow()
-        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, department, position, eventEmployee.companyMail, eventEmployee.deleted, eventEmployee.state)
+        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, eventEmployee.companyMail, eventEmployee.deleted, eventEmployee.state)
         employeeRepository.save(emp)
     }
 
@@ -95,12 +87,6 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     fun updateEmployee(eventEmployee: EmployeeKfk) {
         // If we would not load beforehand a new db row would be created because dbId is only set in this service
         val emp = employeeRepository.findByEmployeeId(eventEmployee.id).orElseThrow()
-        if (emp.department.departmentId != eventEmployee.department) {
-            emp.department = departmentRepository.findByDepartmentId(eventEmployee.department).orElseThrow()
-        }
-        if (emp.position.positionId != eventEmployee.position) {
-            emp.position = positionRepository.findByPositionId(eventEmployee.position).orElseThrow()
-        }
         emp.firstname = eventEmployee.firstname
         emp.lastname = eventEmployee.lastname
         emp.companyMail = eventEmployee.companyMail

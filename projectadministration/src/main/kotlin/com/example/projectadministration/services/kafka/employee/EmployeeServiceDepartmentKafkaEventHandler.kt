@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 import javax.persistence.RollbackException
 
 @Service
-@KafkaListener(groupId = "ProjectService", topics = [DEPARTMENT_AGGREGATE_NAME])
+@KafkaListener(groupId = SERVICE_NAME, topics = [DEPARTMENT_AGGREGATE_NAME])
 class EmployeeServiceDepartmentKafkaEventHandler(
         val producer: KafkaEventProducer,
         val departmentRepository: DepartmentRepository): EventHandler {

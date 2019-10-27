@@ -10,12 +10,13 @@ const val EMPLOYEE_AGGREGATE_NAME = "employee"
 data class Employee(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) var dbId: Long?,
         val employeeId: Long,
-        val firstname: String,
-        val lastname: String,
+        var firstname: String,
+        var lastname: String,
+        var companyMail: String,
         @ManyToMany(mappedBy = "employees", fetch = FetchType.LAZY)
         val projects: Set<Project>,
-        val deleted: Boolean,
-        val state: AggregateState
+        var deleted: Boolean,
+        var state: AggregateState
 ) {
 
     constructor(
@@ -23,8 +24,9 @@ data class Employee(
             employeeId: Long,
             firstname: String,
             lastname: String,
+            companyMail: String,
             deleted: Boolean,
             state: AggregateState
-    ): this(dbId, employeeId, firstname, lastname, emptySet(), deleted, state)
+    ): this(dbId, employeeId, firstname, lastname, companyMail, emptySet(), deleted, state)
 
 }

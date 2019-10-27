@@ -1,5 +1,6 @@
 package com.example.employeeadministration.services.kafka
 
+import com.example.employeeadministration.SERVICE_NAME
 import com.example.employeeadministration.model.aggregates.POSITION_AGGREGATE_NAME
 import com.example.employeeadministration.model.dto.PositionKfk
 import com.example.employeeadministration.model.aggregates.AggregateState
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-@KafkaListener(groupId = "EmployeeService", topics = [POSITION_AGGREGATE_NAME])
+@KafkaListener(groupId = SERVICE_NAME, topics = [POSITION_AGGREGATE_NAME])
 class KafkaPositionEventHandler(
         val positionRepository: PositionRepository,
         val sagaRepository: SagaRepository,
