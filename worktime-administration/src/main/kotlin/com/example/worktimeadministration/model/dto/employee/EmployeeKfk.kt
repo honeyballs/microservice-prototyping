@@ -15,6 +15,7 @@ class EmployeeKfk(
         val firstname: String,
         val lastname: String,
         val deleted: Boolean,
+        val availableVacationHours: Int,
         val state: AggregateState
 ): BaseKfkDto {
 

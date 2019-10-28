@@ -4,7 +4,9 @@ import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.aggregates.Employee
 import com.example.employeeadministration.model.dto.EmployeeDto
 import com.example.employeeadministration.model.aggregates.AggregateState
+import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
+import com.example.employeeadministration.repositories.PositionRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -14,9 +16,52 @@ class EmployeeServiceImpl(
         val employeeRepository: EmployeeRepository,
         val departmentService: DepartmentService,
         val positionService: PositionService,
+        val departmentRepository: DepartmentRepository,
+        val positionRepository: PositionRepository,
         val sagaService: SagaService,
         val eventProducer: KafkaEventProducer
 ) : EmployeeService {
+
+    @Transactional
+    override fun createEmployee(employeeDto: EmployeeDto): EmployeeDto {
+        val employee = mapDtoToEntity(employeeDto)
+        return mapEntityToDto(persistWithEvents(employee))
+    }
+
+    @Throws(Exception::class)
+    override fun updateEmployee(employeeDto: EmployeeDto): EmployeeDto {
+        val employee = employeeRepository.findById(employeeDto.id!!).orElseThrow()
+        if (employee.firstname != employeeDto.firstname || employee.lastname != employeeDto.lastname) {
+            employee.changeName(employeeDto.firstname, employeeDto.lastname)
+        }
+        if (employee.address != employeeDto.address) {
+            employee.moveToNewAddress(employeeDto.address)
+        }
+        if (employee.hourlyRate != employeeDto.hourlyRate) {
+            employee.receiveRaiseBy(employee.hourlyRate.minus(employeeDto.hourlyRate))
+        }
+        if (employee.bankDetails != employeeDto.bankDetails) {
+            employee.switchBankDetails(employeeDto.bankDetails)
+        }
+        if (employee.department.id!! != employeeDto.department.id!!) {
+            employee.moveToAnotherDepartment(departmentRepository.findById(employeeDto.department.id!!).orElseThrow())
+        }
+        if (employee.position.id!! != employeeDto.position.id!!) {
+            employee.changeJobPosition(positionRepository.findById(employeeDto.position.id!!).orElseThrow(), null)
+        }
+        return mapEntityToDto(persistWithEvents(employee))
+    }
+
+
+    @Throws(Exception::class)
+    @Transactional
+    override fun deleteEmployee(id: Long) {
+        val employee = employeeRepository.getByIdAndDeletedFalse(id).orElseThrow {
+            Exception("The employee you are trying to delete does not exist")
+        }
+        employee.deleteEmployee()
+        persistWithEvents(employee)
+    }
 
     override fun persistWithEvents(aggregate: Employee): Employee {
         var agg: Employee? = null
@@ -56,21 +101,15 @@ class EmployeeServiceImpl(
         }
     }
 
-    @Transactional
-    override fun deleteEmployee(id: Long) {
-        val employee = employeeRepository.getByIdAndDeletedFalse(id).orElseThrow {
-            Exception("The employee you are trying to delete does not exist")
-        }
-        employee.deleteEmployee()
-        persistWithEvents(employee)
-    }
-
     override fun mapEntityToDto(entity: Employee): EmployeeDto {
-        return EmployeeDto(entity.id, entity.firstname, entity.lastname, entity.birthday, entity.address, entity.bankDetails, departmentService.mapEntityToDto(entity.department), positionService.mapEntityToDto(entity.position), entity.hourlyRate, entity.companyMail)
+        return EmployeeDto(entity.id!!, entity.firstname, entity.lastname, entity.birthday, entity.address, entity.bankDetails, departmentService.mapEntityToDto(entity.department), positionService.mapEntityToDto(entity.position), entity.hourlyRate, entity.availableVacationHours, entity.companyMail)
     }
 
+    @Throws(Exception::class)
     override fun mapDtoToEntity(dto: EmployeeDto): Employee {
-        return Employee(dto.id, dto.firstname, dto.lastname, dto.birthday, dto.address, dto.bankDetails, departmentService.mapDtoToEntity(dto.department), positionService.mapDtoToEntity(dto.position), dto.hourlyRate, dto.companyMail)
+        val department = departmentRepository.findById(dto.department.id!!).orElseThrow()
+        val position = positionRepository.findById(dto.position.id!!).orElseThrow()
+        return Employee(dto.id, dto.firstname, dto.lastname, dto.birthday, dto.address, dto.bankDetails, department, position, dto.availableVacationHours, dto.hourlyRate, dto.companyMail)
     }
 
     override fun mapEntitiesToDtos(entities: List<Employee>): List<EmployeeDto> {

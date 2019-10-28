@@ -2,6 +2,7 @@ package com.example.worktimeadministration.model.aggregates.project
 
 import com.example.worktimeadministration.model.aggregates.AggregateState
 import com.example.worktimeadministration.model.aggregates.employee.Employee
+import java.io.Serializable
 import java.time.LocalDate
 import javax.persistence.*
 
@@ -23,5 +24,5 @@ data class Project(
         var employees: Set<Employee>,
         var deleted: Boolean,
         var state: AggregateState
-) {
+): Serializable {
 }

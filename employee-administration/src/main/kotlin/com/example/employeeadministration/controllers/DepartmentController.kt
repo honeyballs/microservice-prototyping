@@ -9,7 +9,7 @@ interface DepartmentController {
     fun getDepartmentById(id: Long): ResponseEntity<DepartmentDto>
 
     fun createDepartment(departmentDto: DepartmentDto): ResponseEntity<DepartmentDto>
-    fun updateDepartmentName(departmentDto: DepartmentDto): ResponseEntity<DepartmentDto>
+    fun updateDepartment(departmentDto: DepartmentDto): ResponseEntity<DepartmentDto>
     fun deleteDepartment(id: Long)
 
 }

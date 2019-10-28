@@ -16,6 +16,39 @@ class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
                             val sagaService: SagaService,
                             val eventProducer: KafkaEventProducer) : DepartmentService {
 
+    /**
+     * If the department already exists we just return it, otherwise it is saved and returned
+     */
+    @Transactional
+    override fun createDepartmentUniquely(departmentDto: DepartmentDto): DepartmentDto {
+        return departmentRepository.getByNameAndDeletedFalse(departmentDto.name)
+                .map { mapEntityToDto(it) }
+                .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(departmentDto))) }
+    }
+
+    @Throws(Exception::class)
+    override fun updateDepartment(departmentDto: DepartmentDto): DepartmentDto {
+        val department = departmentRepository.findById(departmentDto.id!!).orElseThrow()
+        if (department.name != departmentDto.name) {
+            department.renameDepartment(departmentDto.name)
+        }
+        return mapEntityToDto(persistWithEvents(department))
+    }
+
+    @Transactional
+    @Throws(Exception::class)
+    override fun deleteDepartment(id: Long) {
+        if (employeeRepository.getAllByDepartment_IdAndDeletedFalse(id).isEmpty()) {
+            val department = departmentRepository.getByIdAndDeletedFalse(id).orElseThrow {
+                Exception("The department you are trying to delete does not exist")
+            }
+            department.deleteDepartment()
+            persistWithEvents(department)
+        } else {
+            throw Exception("The department has employees assigned to it and cannot be deleted.")
+        }
+    }
+
     @Transactional
     override fun persistWithEvents(aggregate: Department): Department {
         var agg: Department? = null
@@ -56,31 +89,8 @@ class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
         }
     }
 
-    /**
-     * If the department already exists we just return it, otherwise it is saved and returned
-     */
-    @Transactional
-    override fun createDepartmentUniquely(departmentDto: DepartmentDto): DepartmentDto {
-        return departmentRepository.getByNameAndDeletedFalse(departmentDto.name)
-                .map { mapEntityToDto(it) }
-                .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(departmentDto))) }
-    }
-
-    @Transactional
-    override fun deleteDepartment(id: Long) {
-        if (employeeRepository.getAllByDepartment_IdAndDeletedFalse(id).isEmpty()) {
-            val department = departmentRepository.getByIdAndDeletedFalse(id).orElseThrow {
-                Exception("The department you are trying to delete does not exist")
-            }
-            department.deleteDepartment()
-            persistWithEvents(department)
-        } else {
-            throw Exception("The department has employees assigned to it and cannot be deleted.")
-        }
-    }
-
     override fun mapEntityToDto(entity: Department): DepartmentDto {
-        return DepartmentDto(entity.id, entity.name)
+        return DepartmentDto(entity.id!!, entity.name)
     }
 
     override fun mapDtoToEntity(dto: DepartmentDto): Department {

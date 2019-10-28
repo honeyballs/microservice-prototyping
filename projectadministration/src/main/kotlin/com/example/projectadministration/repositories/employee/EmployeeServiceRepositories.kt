@@ -3,6 +3,7 @@ package com.example.projectadministration.repositories.employee
 import com.example.projectadministration.model.aggregates.employee.Department
 import com.example.projectadministration.model.aggregates.employee.Employee
 import com.example.projectadministration.model.aggregates.employee.Position
+import org.apache.kafka.common.protocol.types.Field
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.*
@@ -10,8 +11,11 @@ import java.util.*
 @Repository
 interface EmployeeRepository: JpaRepository<Employee, Long> {
 
-    fun findByEmployeeId(id: Long): Optional<Employee>
-    fun findByEmployeeIdIn(ids: List<Long>): List<Employee>
+    fun findAllByDeletedFalse(): List<Employee>
+    fun findByEmployeeIdAndDeletedFalse(id: Long): Optional<Employee>
+    fun findAllByEmployeeIdInAndDeletedFalse(ids: List<Long>): List<Employee>
+    fun findAllByDepartmentNameAndDeletedFalse(name: String): List<Employee>
+    fun findAllByPositionTitleAndDeletedFalse(title: String): List<Employee>
 
 }
 

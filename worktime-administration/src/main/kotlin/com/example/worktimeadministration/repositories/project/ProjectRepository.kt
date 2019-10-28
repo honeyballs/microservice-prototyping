@@ -7,7 +7,8 @@ import java.util.*
 
 interface ProjectRepository: JpaRepository<Project, Long> {
 
-    fun findByProjectId(id: Long): Optional<Project>
-    fun findByEmployeesContains(employee: Employee): List<Project>
-    fun findAllByProjectIdIn(ids: List<Long>): List<Project>
+    fun findAllByDeletedFalse(): List<Project>
+    fun findByProjectIdAndDeletedFalse(id: Long): Optional<Project>
+    fun findAllByEmployeesContainsAndDeletedFalse(employee: Employee): List<Project>
+    fun findAllByProjectIdInAndDeletedFalse(ids: List<Long>): List<Project>
 }

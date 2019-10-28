@@ -32,24 +32,13 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
         return ok(positionService.createPositionUniquely(positionDto))
     }
 
-    @PutMapping("$positionUrl/{id}/title")
-    override fun updatePositionTitle(@PathVariable("id") id: Long, @RequestParam("title") title: String): ResponseEntity<PositionDto> {
-        return ok(positionRepository.getByIdAndDeletedFalse(id).map {
-            it.changePositionTitle(title)
-            positionService.mapEntityToDto(positionService.persistWithEvents(it))
-        }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position to update")
-        })
-    }
-
-    @PutMapping("$positionUrl/{id}/range")
-    override fun updatePositionWageRange(@PathVariable("id") id: Long, @RequestParam("min") min: BigDecimal, @RequestParam("max") max: BigDecimal): ResponseEntity<PositionDto> {
-        return ok(positionRepository.getByIdAndDeletedFalse(id).map {
-            it.adjustWageRange(min, max)
-            positionService.mapEntityToDto(positionService.persistWithEvents(it))
-        }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position to update")
-        })
+    @PutMapping("$positionUrl")
+    override fun updatePosition(@RequestBody positionDto: PositionDto): ResponseEntity<PositionDto> {
+        try {
+            return ok(positionService.updatePosition(positionDto))
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong when updating the position", ex)
+        }
     }
 
     @DeleteMapping(positionUrl)

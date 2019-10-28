@@ -24,6 +24,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                @Embedded var bankDetails: BankDetails,
                @ManyToOne @JoinColumn(name = "fk_department") var department: Department,
                @ManyToOne @JoinColumn(name = "fk_position") var position: Position,
+               var availableVacationHours: Int,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?,
                var deleted: Boolean = false
@@ -103,7 +104,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     }
 
     override fun mapAggregateToKafkaDto(): EmployeeKfk {
-        return EmployeeKfk(this.id!!, this.firstname, this.lastname, this.birthday, this.address, this.bankDetails, this.department.id!!, this.position.id!!, this.hourlyRate, this.companyMail, this.deleted, this.state)
+        return EmployeeKfk(this.id!!, this.firstname, this.lastname, this.birthday, this.address, this.bankDetails, this.department.id!!, this.position.id!!, this.hourlyRate, this.companyMail, this.availableVacationHours, this.deleted, this.state)
     }
 
     override fun toString(): String {

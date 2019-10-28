@@ -18,11 +18,4 @@ interface EmployeeController {
     fun updateEmployee(employeeDto: EmployeeDto): ResponseEntity<EmployeeDto>
     fun deleteEmployee(id: Long)
 
-    fun employeeChangesName(id: Long, firstname: String, lastname: String): ResponseEntity<EmployeeDto>
-    fun employeeMoves(id: Long, address: Address): ResponseEntity<EmployeeDto>
-    fun employeeSwitchesBankDetails(id: Long, details: BankDetails): ResponseEntity<EmployeeDto>
-    fun employeeReceivesRaise(id: Long, amount: BigDecimal): ResponseEntity<EmployeeDto>
-    fun employeeMovesToDepartment(id: Long, departmentId: Long): ResponseEntity<EmployeeDto>
-    fun employeeReceivesNewPosition(id: Long, positionId: Long, newSalary: BigDecimal): ResponseEntity<EmployeeDto>
-
 }

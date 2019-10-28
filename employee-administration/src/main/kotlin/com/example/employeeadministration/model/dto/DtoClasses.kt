@@ -1,8 +1,10 @@
 package com.example.employeeadministration.model.dto
 
+import com.example.employeeadministration.configurations.dateTimePattern
 import com.example.employeeadministration.model.valueobjects.Address
 import com.example.employeeadministration.model.valueobjects.BankDetails
 import com.example.employeeadministration.model.valueobjects.CompanyMail
+import com.fasterxml.jackson.annotation.JsonFormat
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -17,10 +19,11 @@ data class PositionDto(val id: Long?, val title: String, val minHourlyWage: BigD
 data class EmployeeDto(val id: Long?,
                        val firstname: String,
                        val lastname: String,
-                       val birthday: LocalDate,
+                       @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = dateTimePattern) val birthday: LocalDate,
                        val address: Address,
                        val bankDetails: BankDetails,
                        val department: DepartmentDto,
                        val position: PositionDto,
                        val hourlyRate: BigDecimal,
+                       val availableVacationHours: Int,
                        val companyMail: CompanyMail?)

@@ -18,6 +18,40 @@ class CustomerServiceImpl(
         val eventProducer: KafkaEventProducer
 ): CustomerService {
 
+    @Throws(Exception::class)
+    override fun createCustomer(customerDto: CustomerDto): CustomerDto {
+        val customer = mapDtoToEntity(customerDto)
+        return mapEntityToDto(persistWithEvents(customer))
+    }
+
+    @Throws(Exception::class)
+    override fun updateCustomer(customerDto: CustomerDto): CustomerDto {
+        val customer = customerRepository.findById(customerDto.id!!).orElseThrow()
+        if (customer.customerName != customerDto.customerName) {
+            customer.changeName(customerDto.customerName)
+        }
+        if (customer.address != customerDto.address) {
+            customer.moveCompanyLocation(customerDto.address)
+        }
+        if (customer.contact != customerDto.contact) {
+            customer.changeCustomerContact(customerDto.contact)
+        }
+        return mapEntityToDto(persistWithEvents(customer))
+    }
+
+    @Transactional
+    override fun deleteCustomer(id: Long) {
+        if (projectRepository.getAllByCustomer_IdAndDeletedFalse(id).isEmpty()) {
+            val customer = customerRepository.getByIdAndDeletedFalse(id).orElseThrow {
+                Exception("The customer you are trying to delete does not exist")
+            }
+            customer.deleteCustomer()
+            persistWithEvents(customer)
+        } else {
+            throw Exception("The customer has projects assigned to it and cannot be deleted.")
+        }
+    }
+
     @Transactional
     override fun persistWithEvents(aggregate: Customer): Customer {
         var agg: Customer? = null
@@ -55,19 +89,6 @@ class CustomerServiceImpl(
             ex.printStackTrace()
         } finally {
             return agg ?: aggregate
-        }
-    }
-
-    @Transactional
-    override fun deleteCustomer(id: Long) {
-        if (projectRepository.getAllByCustomer_IdAndDeletedFalse(id).isEmpty()) {
-            val customer = customerRepository.getByIdAndDeletedFalse(id).orElseThrow {
-                Exception("The customer you are trying to delete does not exist")
-            }
-            customer.deleteCustomer()
-            persistWithEvents(customer)
-        } else {
-            throw Exception("The customer has projects assigned to it and cannot be deleted.")
         }
     }
 

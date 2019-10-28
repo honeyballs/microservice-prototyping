@@ -79,7 +79,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
 
     @Throws(RollbackException::class, Exception::class)
     fun createEmployee(eventEmployee: EmployeeKfk) {
-        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, eventEmployee.companyMail, eventEmployee.deleted, eventEmployee.state)
+        val emp = Employee(null, eventEmployee.id, eventEmployee.firstname, eventEmployee.lastname, eventEmployee.companyMail, eventEmployee.availableVacationHours, 0,eventEmployee.deleted, eventEmployee.state)
         employeeRepository.save(emp)
     }
 
@@ -90,6 +90,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
         emp.firstname = eventEmployee.firstname
         emp.lastname = eventEmployee.lastname
         emp.companyMail = eventEmployee.companyMail
+        emp.availableVacationHours = eventEmployee.availableVacationHours
         emp.state = eventEmployee.state
         employeeRepository.save(emp)
     }

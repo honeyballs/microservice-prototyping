@@ -18,6 +18,40 @@ class PositionServiceImpl(
         val eventProducer: KafkaEventProducer
 ) : PositionService {
 
+    /**
+     * Return a position if present, otherwise save a new position.
+     */
+    @Transactional
+    override fun createPositionUniquely(positionDto: PositionDto): PositionDto {
+        return positionRepository.getByTitleAndDeletedFalse(positionDto.title)
+                .map { mapEntityToDto(it) }
+                .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(positionDto))) }
+    }
+
+    override fun updatePosition(positionDto: PositionDto): PositionDto {
+        val position = positionRepository.findById(positionDto.id!!).orElseThrow()
+        if (position.title != positionDto.title) {
+            position.changePositionTitle(positionDto.title)
+        }
+        if (position.minHourlyWage != positionDto.minHourlyWage || position.maxHourlyWage != positionDto.maxHourlyWage) {
+            position.adjustWageRange(positionDto.minHourlyWage, positionDto.maxHourlyWage)
+        }
+        return mapEntityToDto(persistWithEvents(position))
+    }
+
+    @Transactional
+    override fun deletePosition(id: Long) {
+        if (employeeRepository.getAllByPosition_IdAndDeletedFalse(id).isEmpty()) {
+            val position = positionRepository.getByIdAndDeletedFalse(id).orElseThrow {
+                Exception("The job position you are trying to delete does not exist")
+            }
+            position.deletePosition()
+            persistWithEvents(position)
+        } else {
+            throw Exception("The job position has employees assigned to it and cannot be deleted.")
+        }
+    }
+
     override fun persistWithEvents(aggregate: Position): Position {
         var agg: Position? = null
         try {
@@ -57,31 +91,8 @@ class PositionServiceImpl(
         }
     }
 
-    /**
-     * Return a position if present, otherwise save a new position.
-     */
-    @Transactional
-    override fun createPositionUniquely(positionDto: PositionDto): PositionDto {
-        return positionRepository.getByTitleAndDeletedFalse(positionDto.title)
-                .map { mapEntityToDto(it) }
-                .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(positionDto))) }
-    }
-
-    @Transactional
-    override fun deletePosition(id: Long) {
-        if (employeeRepository.getAllByPosition_IdAndDeletedFalse(id).isEmpty()) {
-            val position = positionRepository.getByIdAndDeletedFalse(id).orElseThrow {
-                Exception("The job position you are trying to delete does not exist")
-            }
-            position.deletePosition()
-            persistWithEvents(position)
-        } else {
-            throw Exception("The job position has employees assigned to it and cannot be deleted.")
-        }
-    }
-
     override fun mapEntityToDto(entity: Position): PositionDto {
-        return PositionDto(entity.id, entity.title, entity.minHourlyWage, entity.maxHourlyWage)
+        return PositionDto(entity.id!!, entity.title, entity.minHourlyWage, entity.maxHourlyWage)
     }
 
     override fun mapDtoToEntity(dto: PositionDto): Position {

@@ -35,6 +35,7 @@ data class EmployeeKfk(
         val position: Long,
         val hourlyRate: BigDecimal,
         val companyMail: CompanyMail?,
+        val availableVacationHours: Int,
         val deleted: Boolean,
         val state: AggregateState
 ) : BaseKfkDto

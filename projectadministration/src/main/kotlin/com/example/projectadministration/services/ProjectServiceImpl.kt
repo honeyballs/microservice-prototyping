@@ -12,6 +12,7 @@ import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 
 @Service
 class ProjectServiceImpl(
@@ -19,7 +20,40 @@ class ProjectServiceImpl(
         val customerRepository: CustomerRepository,
         val employeeRepository: EmployeeRepository,
         val sagaService: SagaService,
-        val eventProducer: KafkaEventProducer): ProjectService {
+        val eventProducer: KafkaEventProducer
+) : ProjectService {
+
+    @Throws(Exception::class)
+    override fun createProject(projectDto: ProjectDto): ProjectDto {
+        val project = mapDtoToEntity(projectDto)
+        return mapEntityToDto(persistWithEvents(project))
+    }
+
+    @Throws(Exception::class)
+    override fun updateProject(projectDto: ProjectDto): ProjectDto {
+        val project = projectRepository.findById(projectDto.id!!).orElseThrow()
+        if (project.description != projectDto.description) {
+            project.updateProjectDescription(projectDto.description)
+        }
+        if (project.projectedEndDate != projectDto.projectedEndDate) {
+            project.delayProject(projectDto.projectedEndDate)
+        }
+        if (project.employees.map { it.employeeId } != projectDto.projectEmployees.map { it.id }) {
+            project.changeEmployeesWorkingOnProject(employeeRepository.findAllByEmployeeIdIn(projectDto.projectEmployees.map { it.id }).toSet())
+        }
+        return mapEntityToDto(persistWithEvents(project))
+    }
+
+    @Throws(Exception::class)
+    override fun finishProject(id: Long, endDate: LocalDate): ProjectDto {
+        val project = projectRepository.findById(id).orElseThrow()
+        project.finishProject(endDate)
+        return mapEntityToDto(persistWithEvents(project))
+    }
+
+    override fun deleteProject(id: Long) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     @Transactional
     override fun persistWithEvents(aggregate: Project): Project {
@@ -69,7 +103,7 @@ class ProjectServiceImpl(
 
     @Transactional
     override fun mapDtoToEntity(dto: ProjectDto): Project {
-        val employees = employeeRepository.findByEmployeeIdIn(dto.projectEmployees.map { it.id }).toSet()
+        val employees = employeeRepository.findAllByEmployeeIdIn(dto.projectEmployees.map { it.id }).toSet()
         val customer = customerRepository.findById(dto.customer.id).orElseThrow()
         return Project(dto.id, dto.name, dto.description, dto.startDate, dto.projectedEndDate, dto.endDate, employees, customer)
     }

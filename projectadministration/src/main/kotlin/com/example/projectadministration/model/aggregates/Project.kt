@@ -65,6 +65,12 @@ data class Project(
         registerEvent(this.id!!, "updated", from)
     }
 
+    fun changeEmployeesWorkingOnProject(employees: Set<Employee>) {
+        val from = mapAggregateToKafkaDto()
+        this.employees = employees
+        registerEvent(this.id!!, "updated", from)
+    }
+
     fun deleteProject() {
         val from = mapAggregateToKafkaDto()
         this.deleted = true

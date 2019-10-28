@@ -5,6 +5,8 @@ import com.example.employeeadministration.model.dto.EmployeeDto
 
 interface EmployeeService: MappingService<Employee, EmployeeDto>, EventProducingPersistenceService<Employee> {
 
+    fun createEmployee(employeeDto: EmployeeDto): EmployeeDto
+    fun updateEmployee(employeeDto: EmployeeDto): EmployeeDto
     fun deleteEmployee(id: Long)
 
 }

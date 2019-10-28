@@ -32,13 +32,12 @@ class DepartmentControllerImpl(val departmentService: DepartmentService, val dep
     }
 
     @PutMapping(departmentUrl)
-    override fun updateDepartmentName(@RequestBody departmentDto: DepartmentDto): ResponseEntity<DepartmentDto> {
-        return ok(departmentRepository.getByIdAndDeletedFalse(departmentDto.id!!).map {
-            it.renameDepartment(departmentDto.name)
-            departmentService.mapEntityToDto(departmentService.persistWithEvents(it))
-        }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find department to update")
-        })
+    override fun updateDepartment(@RequestBody departmentDto: DepartmentDto): ResponseEntity<DepartmentDto> {
+        try {
+            return ok(departmentService.updateDepartment(departmentDto))
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong when updating the department", ex)
+        }
     }
 
     @DeleteMapping("$departmentUrl/{id}")
