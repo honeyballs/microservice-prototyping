@@ -11,6 +11,8 @@ import java.util.*
 @Repository
 interface EmployeeRepository: JpaRepository<Employee, Long> {
 
+    fun findByEmployeeId(id: Long): Optional<Employee>
+
     fun findAllByDeletedFalse(): List<Employee>
     fun findByEmployeeIdAndDeletedFalse(id: Long): Optional<Employee>
     fun findAllByEmployeeIdInAndDeletedFalse(ids: List<Long>): List<Employee>
