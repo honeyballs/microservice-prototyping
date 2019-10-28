@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 
-const val employeeUrl = "employees"
+const val employeeUrl = "employee"
 
 @RestController
 class EmployeeControllerImpl(val repository: EmployeeRepository, val service: EmployeeService, val departmentRepository: DepartmentRepository, val positionRepository: PositionRepository) : EmployeeController {

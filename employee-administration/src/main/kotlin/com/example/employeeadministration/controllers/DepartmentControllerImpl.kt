@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity.ok
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
-const val departmentUrl = "departments"
+const val departmentUrl = "department"
 
 @RestController
 class DepartmentControllerImpl(val departmentService: DepartmentService, val departmentRepository: DepartmentRepository): DepartmentController {

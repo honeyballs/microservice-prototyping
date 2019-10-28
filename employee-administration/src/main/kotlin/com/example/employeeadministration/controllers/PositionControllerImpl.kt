@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 
-const val positionUrl = "positions"
+const val positionUrl = "position"
 
 @RestController
 class PositionControllerImpl(val positionService: PositionService, val positionRepository: PositionRepository): PositionController {
