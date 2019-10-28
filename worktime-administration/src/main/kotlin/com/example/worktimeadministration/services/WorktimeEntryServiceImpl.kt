@@ -46,7 +46,7 @@ class WorktimeEntryServiceImpl(
             entryToUpdate.changeDescription(worktimeEntryDto.description)
         }
         if (entryToUpdate.project.projectId != worktimeEntryDto.project.id) {
-            entryToUpdate.project = projectRepository.findByProjectId(worktimeEntryDto.project.id).orElseThrow()
+            entryToUpdate.project = projectRepository.findByProjectIdAndDeletedFalse(worktimeEntryDto.project.id).orElseThrow()
         }
         return mapEntityToDto(persistWithEvents(entryToUpdate))
     }
@@ -122,8 +122,8 @@ class WorktimeEntryServiceImpl(
     }
 
     override fun mapDtoToEntity(dto: WorktimeEntryDto): WorktimeEntry {
-        val project = projectRepository.findByProjectId(dto.project.id).orElseThrow()
-        val employee = employeeRepository.findByEmployeeId(dto.employee.id).orElseThrow()
+        val project = projectRepository.findByProjectIdAndDeletedFalse(dto.project.id).orElseThrow()
+        val employee = employeeRepository.findByEmployeeIdAndDeletedFalse(dto.employee.id).orElseThrow()
         return WorktimeEntry(dto.id, dto.startTime, dto.endTime, dto.pauseTimeInMinutes, project, employee, dto.description, dto.type)
     }
 

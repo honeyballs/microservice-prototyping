@@ -39,7 +39,7 @@ class ProjectServiceImpl(
             project.delayProject(projectDto.projectedEndDate)
         }
         if (project.employees.map { it.employeeId } != projectDto.projectEmployees.map { it.id }) {
-            project.changeEmployeesWorkingOnProject(employeeRepository.findAllByEmployeeIdIn(projectDto.projectEmployees.map { it.id }).toSet())
+            project.changeEmployeesWorkingOnProject(employeeRepository.findAllByEmployeeIdInAndDeletedFalse(projectDto.projectEmployees.map { it.id }).toSet())
         }
         return mapEntityToDto(persistWithEvents(project))
     }
@@ -103,7 +103,7 @@ class ProjectServiceImpl(
 
     @Transactional
     override fun mapDtoToEntity(dto: ProjectDto): Project {
-        val employees = employeeRepository.findAllByEmployeeIdIn(dto.projectEmployees.map { it.id }).toSet()
+        val employees = employeeRepository.findAllByEmployeeIdInAndDeletedFalse(dto.projectEmployees.map { it.id }).toSet()
         val customer = customerRepository.findById(dto.customer.id).orElseThrow()
         return Project(dto.id, dto.name, dto.description, dto.startDate, dto.projectedEndDate, dto.endDate, employees, customer)
     }

@@ -41,7 +41,7 @@ class CustomerServiceImpl(
 
     @Transactional
     override fun deleteCustomer(id: Long) {
-        if (projectRepository.getAllByCustomer_IdAndDeletedFalse(id).isEmpty()) {
+        if (projectRepository.getAllByCustomerIdAndDeletedFalse(id).isEmpty()) {
             val customer = customerRepository.getByIdAndDeletedFalse(id).orElseThrow {
                 Exception("The customer you are trying to delete does not exist")
             }
