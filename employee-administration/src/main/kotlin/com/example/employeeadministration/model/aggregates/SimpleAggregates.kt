@@ -15,12 +15,9 @@ const val DEPARTMENT_AGGREGATE_NAME = "department"
 @Entity
 data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
                       @Column(name = "department_name") var name: String,
-                      var deleted: Boolean = false
-): EventAggregate() {
-
-    init {
-        aggregateName = DEPARTMENT_AGGREGATE_NAME
-    }
+                      var deleted: Boolean = false,
+                      override var aggregateName: String = DEPARTMENT_AGGREGATE_NAME
+) : EventAggregate() {
 
     fun created() {
         if (id != null) {
@@ -67,11 +64,13 @@ const val POSITION_AGGREGATE_NAME = "position"
  * Position aggregate
  */
 @Entity
-class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
-                                 var title: String,
-                                 minHourlyWage: BigDecimal,
-                                 maxHourlyWage: BigDecimal,
-                                 var deleted: Boolean = false): EventAggregate() {
+class Position @JsonCreator constructor(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+                                        var title: String,
+                                        minHourlyWage: BigDecimal,
+                                        maxHourlyWage: BigDecimal,
+                                        var deleted: Boolean = false,
+                                        override var aggregateName: String = POSITION_AGGREGATE_NAME
+) : EventAggregate() {
 
     var minHourlyWage: BigDecimal = minHourlyWage.setScale(2, RoundingMode.HALF_UP)
         set(value) {
@@ -82,10 +81,6 @@ class Position @JsonCreator constructor (@Id @GeneratedValue(strategy = Generati
         set(value) {
             field = value.setScale(2, RoundingMode.HALF_UP)
         }
-
-    init {
-        aggregateName = POSITION_AGGREGATE_NAME
-    }
 
     fun created() {
         if (id != null) {

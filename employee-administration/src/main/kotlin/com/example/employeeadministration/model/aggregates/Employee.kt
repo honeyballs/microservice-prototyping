@@ -27,7 +27,8 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                var availableVacationHours: Int,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?,
-               var deleted: Boolean = false
+               var deleted: Boolean = false,
+               override var aggregateName: String = EMPLOYEE_AGGREGATE_NAME
 ) : EventAggregate() {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
@@ -40,9 +41,6 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
     @Embedded
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
 
-    init {
-        aggregateName = EMPLOYEE_AGGREGATE_NAME
-    }
 
     fun created() {
         if (id != null) {

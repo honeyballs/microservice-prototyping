@@ -22,7 +22,8 @@ data class Project(
                 inverseJoinColumns = [JoinColumn(name = "employee_id")])
         var employees: Set<Employee>,
         @ManyToOne @JoinColumn(name = "fk_customer") val customer: Customer,
-        var deleted: Boolean = false
+        var deleted: Boolean = false,
+        override var aggregateName: String = PROJECT_AGGREGATE_NAME
 ): EventAggregate() {
 
     init {

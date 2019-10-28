@@ -14,12 +14,10 @@ data class Customer(
         var customerName: String,
         @Embedded var address: Address,
         @Embedded var contact: CustomerContact,
-        var deleted: Boolean = false
+        var deleted: Boolean = false,
+        override var aggregateName: String = CUSTOMER_AGGREGATE_NAME
 ): EventAggregate() {
 
-    init {
-        aggregateName = CUSTOMER_AGGREGATE_NAME
-    }
 
     fun created() {
         if (id != null) {

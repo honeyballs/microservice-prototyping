@@ -26,7 +26,8 @@ data class WorktimeEntry(
         val employee: Employee,
         var description: String,
         var type: EntryType,
-        var deleted: Boolean = false
+        var deleted: Boolean = false,
+        override var aggregateName: String = WORKTIME_AGGREGATE_NAME
 ): EventAggregate(), Serializable {
 
     init {
@@ -38,7 +39,6 @@ data class WorktimeEntry(
         if (!timeFitsWithinProjectSpan(startTime) || !timeFitsWithinProjectSpan(endTime)) {
             throw Exception("Timeframe not within project dates")
         }
-        aggregateName = WORKTIME_AGGREGATE_NAME
     }
 
     fun created() {

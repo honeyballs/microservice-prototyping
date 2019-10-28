@@ -16,7 +16,7 @@ import javax.persistence.Transient
 abstract class EventAggregate {
 
     @Transient
-    lateinit var aggregateName: String
+    open lateinit var aggregateName: String
 
     // Since events need a key property corresponding to the id of an aggregate a pair is used to store them.
     @Transient
