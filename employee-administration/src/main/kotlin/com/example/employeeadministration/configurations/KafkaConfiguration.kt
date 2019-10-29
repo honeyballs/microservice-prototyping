@@ -45,7 +45,7 @@ class KafkaConfiguration {
     @Bean
     fun producerConfigs():Map<String, Any> {
         val configs = HashMap<String, Any>()
-        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = env.getProperty("KAFKA_URL", "localhost:9092")
+        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = env.getProperty("KAFKA_URL", "localhost:9093")
         return configs
     }
 

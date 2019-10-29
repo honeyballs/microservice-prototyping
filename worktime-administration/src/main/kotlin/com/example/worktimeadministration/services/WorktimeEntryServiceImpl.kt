@@ -1,5 +1,7 @@
 package com.example.worktimeadministration.services
 
+import com.example.worktimeadministration.configurations.PendingException
+import com.example.worktimeadministration.configurations.throwPendingException
 import com.example.worktimeadministration.model.aggregates.AggregateState
 import com.example.worktimeadministration.model.aggregates.EntryType
 import com.example.worktimeadministration.model.aggregates.WorktimeEntry
@@ -11,6 +13,8 @@ import com.example.worktimeadministration.repositories.employee.EmployeeReposito
 import com.example.worktimeadministration.repositories.project.ProjectRepository
 import com.example.worktimeadministration.services.employee.EmployeeService
 import com.example.worktimeadministration.services.project.ProjectService
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -30,9 +34,11 @@ class WorktimeEntryServiceImpl(
     /**
      * Collects multiple Updates on an aggregate.
      */
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun updateWorktimeEntry(worktimeEntryDto: WorktimeEntryDto): WorktimeEntryDto {
         val entryToUpdate = worktimeEntryRepository.findById(worktimeEntryDto.id!!).orElseThrow()
+        throwPendingException(entryToUpdate)
         if (entryToUpdate.startTime != worktimeEntryDto.startTime) {
             entryToUpdate.adjustStartTime(worktimeEntryDto.startTime)
         }
@@ -61,9 +67,11 @@ class WorktimeEntryServiceImpl(
         return mapEntityToDto(persistWithEvents(entry))
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun deleteEntry(id: Long) {
         val entry = worktimeEntryRepository.findById(id).orElseThrow()
+        throwPendingException(entry)
         entry.deleteEntry()
         persistWithEvents(entry)
     }
@@ -117,7 +125,8 @@ class WorktimeEntryServiceImpl(
                 projectService.mapEntityToDto(entity.project),
                 employeeService.mapEntityToDto(entity.employee),
                 entity.description,
-                entity.type
+                entity.type,
+                entity.state
         )
     }
 

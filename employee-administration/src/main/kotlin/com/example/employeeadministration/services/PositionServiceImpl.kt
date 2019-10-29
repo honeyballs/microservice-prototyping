@@ -1,11 +1,15 @@
 package com.example.employeeadministration.services
 
+import com.example.employeeadministration.configurations.PendingException
+import com.example.employeeadministration.configurations.throwPendingException
 import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.aggregates.Position
 import com.example.employeeadministration.model.dto.PositionDto
 import com.example.employeeadministration.model.aggregates.AggregateState
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -28,8 +32,11 @@ class PositionServiceImpl(
                 .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(positionDto))) }
     }
 
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun updatePosition(positionDto: PositionDto): PositionDto {
         val position = positionRepository.findById(positionDto.id!!).orElseThrow()
+        throwPendingException(position)
         if (position.title != positionDto.title) {
             position.changePositionTitle(positionDto.title)
         }
@@ -39,12 +46,15 @@ class PositionServiceImpl(
         return mapEntityToDto(persistWithEvents(position))
     }
 
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     @Transactional
     override fun deletePosition(id: Long) {
         if (employeeRepository.getAllByPosition_IdAndDeletedFalse(id).isEmpty()) {
             val position = positionRepository.getByIdAndDeletedFalse(id).orElseThrow {
                 Exception("The job position you are trying to delete does not exist")
             }
+            throwPendingException(position)
             position.deletePosition()
             persistWithEvents(position)
         } else {
@@ -92,7 +102,7 @@ class PositionServiceImpl(
     }
 
     override fun mapEntityToDto(entity: Position): PositionDto {
-        return PositionDto(entity.id!!, entity.title, entity.minHourlyWage, entity.maxHourlyWage)
+        return PositionDto(entity.id!!, entity.title, entity.minHourlyWage, entity.maxHourlyWage, entity.state)
     }
 
     override fun mapDtoToEntity(dto: PositionDto): Position {

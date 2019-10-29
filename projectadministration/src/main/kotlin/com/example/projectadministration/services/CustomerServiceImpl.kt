@@ -1,11 +1,15 @@
 package com.example.projectadministration.services
 
+import com.example.projectadministration.configurations.PendingException
+import com.example.projectadministration.configurations.throwPendingException
 import com.example.projectadministration.model.aggregates.AggregateState
 import com.example.projectadministration.model.aggregates.Customer
 import com.example.projectadministration.model.dto.CustomerDto
 import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.services.kafka.KafkaEventProducer
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -24,9 +28,11 @@ class CustomerServiceImpl(
         return mapEntityToDto(persistWithEvents(customer))
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun updateCustomer(customerDto: CustomerDto): CustomerDto {
         val customer = customerRepository.findById(customerDto.id!!).orElseThrow()
+        throwPendingException(customer)
         if (customer.customerName != customerDto.customerName) {
             customer.changeName(customerDto.customerName)
         }
@@ -39,12 +45,15 @@ class CustomerServiceImpl(
         return mapEntityToDto(persistWithEvents(customer))
     }
 
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     @Transactional
     override fun deleteCustomer(id: Long) {
         if (projectRepository.getAllByCustomerIdAndDeletedFalse(id).isEmpty()) {
             val customer = customerRepository.getByIdAndDeletedFalse(id).orElseThrow {
                 Exception("The customer you are trying to delete does not exist")
             }
+            throwPendingException(customer)
             customer.deleteCustomer()
             persistWithEvents(customer)
         } else {
@@ -93,7 +102,7 @@ class CustomerServiceImpl(
     }
 
     override fun mapEntityToDto(entity: Customer): CustomerDto {
-        return CustomerDto(entity.id, entity.customerName, entity.address, entity.contact)
+        return CustomerDto(entity.id, entity.customerName, entity.address, entity.contact, entity.state)
     }
 
     override fun mapDtoToEntity(dto: CustomerDto): Customer {

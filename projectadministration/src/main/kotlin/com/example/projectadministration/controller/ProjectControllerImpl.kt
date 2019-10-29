@@ -58,7 +58,7 @@ class ProjectControllerImpl(
     }
 
     @PutMapping(projectUrl)
-    override fun updateProject(projectDto: ProjectDto): ResponseEntity<ProjectDto> {
+    override fun updateProject(@RequestBody projectDto: ProjectDto): ResponseEntity<ProjectDto> {
         try {
             return ok(projectService.updateProject(projectDto))
         } catch (ex: Exception) {

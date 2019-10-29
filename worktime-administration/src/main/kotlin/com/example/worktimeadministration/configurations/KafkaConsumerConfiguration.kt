@@ -31,7 +31,7 @@ class KafkaConsumerConfiguration {
     @Bean
     fun consumerConfig(): Map<String, Any> {
         val configs = HashMap<String, Any>()
-        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = env.getProperty("KAFKA_URL", "localhost:9092")
+        configs[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = env.getProperty("KAFKA_URL", "localhost:9093")
         configs[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
         configs[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
         return configs

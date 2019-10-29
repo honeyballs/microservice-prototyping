@@ -46,6 +46,6 @@ class EmployeeControllerImpl(
             throw ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "No Project under the given id", ex)
         }
-        return ok(employeeService.mapEntitiesToDtos(employeeRepository.findAllByProjectsContainsAndDeletedFalse(project)))
+        return ok(employeeService.mapEntitiesToDtos(project.employees.toList()))
     }
 }

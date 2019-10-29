@@ -1,5 +1,7 @@
 package com.example.employeeadministration.services
 
+import com.example.employeeadministration.configurations.PendingException
+import com.example.employeeadministration.configurations.throwPendingException
 import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.aggregates.Employee
 import com.example.employeeadministration.model.dto.EmployeeDto
@@ -7,6 +9,8 @@ import com.example.employeeadministration.model.aggregates.AggregateState
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -28,9 +32,11 @@ class EmployeeServiceImpl(
         return mapEntityToDto(persistWithEvents(employee))
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun updateEmployee(employeeDto: EmployeeDto): EmployeeDto {
         val employee = employeeRepository.findById(employeeDto.id!!).orElseThrow()
+        throwPendingException(employee)
         if (employee.firstname != employeeDto.firstname || employee.lastname != employeeDto.lastname) {
             employee.changeName(employeeDto.firstname, employeeDto.lastname)
         }
@@ -53,12 +59,14 @@ class EmployeeServiceImpl(
     }
 
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     @Transactional
     override fun deleteEmployee(id: Long) {
         val employee = employeeRepository.getByIdAndDeletedFalse(id).orElseThrow {
             Exception("The employee you are trying to delete does not exist")
         }
+        throwPendingException(employee)
         employee.deleteEmployee()
         persistWithEvents(employee)
     }
@@ -102,7 +110,7 @@ class EmployeeServiceImpl(
     }
 
     override fun mapEntityToDto(entity: Employee): EmployeeDto {
-        return EmployeeDto(entity.id!!, entity.firstname, entity.lastname, entity.birthday, entity.address, entity.bankDetails, departmentService.mapEntityToDto(entity.department), positionService.mapEntityToDto(entity.position), entity.hourlyRate, entity.availableVacationHours, entity.companyMail)
+        return EmployeeDto(entity.id!!, entity.firstname, entity.lastname, entity.birthday, entity.address, entity.bankDetails, departmentService.mapEntityToDto(entity.department), positionService.mapEntityToDto(entity.position), entity.hourlyRate, entity.availableVacationHours, entity.companyMail, entity.state)
     }
 
     @Throws(Exception::class)

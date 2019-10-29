@@ -14,8 +14,7 @@ class EmployeeServiceImpl(): EmployeeService {
         return EmployeeDto(
                 entity.employeeId,
                 entity.firstname,
-                entity.lastname,
-                entity.projects.map { it.projectId }.toSet()
+                entity.lastname
         )
     }
 

@@ -9,6 +9,7 @@ import com.example.projectadministration.model.events.UpdateStateEvent
 import com.example.projectadministration.model.saga.SagaState
 import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.SagaRepository
+import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.services.SagaService
 import com.example.projectadministration.services.getResponseEventKeyword
 import com.example.projectadministration.services.getSagaCompleteType
@@ -29,7 +30,7 @@ class KafkaCustomerEventHandler(
         val sagaService: SagaService,
         val mapper: ObjectMapper,
         val eventProducer: KafkaEventProducer
-) {
+): EventHandler {
 
     val logger = LoggerFactory.getLogger(KafkaCustomerEventHandler::class.java)
 

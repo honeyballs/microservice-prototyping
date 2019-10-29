@@ -21,7 +21,7 @@ data class ProjectKfk(
         val startDate: LocalDate,
         val projectedEndDate: LocalDate,
         val endDate: LocalDate?,
-        val employees: Set<Long>,
+        val employees: MutableSet<Long>,
         val customer: Long,
         val deleted: Boolean,
         val state: AggregateState

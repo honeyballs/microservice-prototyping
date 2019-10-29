@@ -1,5 +1,7 @@
 package com.example.projectadministration.services
 
+import com.example.projectadministration.configurations.PendingException
+import com.example.projectadministration.configurations.throwPendingException
 import com.example.projectadministration.model.aggregates.AggregateState
 import com.example.projectadministration.model.aggregates.Project
 import com.example.projectadministration.model.dto.ProjectCustomerDto
@@ -9,6 +11,8 @@ import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.repositories.employee.EmployeeRepository
 import com.example.projectadministration.services.kafka.KafkaEventProducer
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
@@ -29,9 +33,11 @@ class ProjectServiceImpl(
         return mapEntityToDto(persistWithEvents(project))
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun updateProject(projectDto: ProjectDto): ProjectDto {
         val project = projectRepository.findById(projectDto.id!!).orElseThrow()
+        throwPendingException(project)
         if (project.description != projectDto.description) {
             project.updateProjectDescription(projectDto.description)
         }
@@ -39,20 +45,22 @@ class ProjectServiceImpl(
             project.delayProject(projectDto.projectedEndDate)
         }
         if (project.employees.map { it.employeeId } != projectDto.projectEmployees.map { it.id }) {
-            project.changeEmployeesWorkingOnProject(employeeRepository.findAllByEmployeeIdInAndDeletedFalse(projectDto.projectEmployees.map { it.id }).toSet())
+            project.changeEmployeesWorkingOnProject(employeeRepository.findAllByEmployeeIdInAndDeletedFalse(projectDto.projectEmployees.map { it.id }).toMutableSet())
         }
         return mapEntityToDto(persistWithEvents(project))
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class, Exception::class)
     override fun finishProject(id: Long, endDate: LocalDate): ProjectDto {
         val project = projectRepository.findById(id).orElseThrow()
+        throwPendingException(project)
         project.finishProject(endDate)
         return mapEntityToDto(persistWithEvents(project))
     }
 
     override fun deleteProject(id: Long) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented - projects aren't really deleted")
     }
 
     @Transactional
@@ -96,16 +104,16 @@ class ProjectServiceImpl(
     }
 
     override fun mapEntityToDto(entity: Project): ProjectDto {
-        val employeeDtos = entity.employees.map { ProjectEmployeeDto(it.employeeId, it.firstname, it.lastname, it.companyMail) }.toSet()
+        val employeeDtos = entity.employees.map { ProjectEmployeeDto(it.employeeId, it.firstname, it.lastname, it.companyMail) }.toMutableSet()
         val customerDto = ProjectCustomerDto(entity.customer.id!!, entity.customer.customerName)
-        return ProjectDto(entity.id, entity.name, entity.description, entity.startDate, entity.projectedEndDate, entity.endDate, employeeDtos, customerDto)
+        return ProjectDto(entity.id, entity.name, entity.description, entity.startDate, entity.projectedEndDate, entity.endDate, employeeDtos, customerDto, entity.state)
     }
 
     @Transactional
     override fun mapDtoToEntity(dto: ProjectDto): Project {
         val employees = employeeRepository.findAllByEmployeeIdInAndDeletedFalse(dto.projectEmployees.map { it.id }).toSet()
         val customer = customerRepository.findById(dto.customer.id).orElseThrow()
-        return Project(dto.id, dto.name, dto.description, dto.startDate, dto.projectedEndDate, dto.endDate, employees, customer)
+        return Project(dto.id, dto.name, dto.description, dto.startDate, dto.projectedEndDate, dto.endDate, employees.toMutableSet(), customer)
     }
 
     override fun mapEntitiesToDtos(entities: List<Project>): List<ProjectDto> {

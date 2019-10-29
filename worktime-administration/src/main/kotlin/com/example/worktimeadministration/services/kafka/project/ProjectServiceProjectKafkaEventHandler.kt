@@ -40,29 +40,29 @@ class ProjectServiceProjectKafkaEventHandler(
     fun handle(event: DomainEvent, ack: Acknowledgment) {
         logger.info("Project Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
-        val eventEmployee = event.to
+        val eventProject = event.to
         try {
 
             when (action) {
-                "created" -> createProject(eventEmployee as ProjectKfk)
-                "updated" -> updateProject(eventEmployee as ProjectKfk)
-                "deleted" -> deleteProject(eventEmployee as ProjectKfk)
+                "created" -> createProject(eventProject as ProjectKfk)
+                "updated" -> updateProject(eventProject as ProjectKfk)
+                "deleted" -> deleteProject(eventProject as ProjectKfk)
             }
 
             val success = event.successEvent
             success.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventEmployee.id, success, EMPLOYEE_AGGREGATE_NAME)
+            producer.sendDomainEvent(eventProject.id, success, PROJECT_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
             val failure = event.failureEvent
             failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
+            producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
             val failure = event.failureEvent
             failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
+            producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
         } finally {
             ack.acknowledge()
         }
@@ -85,8 +85,8 @@ class ProjectServiceProjectKafkaEventHandler(
 
     @Throws(RollbackException::class, Exception::class)
     fun createProject(eventProject: ProjectKfk) {
-        val employees = employeeRepository.findAllById(eventProject.employees)
-        val proj = Project(null, eventProject.id, eventProject.name, eventProject.description, eventProject.startDate, eventProject.projectedEndDate, eventProject.endDate, employees.toSet(), eventProject.deleted, eventProject.state)
+        val employees = employeeRepository.findAllByEmployeeIdIn(eventProject.employees.toList()).toSet()
+        val proj = Project(null, eventProject.id, eventProject.name, eventProject.description, eventProject.startDate, eventProject.projectedEndDate, eventProject.endDate, employees.toMutableSet(), eventProject.deleted, eventProject.state)
         projectRepository.save(proj)
     }
 
@@ -94,13 +94,13 @@ class ProjectServiceProjectKafkaEventHandler(
     fun updateProject(eventProject: ProjectKfk) {
         // If we would not load beforehand a new db row would be created because dbId is only set in this service
         val proj = projectRepository.findByProjectId(eventProject.id).orElseThrow()
-        val employees = employeeRepository.findAllById(eventProject.employees)
+        val employees = employeeRepository.findAllByEmployeeIdIn(eventProject.employees.toList()).toMutableSet()
         proj.name = eventProject.name
         proj.description = eventProject.description
         proj.startDate = eventProject.startDate
         proj.projectedEndDate = eventProject.projectedEndDate
         proj.endDate = eventProject.endDate
-        proj.employees = employees.toSet()
+        proj.employees = employees
         proj.state = eventProject.state
         projectRepository.save(proj)
     }

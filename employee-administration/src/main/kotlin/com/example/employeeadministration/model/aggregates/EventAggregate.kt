@@ -35,6 +35,7 @@ abstract class EventAggregate {
             events = Pair(aggregateId, ArrayList())
         }
         events!!.second.add(event)
+        state = AggregateState.PENDING
     }
 
     fun events(): Pair<Long, MutableList<DomainEvent>>? {

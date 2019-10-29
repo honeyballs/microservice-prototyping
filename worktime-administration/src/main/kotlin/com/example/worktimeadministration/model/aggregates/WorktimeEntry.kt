@@ -18,10 +18,10 @@ data class WorktimeEntry(
         var startTime: LocalDateTime,
         var endTime: LocalDateTime,
         var pauseTimeInMinutes: Int = 0,
-        @ManyToOne(cascade = [CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH])
+        @ManyToOne(cascade = [CascadeType.REFRESH])
         @JoinColumn(name="project_id")
         var project: Project,
-        @ManyToOne(cascade = [CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH])
+        @ManyToOne(cascade = [CascadeType.REFRESH])
         @JoinColumn(name="employee_id")
         val employee: Employee,
         var description: String,

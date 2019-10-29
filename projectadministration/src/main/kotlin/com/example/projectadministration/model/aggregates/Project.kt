@@ -16,12 +16,12 @@ data class Project(
         val startDate: LocalDate,
         var projectedEndDate: LocalDate,
         var endDate: LocalDate?,
-        @ManyToMany(cascade = [CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH])
+        @ManyToMany(cascade = [CascadeType.REFRESH])
         @JoinTable(name = "project_employees",
                 joinColumns = [JoinColumn(name = "project_id")],
                 inverseJoinColumns = [JoinColumn(name = "employee_id")])
-        var employees: Set<Employee>,
-        @ManyToOne @JoinColumn(name = "fk_customer") val customer: Customer,
+        var employees: MutableSet<Employee>,
+        @ManyToOne(cascade = [CascadeType.REFRESH]) @JoinColumn(name = "fk_customer") val customer: Customer,
         var deleted: Boolean = false,
         override var aggregateName: String = PROJECT_AGGREGATE_NAME
 ): EventAggregate() {
@@ -56,17 +56,17 @@ data class Project(
 
     fun addEmployeeToProject(employee: Employee) {
         val from = mapAggregateToKafkaDto()
-        this.employees = this.employees.plus(employee)
+        this.employees.add(employee)
         registerEvent(this.id!!, "updated", from)
     }
 
     fun removeEmployeeFromProject(employee: Employee) {
         val from = mapAggregateToKafkaDto()
-        this.employees = this.employees.minus(employee)
+        this.employees.remove(employee)
         registerEvent(this.id!!, "updated", from)
     }
 
-    fun changeEmployeesWorkingOnProject(employees: Set<Employee>) {
+    fun changeEmployeesWorkingOnProject(employees: MutableSet<Employee>) {
         val from = mapAggregateToKafkaDto()
         this.employees = employees
         registerEvent(this.id!!, "updated", from)
@@ -79,7 +79,7 @@ data class Project(
     }
 
     override fun mapAggregateToKafkaDto(): ProjectKfk {
-        return ProjectKfk(this.id!!, this.name, this.description, this.startDate, this.projectedEndDate, this.endDate, this.employees.map { it.employeeId }.toSet(), this.customer.id!!, this.deleted, this.state)
+        return ProjectKfk(this.id!!, this.name, this.description, this.startDate, this.projectedEndDate, this.endDate, this.employees.map { it.employeeId }.toMutableSet(), this.customer.id!!, this.deleted, this.state)
     }
 
 }

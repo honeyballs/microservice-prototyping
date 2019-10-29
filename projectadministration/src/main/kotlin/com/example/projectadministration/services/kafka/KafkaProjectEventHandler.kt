@@ -13,6 +13,7 @@ import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.repositories.SagaRepository
 import com.example.projectadministration.repositories.employee.EmployeeRepository
+import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.services.SagaService
 import com.example.projectadministration.services.getResponseEventKeyword
 import com.example.projectadministration.services.getSagaCompleteType
@@ -34,14 +35,14 @@ class KafkaProjectEventHandler(
         val sagaService: SagaService,
         val mapper: ObjectMapper,
         val eventProducer: KafkaEventProducer
-) {
+): EventHandler {
 
     val logger = LoggerFactory.getLogger(KafkaProjectEventHandler::class.java)
-
 
     @KafkaHandler
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
+        logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}")
         try {
             val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
             if (getResponseEventKeyword(responseEvent.type) == "success") {
@@ -75,8 +76,8 @@ class KafkaProjectEventHandler(
         project.name = projectKfk.name
         project.description = projectKfk.description
         project.projectedEndDate = projectKfk.projectedEndDate
-        project.endDate = projectKfk.projectedEndDate
-        project.employees = projectKfk.employees.map { employeeRepository.findByEmployeeId(id).orElseThrow() }.toSet()
+        project.endDate = projectKfk.endDate
+        project.employees = projectKfk.employees.map { employeeRepository.findByEmployeeId(id).orElseThrow() }.toMutableSet()
         projectRepository.save(project)
     }
 

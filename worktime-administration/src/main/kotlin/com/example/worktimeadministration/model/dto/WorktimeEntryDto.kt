@@ -7,8 +7,11 @@ import com.example.worktimeadministration.model.aggregates.employee.Employee
 import com.example.worktimeadministration.model.dto.employee.EmployeeDto
 import com.example.worktimeadministration.model.dto.project.ProjectDto
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDateTime
 
+@JsonIgnoreProperties(value = ["state"], allowGetters = true)
 class WorktimeEntryDto(
         val id: Long?,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = dateTimePattern) var startTime: LocalDateTime,
@@ -17,5 +20,6 @@ class WorktimeEntryDto(
         val project: ProjectDto,
         val employee: EmployeeDto,
         var description: String,
-        var type: EntryType
+        var type: EntryType,
+        @JsonProperty("state") val state: AggregateState?
 )

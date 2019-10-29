@@ -5,6 +5,5 @@ import com.example.worktimeadministration.model.dto.project.ProjectDto
 class EmployeeDto(
     val id: Long,
     val firstname: String,
-    val lastname: String,
-    val projects: Set<Long>
+    val lastname: String
 )

@@ -10,10 +10,12 @@ spring:
     console:
       enabled: true
       path: /console
+      settings:
+        web-allow-others: true
 
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
 server:
-  port: 8090
+  port: 8085

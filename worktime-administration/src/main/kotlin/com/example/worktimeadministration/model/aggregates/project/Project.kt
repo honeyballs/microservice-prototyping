@@ -17,11 +17,11 @@ data class Project(
         var startDate: LocalDate,
         var projectedEndDate: LocalDate,
         var endDate: LocalDate?,
-        @ManyToMany(cascade = [CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH], fetch = FetchType.LAZY)
+        @ManyToMany(cascade = [CascadeType.REFRESH], fetch = FetchType.LAZY)
         @JoinTable(name = "project_employees",
                 joinColumns = [JoinColumn(name = "project_id", referencedColumnName = "projectId")],
                 inverseJoinColumns = [JoinColumn(name = "employee_id", referencedColumnName = "employeeId")])
-        var employees: Set<Employee>,
+        var employees: MutableSet<Employee>,
         var deleted: Boolean,
         var state: AggregateState
 ): Serializable {

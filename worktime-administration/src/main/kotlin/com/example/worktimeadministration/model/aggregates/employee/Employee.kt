@@ -16,22 +16,6 @@ data class Employee(
         var companyMail: String,
         var availableVacationHours: Int,
         var usedVacationHours: Int,
-        @ManyToMany(mappedBy = "employees", fetch = FetchType.LAZY)
-        val projects: Set<Project>,
         var deleted: Boolean,
         var state: AggregateState
-): Serializable {
-
-    constructor(
-            dbId: Long?,
-            employeeId: Long,
-            firstname: String,
-            lastname: String,
-            companyMail: String,
-            availableVacationHours: Int,
-            usedVacationHours: Int,
-            deleted: Boolean,
-            state: AggregateState
-    ): this(dbId, employeeId, firstname, lastname, companyMail, availableVacationHours, usedVacationHours, emptySet(), deleted, state)
-
-}
+): Serializable
