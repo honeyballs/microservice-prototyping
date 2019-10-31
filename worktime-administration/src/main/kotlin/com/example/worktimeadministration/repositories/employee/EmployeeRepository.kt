@@ -7,6 +7,8 @@ import java.util.*
 
 interface EmployeeRepository: JpaRepository<Employee, Long> {
 
+    fun deleteByEmployeeId(id: Long)
+
     fun findByEmployeeId(id: Long): Optional<Employee>
     fun findAllByEmployeeIdIn(ids: List<Long>): List<Employee>
 

@@ -110,12 +110,13 @@ data class WorktimeEntry(
     }
 
     fun isPauseSufficient(timespan: Int, pause: Int? = null): Boolean {
-        return timespan in 8..9 && pause ?: pauseTimeInMinutes >= 30
+        return timespan < 8 || timespan in 8..9 && pause ?: pauseTimeInMinutes >= 30
                 || timespan >= 10 && pause ?:pauseTimeInMinutes >= 60
     }
 
     fun timeFitsWithinProjectSpan(time: LocalDateTime): Boolean {
-        return time.toLocalDate().isAfter(project.startDate) && time.toLocalDate().isBefore(project.endDate)
+        val endDateToUse = project.endDate ?: project.projectedEndDate
+        return time.toLocalDate().isAfter(project.startDate) && time.toLocalDate().isBefore(endDateToUse)
     }
 
     fun employeeHasEnoughVacationHours(timespan: Int): Boolean {

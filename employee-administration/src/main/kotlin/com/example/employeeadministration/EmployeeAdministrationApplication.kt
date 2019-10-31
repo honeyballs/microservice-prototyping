@@ -34,15 +34,15 @@ class EmployeeAdministrationApplication {
 //        }
 //    }
 //
-    @Autowired
-    lateinit var departmentService: DepartmentService
-
-    @Autowired
-    lateinit var positionService: PositionService
-
-    @Autowired
-    lateinit var employeeService: EmployeeService
-
+//    @Autowired
+//    lateinit var departmentService: DepartmentService
+//
+//    @Autowired
+//    lateinit var positionService: PositionService
+//
+//    @Autowired
+//    lateinit var employeeService: EmployeeService
+//
 //    @Bean
 //    fun repositoryKafkaTestRunner(): CommandLineRunner {
 //        return CommandLineRunner {
@@ -52,8 +52,8 @@ class EmployeeAdministrationApplication {
 //            position = positionService.persistWithEvents(position)
 //            val address = Address("Teststr.", 17, "Berlin", ZipCode(12345))
 //            val bankDetails = BankDetails("128319815719", "4712841", "Sparkasse")
-//            var employee = Employee(null, "Max", "Mustermann", LocalDate.now().minusYears(25), address, bankDetails, department, position, 8 * 30, BigDecimal(40.34), null)
-//            Thread.sleep(1000)
+//            var employee = Employee(null, "Max", "FAIL", LocalDate.now().minusYears(25), address, bankDetails, department, position, 8 * 30, BigDecimal(40.34), null)
+//            Thread.sleep(2000)
 //            employee = employeeService.persistWithEvents(employee)
 //            department.renameDepartment("Java Development")
 //            departmentService.persistWithEvents(department)

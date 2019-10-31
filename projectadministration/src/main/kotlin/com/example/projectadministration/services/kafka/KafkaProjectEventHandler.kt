@@ -44,15 +44,16 @@ class KafkaProjectEventHandler(
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}")
         try {
-            val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
-            if (getResponseEventKeyword(responseEvent.type) == "success") {
-                val state = saga.receivedSuccessEvent(responseEvent.consumerName)
-                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(saga.id!!, saga.aggregateId)) {
-                    activateProject(saga.aggregateId, saga.id!!)
+            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+                if (getResponseEventKeyword(responseEvent.type) == "success") {
+                    val state = it.receivedSuccessEvent(responseEvent.consumerName)
+                    if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
+                        activateProject(it.aggregateId, it.id!!)
+                    }
+                } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                    it.receivedFailureEvent()
+                    rollbackProject(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
-            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
-                saga.receivedFailureEvent()
-                rollbackProject(saga.aggregateId, saga.leftAggregate)
             }
             ack.acknowledge()
         } catch (exception: Exception) {
@@ -69,16 +70,21 @@ class KafkaProjectEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackProject(id: Long, data: String) {
-        val projectKfk = mapper.readValue<ProjectKfk>(data)
+    fun rollbackProject(id: Long, data: String, failedData: String) {
+        val projectKfk: ProjectKfk? =  mapper.readValue<ProjectKfk>(data)
         val project = projectRepository.findById(id).orElseThrow()
-        project.deleted = projectKfk.deleted
-        project.name = projectKfk.name
-        project.description = projectKfk.description
-        project.projectedEndDate = projectKfk.projectedEndDate
-        project.endDate = projectKfk.endDate
-        project.employees = projectKfk.employees.map { employeeRepository.findByEmployeeId(id).orElseThrow() }.toMutableSet()
-        projectRepository.save(project)
+        if (projectKfk == null) {
+            projectRepository.deleteById(id)
+        } else {
+            project.deleted = projectKfk.deleted
+            project.name = projectKfk.name
+            project.description = projectKfk.description
+            project.projectedEndDate = projectKfk.projectedEndDate
+            project.endDate = projectKfk.endDate
+            project.employees = projectKfk.employees.map { employeeRepository.findByEmployeeId(id).orElseThrow() }.toMutableSet()
+            projectRepository.save(project)
+        }
+        // Check the employee service employee kafka handler for rollback event
     }
 
     @KafkaHandler(isDefault = true)

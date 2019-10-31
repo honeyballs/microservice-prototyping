@@ -38,15 +38,16 @@ class KafkaPositionEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         try {
-            val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
-            if (getResponseEventKeyword(responseEvent.type) == "success") {
-                val state = saga.receivedSuccessEvent(responseEvent.consumerName)
-                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(saga.id!!, saga.aggregateId)) {
-                    activatePosition(saga.aggregateId, saga.id!!)
+            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+                if (getResponseEventKeyword(responseEvent.type) == "success") {
+                    val state = it.receivedSuccessEvent(responseEvent.consumerName)
+                    if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
+                        activatePosition(it.aggregateId, it.id!!)
+                    }
+                } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                    it.receivedFailureEvent()
+                    rollbackPosition(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
-            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
-                saga.receivedFailureEvent()
-                rollbackPosition(saga.aggregateId, saga.leftAggregate)
             }
             ack.acknowledge()
         } catch (exception: Exception) {
@@ -63,14 +64,19 @@ class KafkaPositionEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackPosition(id: Long, data: String) {
-        val positionKfk = mapper.readValue<PositionKfk>(data)
+    fun rollbackPosition(id: Long, data: String, failedData: String) {
+        val positionKfk: PositionKfk? = mapper.readValue<PositionKfk>(data)
         val pos = positionRepository.findById(id).orElseThrow()
-        pos.deleted = positionKfk.deleted
-        pos.title = positionKfk.title
-        pos.minHourlyWage = positionKfk.minHourlyWage
-        pos.maxHourlyWage = positionKfk.maxHourlyWage
-        positionRepository.save(pos)
+        if (positionKfk == null) {
+            positionRepository.deleteById(id)
+        } else {
+            pos.deleted = positionKfk.deleted
+            pos.title = positionKfk.title
+            pos.minHourlyWage = positionKfk.minHourlyWage
+            pos.maxHourlyWage = positionKfk.maxHourlyWage
+            positionRepository.save(pos)
+        }
+        // Check the employee kafka handler for rollback event
     }
 
     @KafkaHandler(isDefault = true)

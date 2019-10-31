@@ -38,15 +38,16 @@ class KafkaDepartmentEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         try {
-            val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
-            if (getResponseEventKeyword(responseEvent.type) == "success") {
-                val state = saga.receivedSuccessEvent(responseEvent.consumerName)
-                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(saga.id!!, saga.aggregateId)) {
-                    activateDepartment(saga.aggregateId, saga.id!!)
+            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+                if (getResponseEventKeyword(responseEvent.type) == "success") {
+                    val state = it.receivedSuccessEvent(responseEvent.consumerName)
+                    if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
+                        activateDepartment(it.aggregateId, it.id!!)
+                    }
+                } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                    it.receivedFailureEvent()
+                    rollbackDepartment(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
-            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
-                saga.receivedFailureEvent()
-                rollbackDepartment(saga.aggregateId, saga.leftAggregate)
             }
             ack.acknowledge()
         } catch (exception: Exception) {
@@ -63,12 +64,17 @@ class KafkaDepartmentEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackDepartment(id: Long, data: String) {
-        val departmentKfk = mapper.readValue<DepartmentKfk>(data)
+    fun rollbackDepartment(id: Long, data: String, failedData: String) {
+        val departmentKfk: DepartmentKfk? = mapper.readValue<DepartmentKfk>(data)
         val dep = departmentRepository.findById(id).orElseThrow()
-        dep.deleted = departmentKfk.deleted
-        dep.name = departmentKfk.name
-        departmentRepository.save(dep)
+        if (departmentKfk == null) {
+            departmentRepository.deleteById(id)
+        } else {
+            dep.deleted = departmentKfk.deleted
+            dep.name = departmentKfk.name
+            departmentRepository.save(dep)
+        }
+        // Check the employee kafka handler for rollback event
     }
 
 

@@ -39,15 +39,16 @@ class KafkaCustomerEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         try {
-            val saga = sagaRepository.getBySagaEventId(responseEvent.rootEventId).orElseThrow()
-            if (getResponseEventKeyword(responseEvent.type) == "success") {
-                val state = saga.receivedSuccessEvent(responseEvent.consumerName)
-                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(saga.id!!, saga.aggregateId)) {
-                    activateCustomer(saga.aggregateId, saga.id!!)
+            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+                if (getResponseEventKeyword(responseEvent.type) == "success") {
+                    val state = it.receivedSuccessEvent(responseEvent.consumerName)
+                    if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
+                        activateCustomer(it.aggregateId, it.id!!)
+                    }
+                } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                    it.receivedFailureEvent()
+                    rollbackCustomer(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
-            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
-                saga.receivedFailureEvent()
-                rollbackCustomer(saga.aggregateId, saga.leftAggregate)
             }
             ack.acknowledge()
         } catch (exception: Exception) {
@@ -64,14 +65,19 @@ class KafkaCustomerEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackCustomer(id: Long, data: String) {
-        val customerKfk = mapper.readValue<CustomerKfk>(data)
+    fun rollbackCustomer(id: Long, data: String, failedData: String) {
+        val customerKfk: CustomerKfk? = mapper.readValue<CustomerKfk>(data)
         val customer = customerRepository.findById(id).orElseThrow()
-        customer.deleted = customerKfk.deleted
-        customer.address = customerKfk.address
-        customer.contact = customerKfk.contact
-        customer.customerName = customerKfk.customerName
-        customerRepository.save(customer)
+        if (customerKfk == null) {
+            customerRepository.deleteById(id)
+        } else {
+            customer.deleted = customerKfk.deleted
+            customer.address = customerKfk.address
+            customer.contact = customerKfk.contact
+            customer.customerName = customerKfk.customerName
+            customerRepository.save(customer)
+        }
+        // Check the employee service employee kafka handler for rollback event
     }
 
     @KafkaHandler(isDefault = true)

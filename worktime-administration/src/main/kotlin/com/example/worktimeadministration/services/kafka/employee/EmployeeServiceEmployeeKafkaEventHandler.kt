@@ -41,6 +41,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
                 "created" -> createEmployee(eventEmployee as EmployeeKfk)
                 "updated" -> updateEmployee(eventEmployee as EmployeeKfk)
                 "deleted" -> deleteEmployee(eventEmployee as EmployeeKfk)
+                "rollback" -> rollbackEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
             }
 
             val success = event.successEvent
@@ -101,6 +102,21 @@ class EmployeeServiceEmployeeKafkaEventHandler(
         emp.deleted = true
         emp.state = eventEmployee.state
         employeeRepository.save(emp)
+    }
+
+    @Throws(RollbackException::class, Exception::class)
+    fun rollbackEmployee(failedValue: EmployeeKfk, rollbackValue: EmployeeKfk?) {
+        if (rollbackValue == null) {
+            employeeRepository.deleteByEmployeeId(failedValue.id)
+        } else {
+            val employee = employeeRepository.findByEmployeeId(rollbackValue.id).orElseThrow()
+            employee.firstname = rollbackValue.firstname
+            employee.lastname = rollbackValue.lastname
+            employee.companyMail = rollbackValue.companyMail
+            employee.deleted = rollbackValue.deleted
+            employee.state = rollbackValue.state
+            employeeRepository.save(employee)
+        }
     }
 
     @Throws(RollbackException::class, Exception::class)
