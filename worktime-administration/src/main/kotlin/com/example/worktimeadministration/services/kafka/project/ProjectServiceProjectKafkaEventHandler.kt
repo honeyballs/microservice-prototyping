@@ -2,8 +2,6 @@ package com.example.worktimeadministration.services.kafka.project
 
 import com.example.worktimeadministration.SERVICE_NAME
 import com.example.worktimeadministration.model.aggregates.AggregateState
-import com.example.worktimeadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
-import com.example.worktimeadministration.model.aggregates.employee.Employee
 import com.example.worktimeadministration.model.aggregates.project.PROJECT_AGGREGATE_NAME
 import com.example.worktimeadministration.model.aggregates.project.Project
 import com.example.worktimeadministration.model.dto.employee.EmployeeKfk
@@ -22,7 +20,6 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
@@ -47,6 +44,7 @@ class ProjectServiceProjectKafkaEventHandler(
                 "created" -> createProject(eventProject as ProjectKfk)
                 "updated" -> updateProject(eventProject as ProjectKfk)
                 "deleted" -> deleteProject(eventProject as ProjectKfk)
+                "compensation" -> compensateProject(eventProject as ProjectKfk, event.from as? ProjectKfk)
             }
 
             val success = event.successEvent
@@ -111,6 +109,25 @@ class ProjectServiceProjectKafkaEventHandler(
         proj.deleted = true
         proj.state = eventProject.state
         projectRepository.save(proj)
+    }
+
+    @Throws(RollbackException::class, Exception::class)
+    fun compensateProject(failedValue: ProjectKfk, compensationValue: ProjectKfk?) {
+        projectRepository.findByProjectId(failedValue.id).ifPresent {
+            if (compensationValue == null) {
+                projectRepository.deleteById(it.dbId!!)
+            } else {
+                it.name = compensationValue.name
+                it.description = compensationValue.description
+                it.startDate = compensationValue.startDate
+                it.projectedEndDate = compensationValue.projectedEndDate
+                it.endDate = compensationValue.endDate
+                it.employees = employeeRepository.findAllByEmployeeIdIn(compensationValue.employees.toList()).toMutableSet()
+                it.deleted = compensationValue.deleted
+                it.state = AggregateState.ACTIVE
+                projectRepository.save(it)
+            }
+        }
     }
 
     @Throws(RollbackException::class, Exception::class)

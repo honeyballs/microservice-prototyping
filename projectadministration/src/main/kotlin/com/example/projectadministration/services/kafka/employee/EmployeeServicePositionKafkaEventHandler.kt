@@ -44,6 +44,7 @@ class EmployeeServicePositionKafkaEventHandler(
                 "created" -> createPosition(eventPos as PositionKfk)
                 "updated" -> updatePosition(eventPos as PositionKfk)
                 "deleted" -> deletePosition(eventPos as PositionKfk)
+                "compensation" -> compensatePosition(eventPos as PositionKfk, event.from as? PositionKfk)
             }
 
             val success = event.successEvent
@@ -100,6 +101,20 @@ class EmployeeServicePositionKafkaEventHandler(
         position.deleted = true
         position.state = eventPos.state
         positionRepository.save(position)
+    }
+
+    @Throws(RollbackException::class, Exception::class)
+    fun compensatePosition(failedValue: PositionKfk, compensationValue: PositionKfk?) {
+        positionRepository.findByPositionId(failedValue.id).ifPresent {
+            if (compensationValue == null) {
+                positionRepository.deleteById(it.dbId!!)
+            } else {
+                it.title = compensationValue.title
+                it.deleted = compensationValue.deleted
+                it.state = AggregateState.ACTIVE
+                positionRepository.save(it)
+            }
+        }
     }
 
     @Throws(RollbackException::class, Exception::class)

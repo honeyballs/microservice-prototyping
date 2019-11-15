@@ -4,15 +4,13 @@ import com.example.projectadministration.SERVICE_NAME
 import com.example.projectadministration.model.aggregates.AggregateState
 import com.example.projectadministration.model.aggregates.CUSTOMER_AGGREGATE_NAME
 import com.example.projectadministration.model.dto.CustomerKfk
+import com.example.projectadministration.model.events.DomainEvent
 import com.example.projectadministration.model.events.ResponseEvent
 import com.example.projectadministration.model.events.UpdateStateEvent
 import com.example.projectadministration.model.saga.SagaState
 import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.SagaRepository
-import com.example.projectadministration.services.EventHandler
-import com.example.projectadministration.services.SagaService
-import com.example.projectadministration.services.getResponseEventKeyword
-import com.example.projectadministration.services.getSagaCompleteType
+import com.example.projectadministration.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
@@ -47,7 +45,7 @@ class KafkaCustomerEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    rollbackCustomer(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensateCustomer(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -65,8 +63,9 @@ class KafkaCustomerEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackCustomer(id: Long, data: String, failedData: String) {
+    fun compensateCustomer(id: Long, data: String, failedData: String) {
         val customerKfk: CustomerKfk? = mapper.readValue<CustomerKfk>(data)
+        val failedCustomerKfk = mapper.readValue<CustomerKfk>(failedData)
         val customer = customerRepository.findById(id).orElseThrow()
         if (customerKfk == null) {
             customerRepository.deleteById(id)
@@ -75,9 +74,15 @@ class KafkaCustomerEventHandler(
             customer.address = customerKfk.address
             customer.contact = customerKfk.contact
             customer.customerName = customerKfk.customerName
+            customer.state = AggregateState.ACTIVE
             customerRepository.save(customer)
         }
-        // Check the employee service employee kafka handler for rollback event
+        // Build the compensation event
+        val eventType = getEventTypeFromProperties(customer.aggregateName, "compensation")
+        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
+        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
+        val event = DomainEvent(eventType, customerKfk, failedCustomerKfk, successResponse, failureResponse)
+        eventProducer.sendDomainEvent(customer.id!!, event, customer.aggregateName)
     }
 
     @KafkaHandler(isDefault = true)

@@ -48,7 +48,7 @@ class KafkaEmployeeEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    rollbackEmployee(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensateEmployee(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -66,7 +66,7 @@ class KafkaEmployeeEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackEmployee(id: Long, data: String, failedData: String) {
+    fun compensateEmployee(id: Long, data: String, failedData: String) {
         val employeeKfk: EmployeeKfk? = mapper.readValue<EmployeeKfk>(data)
         val failedEmployeeKfk = mapper.readValue<EmployeeKfk>(failedData)
         val emp = employeeRepository.findById(id).orElseThrow()
@@ -89,8 +89,8 @@ class KafkaEmployeeEventHandler(
             emp.state = AggregateState.ACTIVE
             employeeRepository.save(emp)
         }
-        // Build the rollback event
-        val eventType = getEventTypeFromProperties(emp.aggregateName, "rollback")
+        // Build the compensation event
+        val eventType = getEventTypeFromProperties(emp.aggregateName, "compensation")
         val successResponse = ResponseEvent(getResponseEventType(eventType, false))
         val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
         val event = DomainEvent(eventType, employeeKfk, failedEmployeeKfk, successResponse, failureResponse)

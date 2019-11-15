@@ -18,7 +18,6 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
@@ -41,7 +40,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
                 "created" -> createEmployee(eventEmployee as EmployeeKfk)
                 "updated" -> updateEmployee(eventEmployee as EmployeeKfk)
                 "deleted" -> deleteEmployee(eventEmployee as EmployeeKfk)
-                "rollback" -> rollbackEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
+                "compensation" -> compensateEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
             }
 
             val success = event.successEvent
@@ -105,17 +104,18 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun rollbackEmployee(failedValue: EmployeeKfk, rollbackValue: EmployeeKfk?) {
-        if (rollbackValue == null) {
-            employeeRepository.deleteByEmployeeId(failedValue.id)
-        } else {
-            val employee = employeeRepository.findByEmployeeId(rollbackValue.id).orElseThrow()
-            employee.firstname = rollbackValue.firstname
-            employee.lastname = rollbackValue.lastname
-            employee.companyMail = rollbackValue.companyMail
-            employee.deleted = rollbackValue.deleted
-            employee.state = rollbackValue.state
-            employeeRepository.save(employee)
+    fun compensateEmployee(failedValue: EmployeeKfk, compensationValue: EmployeeKfk?) {
+        employeeRepository.findByEmployeeId(failedValue.id).ifPresent {
+            if (compensationValue == null) {
+                employeeRepository.deleteById(it.dbId!!)
+            } else {
+                it.firstname = compensationValue.firstname
+                it.lastname = compensationValue.lastname
+                it.companyMail = compensationValue.companyMail
+                it.deleted = compensationValue.deleted
+                it.state = AggregateState.ACTIVE
+                employeeRepository.save(it)
+            }
         }
     }
 

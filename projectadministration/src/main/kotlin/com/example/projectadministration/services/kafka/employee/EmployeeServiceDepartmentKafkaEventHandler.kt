@@ -6,6 +6,7 @@ import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AG
 import com.example.projectadministration.model.aggregates.employee.Department
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.model.dto.employee.DepartmentKfk
+import com.example.projectadministration.model.dto.employee.EmployeeKfk
 import com.example.projectadministration.model.events.*
 import com.example.projectadministration.repositories.employee.DepartmentRepository
 import com.example.projectadministration.services.getActionOfConsumedEvent
@@ -39,6 +40,7 @@ class EmployeeServiceDepartmentKafkaEventHandler(
                 "created" -> createDepartment(eventDepartment as DepartmentKfk)
                 "updated" -> updateDepartment(eventDepartment as DepartmentKfk)
                 "deleted" -> deleteDepartment(eventDepartment as DepartmentKfk)
+                "compensation" -> compensateDepartment(eventDepartment as DepartmentKfk, event.from as? DepartmentKfk)
             }
 
             val success = event.successEvent
@@ -95,6 +97,20 @@ class EmployeeServiceDepartmentKafkaEventHandler(
         department.deleted = true
         department.state = eventDep.state
         departmentRepository.save(department)
+    }
+
+    @Throws(RollbackException::class, Exception::class)
+    fun compensateDepartment(failedValue: DepartmentKfk, compensationValue: DepartmentKfk?) {
+        departmentRepository.findByDepartmentId(failedValue.id).ifPresent {
+            if (compensationValue == null) {
+                departmentRepository.deleteById(it.dbId!!)
+            } else {
+                it.name = compensationValue.name
+                it.deleted = compensationValue.deleted
+                it.state = AggregateState.ACTIVE
+                departmentRepository.save(it)
+            }
+        }
     }
 
     @Throws(RollbackException::class, Exception::class)

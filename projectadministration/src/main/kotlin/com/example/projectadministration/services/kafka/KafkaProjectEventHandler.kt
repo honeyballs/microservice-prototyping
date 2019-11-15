@@ -2,21 +2,16 @@ package com.example.projectadministration.services.kafka
 
 import com.example.projectadministration.SERVICE_NAME
 import com.example.projectadministration.model.aggregates.AggregateState
-import com.example.projectadministration.model.aggregates.CUSTOMER_AGGREGATE_NAME
 import com.example.projectadministration.model.aggregates.PROJECT_AGGREGATE_NAME
-import com.example.projectadministration.model.dto.CustomerKfk
 import com.example.projectadministration.model.dto.ProjectKfk
+import com.example.projectadministration.model.events.DomainEvent
 import com.example.projectadministration.model.events.ResponseEvent
 import com.example.projectadministration.model.events.UpdateStateEvent
 import com.example.projectadministration.model.saga.SagaState
-import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.repositories.SagaRepository
 import com.example.projectadministration.repositories.employee.EmployeeRepository
-import com.example.projectadministration.services.EventHandler
-import com.example.projectadministration.services.SagaService
-import com.example.projectadministration.services.getResponseEventKeyword
-import com.example.projectadministration.services.getSagaCompleteType
+import com.example.projectadministration.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
@@ -52,7 +47,7 @@ class KafkaProjectEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    rollbackProject(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensateProject(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -70,8 +65,9 @@ class KafkaProjectEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackProject(id: Long, data: String, failedData: String) {
+    fun compensateProject(id: Long, data: String, failedData: String) {
         val projectKfk: ProjectKfk? =  mapper.readValue<ProjectKfk>(data)
+        val failedProjectKfk = mapper.readValue<ProjectKfk>(failedData)
         val project = projectRepository.findById(id).orElseThrow()
         if (projectKfk == null) {
             projectRepository.deleteById(id)
@@ -82,9 +78,15 @@ class KafkaProjectEventHandler(
             project.projectedEndDate = projectKfk.projectedEndDate
             project.endDate = projectKfk.endDate
             project.employees = projectKfk.employees.map { employeeRepository.findByEmployeeId(id).orElseThrow() }.toMutableSet()
+            project.state = AggregateState.ACTIVE
             projectRepository.save(project)
         }
-        // Check the employee service employee kafka handler for rollback event
+        // Build the compensation event
+        val eventType = getEventTypeFromProperties(project.aggregateName, "compensation")
+        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
+        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
+        val event = DomainEvent(eventType, projectKfk, failedProjectKfk, successResponse, failureResponse)
+        eventProducer.sendDomainEvent(project.id!!, event, project.aggregateName)
     }
 
     @KafkaHandler(isDefault = true)

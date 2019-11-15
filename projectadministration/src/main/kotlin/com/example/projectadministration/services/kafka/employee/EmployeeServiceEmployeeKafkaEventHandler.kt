@@ -2,10 +2,8 @@ package com.example.projectadministration.services.kafka.employee
 
 import com.example.projectadministration.SERVICE_NAME
 import com.example.projectadministration.model.aggregates.AggregateState
-import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
 import com.example.projectadministration.model.aggregates.employee.EMPLOYEE_AGGREGATE_NAME
 import com.example.projectadministration.model.aggregates.employee.Employee
-import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.model.dto.employee.EmployeeKfk
 import com.example.projectadministration.model.events.DomainEvent
@@ -22,7 +20,6 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
@@ -47,7 +44,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
                 "created" -> createEmployee(eventEmployee as EmployeeKfk)
                 "updated" -> updateEmployee(eventEmployee as EmployeeKfk)
                 "deleted" -> deleteEmployee(eventEmployee as EmployeeKfk)
-                "rollback" -> rollbackEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
+                "compensation" -> compensateEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
             }
 
             val success = event.successEvent
@@ -122,19 +119,20 @@ class EmployeeServiceEmployeeKafkaEventHandler(
     }
 
     @Throws(RollbackException::class, Exception::class)
-    fun rollbackEmployee(failedValue: EmployeeKfk, rollbackValue: EmployeeKfk?) {
-        if (rollbackValue == null) {
-            employeeRepository.deleteByEmployeeId(failedValue.id)
-        } else {
-            val employee = employeeRepository.findByEmployeeId(rollbackValue.id).orElseThrow()
-            employee.firstname = rollbackValue.firstname
-            employee.lastname = rollbackValue.lastname
-            employee.companyMail = rollbackValue.companyMail
-            employee.deleted = rollbackValue.deleted
-            employee.state = rollbackValue.state
-            employee.department = departmentRepository.findByDepartmentId(rollbackValue.department).orElseThrow()
-            employee.position = positionRepository.findByPositionId(rollbackValue.position).orElseThrow()
-            employeeRepository.save(employee)
+    fun compensateEmployee(failedValue: EmployeeKfk, compensationValue: EmployeeKfk?) {
+        employeeRepository.findByEmployeeId(failedValue.id).ifPresent {
+            if (compensationValue == null) {
+                employeeRepository.deleteById(it.dbId!!)
+            } else {
+                it.firstname = compensationValue.firstname
+                it.lastname = compensationValue.lastname
+                it.companyMail = compensationValue.companyMail
+                it.deleted = compensationValue.deleted
+                it.department = departmentRepository.findByDepartmentId(compensationValue.department).orElseThrow()
+                it.position = positionRepository.findByPositionId(compensationValue.position).orElseThrow()
+                it.state = AggregateState.ACTIVE
+                employeeRepository.save(it)
+            }
         }
     }
 

@@ -4,15 +4,15 @@ import com.example.employeeadministration.SERVICE_NAME
 import com.example.employeeadministration.model.aggregates.DEPARTMENT_AGGREGATE_NAME
 import com.example.employeeadministration.model.dto.DepartmentKfk
 import com.example.employeeadministration.model.aggregates.AggregateState
+import com.example.employeeadministration.model.dto.EmployeeKfk
+import com.example.employeeadministration.model.dto.PositionKfk
+import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.ResponseEvent
 import com.example.employeeadministration.model.events.UpdateStateEvent
 import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.SagaRepository
-import com.example.employeeadministration.services.EventHandler
-import com.example.employeeadministration.services.SagaService
-import com.example.employeeadministration.services.getResponseEventKeyword
-import com.example.employeeadministration.services.getSagaCompleteType
+import com.example.employeeadministration.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
@@ -46,7 +46,7 @@ class KafkaDepartmentEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    rollbackDepartment(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensateDepartment(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -64,17 +64,24 @@ class KafkaDepartmentEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackDepartment(id: Long, data: String, failedData: String) {
+    fun compensateDepartment(id: Long, data: String, failedData: String) {
         val departmentKfk: DepartmentKfk? = mapper.readValue<DepartmentKfk>(data)
+        val failedDepartmentKfk = mapper.readValue<PositionKfk>(failedData)
         val dep = departmentRepository.findById(id).orElseThrow()
         if (departmentKfk == null) {
             departmentRepository.deleteById(id)
         } else {
             dep.deleted = departmentKfk.deleted
             dep.name = departmentKfk.name
+            dep.state = AggregateState.ACTIVE
             departmentRepository.save(dep)
         }
-        // Check the employee kafka handler for rollback event
+        // Build the compensation event
+        val eventType = getEventTypeFromProperties(dep.aggregateName, "compensation")
+        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
+        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
+        val event = DomainEvent(eventType, departmentKfk, failedDepartmentKfk, successResponse, failureResponse)
+        eventProducer.sendDomainEvent(dep.id!!, event, dep.aggregateName)
     }
 
 

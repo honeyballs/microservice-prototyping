@@ -4,15 +4,13 @@ import com.example.employeeadministration.SERVICE_NAME
 import com.example.employeeadministration.model.aggregates.POSITION_AGGREGATE_NAME
 import com.example.employeeadministration.model.dto.PositionKfk
 import com.example.employeeadministration.model.aggregates.AggregateState
+import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.ResponseEvent
 import com.example.employeeadministration.model.events.UpdateStateEvent
 import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.repositories.SagaRepository
-import com.example.employeeadministration.services.EventHandler
-import com.example.employeeadministration.services.SagaService
-import com.example.employeeadministration.services.getResponseEventKeyword
-import com.example.employeeadministration.services.getSagaCompleteType
+import com.example.employeeadministration.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
@@ -46,7 +44,7 @@ class KafkaPositionEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    rollbackPosition(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensatePosition(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -64,8 +62,9 @@ class KafkaPositionEventHandler(
     }
 
     @Throws(Exception::class)
-    fun rollbackPosition(id: Long, data: String, failedData: String) {
+    fun compensatePosition(id: Long, data: String, failedData: String) {
         val positionKfk: PositionKfk? = mapper.readValue<PositionKfk>(data)
+        val failedPositionKfk = mapper.readValue<PositionKfk>(failedData)
         val pos = positionRepository.findById(id).orElseThrow()
         if (positionKfk == null) {
             positionRepository.deleteById(id)
@@ -74,9 +73,15 @@ class KafkaPositionEventHandler(
             pos.title = positionKfk.title
             pos.minHourlyWage = positionKfk.minHourlyWage
             pos.maxHourlyWage = positionKfk.maxHourlyWage
+            pos.state = AggregateState.ACTIVE
             positionRepository.save(pos)
         }
-        // Check the employee kafka handler for rollback event
+        // Build the compensation event
+        val eventType = getEventTypeFromProperties(pos.aggregateName, "compensation")
+        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
+        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
+        val event = DomainEvent(eventType, positionKfk, failedPositionKfk, successResponse, failureResponse)
+        eventProducer.sendDomainEvent(pos.id!!, event, pos.aggregateName)
     }
 
     @KafkaHandler(isDefault = true)
