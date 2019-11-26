@@ -1,0 +1,315 @@
+{
+	"info": {
+		"_postman_id": "86829891-a832-4282-9999-f955d39c2c52",
+		"name": "WorktimeAdminApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get all employees",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b8dc6647-c134-4296-ac76-8fb7fb0e379a",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"employee_id\", data[0].id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8085/employee",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all projects",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a66e011-f631-42d6-a470-12f4c035eefd",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"project_id\", data[0].id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"customerName\": \"IT Frankfurt GmbH\",\n\t\"address\": {\n        \"street\": \"Firmenstr.\",\n        \"no\": 12,\n        \"city\": \"Frankfurt\",\n        \"zipCode\": {\n            \"zip\": 12345\n        }\n\t},\n\t\"contact\": {\n\t\t\"firstname\": \"Horst\",\n\t\t\"lastname\": \"Gaussmann\",\n\t\t\"mail\": \"h.gausmman@firma.com\",\n\t\t\"phone\": \"01421241241\"\n\t}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/project",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"project"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Try to create wrong entry",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c95dc7dd-88b6-476a-a615-d39d97b44557",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startTime\": \"10.10.2019 09:15:00\",\n\t\"endTime\": \"10.10.2019 17:45:00\",\n\t\"pauseTimeInMinutes\": 15,\n\t\"project\": {\n\t\t\"id\": {{project_id}},\n\t\t\"name\": \"Microservice Application\",\n    \"description\": \"Test App\",\n    \"startDate\": \"01.09.2019\",\n    \"projectedEndDate\": \"15.03.2020\",\n\t\t\"employees\": [{{employee_id}}]\n\t},\n\t\"employee\": {\n\t\t\"id\": {{employee_id}},\n\t\t\"firstname\": \"Max\",\n\t\t\"lastname\": \"Musterdude\"\n\t},\n\t\"description\": \"Bug fixing\",\n\t\"type\": \"WORK\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/worktime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"worktime"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create entry",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c95dc7dd-88b6-476a-a615-d39d97b44557",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"worktime_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startTime\": \"10.10.2019 09:15:00\",\n\t\"endTime\": \"10.10.2019 17:45:00\",\n\t\"pauseTimeInMinutes\": 30,\n\t\"project\": {\n\t\t\"id\": {{project_id}},\n\t\t\"name\": \"Microservice Application\",\n    \"description\": \"Test App\",\n    \"startDate\": \"01.09.2019\",\n    \"projectedEndDate\": \"15.03.2020\",\n\t\t\"employees\": [{{employee_id}}]\n\t},\n\t\"employee\": {\n\t\t\"id\": {{employee_id}},\n\t\t\"firstname\": \"Max\",\n\t\t\"lastname\": \"Musterdude\"\n\t},\n\t\"description\": \"Bug fixing\",\n\t\"type\": \"WORK\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/worktime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"worktime"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create vacation entry",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c95dc7dd-88b6-476a-a615-d39d97b44557",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startTime\": \"10.10.2019 09:15:00\",\n\t\"endTime\": \"10.10.2019 17:15:00\",\n\t\"pauseTimeInMinutes\": 0,\n\t\"project\": {\n\t\t\"id\": {{project_id}},\n\t\t\"name\": \"Microservice Application\",\n    \"description\": \"Test App\",\n    \"startDate\": \"01.09.2019\",\n    \"projectedEndDate\": \"15.03.2020\",\n\t\t\"employees\": [{{employee_id}}]\n\t},\n\t\"employee\": {\n\t\t\"id\": {{employee_id}},\n\t\t\"firstname\": \"Max\",\n\t\t\"lastname\": \"Musterdude\"\n\t},\n\t\"description\": \"Vacation\",\n\t\"type\": \"VACATION\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/worktime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"worktime"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change endtime",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c95dc7dd-88b6-476a-a615-d39d97b44557",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"id\": {{worktime_id}},\n\t\"startTime\": \"10.10.2019 09:15:00\",\n\t\"endTime\": \"10.10.2019 15:45:00\",\n\t\"pauseTimeInMinutes\": 30,\n\t\"project\": {\n\t\t\"id\": {{project_id}},\n\t\t\"name\": \"Microservice Application\",\n    \"description\": \"Test App\",\n    \"startDate\": \"01.09.2019\",\n    \"projectedEndDate\": \"15.03.2020\",\n\t\t\"employees\": [{{employee_id}}]\n\t},\n\t\"employee\": {\n\t\t\"id\": {{employee_id}},\n\t\t\"firstname\": \"Max\",\n\t\t\"lastname\": \"Musterdude\"\n\t},\n\t\"description\": \"Bug fixing\",\n\t\"type\": \"WORK\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8085/worktime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"worktime"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all entries",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8085/worktime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"worktime"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

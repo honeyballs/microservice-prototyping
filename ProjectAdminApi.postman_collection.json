@@ -1,0 +1,206 @@
+{
+	"info": {
+		"_postman_id": "1d0489f3-a4b0-478f-899a-8b427bb714b0",
+		"name": "ProjectAdminApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get all employees",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b8dc6647-c134-4296-ac76-8fb7fb0e379a",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"employee_id\", data[0].id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8090/employee",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Customer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a66e011-f631-42d6-a470-12f4c035eefd",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"customer_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"customerName\": \"IT Frankfurt GmbH\",\n\t\"address\": {\n        \"street\": \"Firmenstr.\",\n        \"no\": 12,\n        \"city\": \"Frankfurt\",\n        \"zipCode\": {\n            \"zip\": 12345\n        }\n\t},\n\t\"contact\": {\n\t\t\"firstname\": \"Horst\",\n\t\t\"lastname\": \"Gaussmann\",\n\t\t\"mail\": \"h.gausmman@firma.com\",\n\t\t\"phone\": \"01421241241\"\n\t}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/customer",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"customer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Project",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c95dc7dd-88b6-476a-a615-d39d97b44557",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"project_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Microservice Application\",\n    \"description\": \"Test App\",\n    \"startDate\": \"01.09.2019\",\n    \"projectedEndDate\": \"28.02.2020\",\n    \"projectEmployees\": [\n        {\n            \"id\": {{employee_id}},\n            \"firstname\": \"Max\",\n            \"lastname\": \"Musterdude\",\n            \"mail\": \"m.musterdude@company.com\"\n        }\n    ],\n    \"customer\": {\n        \"id\": {{customer_id}},\n        \"customerName\": \"IT Frankfurt GmbH\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/project",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"project"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Project",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": {{project_id}},\n    \"name\": \"Microservice Application\",\n    \"description\": \"Test App\",\n    \"startDate\": \"01.09.2019\",\n    \"projectedEndDate\": \"15.03.2020\",\n    \"projectEmployees\": [\n        {\n            \"id\": {{employee_id}},\n            \"firstname\": \"Max\",\n            \"lastname\": \"Musterdude\",\n            \"mail\": \"m.musterdude@company.com\"\n        }\n    ],\n    \"customer\": {\n        \"id\": {{customer_id}},\n        \"customerName\": \"IT Frankfurt GmbH\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/project",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"project"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all projects",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8090/project",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"project"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

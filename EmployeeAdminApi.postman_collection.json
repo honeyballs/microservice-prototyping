@@ -1,0 +1,284 @@
+{
+	"info": {
+		"_postman_id": "f6c0d76d-4e46-46fe-be3f-e66734a8baff",
+		"name": "EmployeeAdminApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create department",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "83789e87-7aaf-4d1b-9061-e9f417acc003",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"department_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Java Development\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/department",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"department"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create position",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3dcbb7e5-fdc3-4ec5-952f-7a7907f37ab6",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"position_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"title\": \"Junior Developer\",\n\t\"minHourlyWage\": 30.00,\n\t\"maxHourlyWage\": 42.70\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/position",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"position"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update department",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"id\": {{department_id}},\n    \"name\": \"C# Development\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/department",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"department"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Employee",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "53d8666d-2756-4079-9198-8e30f47c40df",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"employee_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstname\": \"Max\",\n    \"lastname\": \"Mustermann\",\n    \"birthday\": \"04.11.1980\",\n    \"address\": {\n        \"street\": \"Musterstr.\",\n        \"no\": 2,\n        \"city\": \"Frankfurt\",\n        \"zipCode\": {\n            \"zip\": 12345\n        }\n    },\n    \"bankDetails\": {\n        \"iban\": \"12314124141241\",\n        \"bic\": \"G12GQA2\",\n        \"bankName\": \"VR Bank\"\n    },\n    \"department\": {\n        \"id\": {{department_id}},\n        \"name\": \"C# Development\"\n    },\n    \"position\": {\n        \"id\": {{position_id}},\n        \"title\": \"Junior Developer\",\n        \"minHourlyWage\": 30,\n        \"maxHourlyWage\": 42.7\n    },\n    \"hourlyRate\": 35.50,\n    \"availableVacationHours\": 240\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/employee",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Employee",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"id\": {{employee_id}},\n    \"firstname\": \"Max\",\n    \"lastname\": \"Musterdude\",\n    \"birthday\": \"04.11.1980\",\n    \"address\": {\n        \"street\": \"Musterstr.\",\n        \"no\": 2,\n        \"city\": \"Frankfurt\",\n        \"zipCode\": {\n            \"zip\": 12345\n        }\n    },\n    \"bankDetails\": {\n        \"iban\": \"12314124141241\",\n        \"bic\": \"G12GQA2\",\n        \"bankName\": \"VR Bank\"\n    },\n    \"department\": {\n        \"id\": {{department_id}},\n        \"name\": \"C# Development\"\n    },\n    \"position\": {\n        \"id\": {{position_id}},\n        \"title\": \"Junior Developer\",\n        \"minHourlyWage\": 30,\n        \"maxHourlyWage\": 42.7\n    },\n    \"hourlyRate\": 37.50,\n    \"availableVacationHours\": 240\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/employee",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create failing employee",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "53d8666d-2756-4079-9198-8e30f47c40df",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"employee_id\", data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstname\": \"Max\",\n    \"lastname\": \"FAIL\",\n    \"birthday\": \"04.11.1980\",\n    \"address\": {\n        \"street\": \"Musterstr.\",\n        \"no\": 2,\n        \"city\": \"Frankfurt\",\n        \"zipCode\": {\n            \"zip\": 12345\n        }\n    },\n    \"bankDetails\": {\n        \"iban\": \"12314124141241\",\n        \"bic\": \"G12GQA2\",\n        \"bankName\": \"VR Bank\"\n    },\n    \"department\": {\n        \"id\": {{department_id}},\n        \"name\": \"C# Development\"\n    },\n    \"position\": {\n        \"id\": {{position_id}},\n        \"title\": \"Junior Developer\",\n        \"minHourlyWage\": 30,\n        \"maxHourlyWage\": 42.7\n    },\n    \"hourlyRate\": 35.50,\n    \"availableVacationHours\": 240\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/employee",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Employees of department",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/employee/department/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"employee",
+						"department",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
