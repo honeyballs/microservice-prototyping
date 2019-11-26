@@ -9,14 +9,14 @@ import javax.persistence.*
 const val CUSTOMER_AGGREGATE_NAME = "customer"
 
 @Entity
-data class Customer(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+class Customer(
+        id: Long?,
         var customerName: String,
         @Embedded var address: Address,
         @Embedded var contact: CustomerContact,
-        var deleted: Boolean = false,
+        deleted: Boolean = false,
         override var aggregateName: String = CUSTOMER_AGGREGATE_NAME
-): EventAggregate() {
+): EventAggregate(id, deleted) {
 
 
     fun created() {
@@ -43,15 +43,15 @@ data class Customer(
         registerEvent(this.id!!, "updated", from)
     }
 
-    fun deleteCustomer() {
+    override fun deleteAggregate() {
         val from = mapAggregateToKafkaDto()
         this.deleted = true
-        registerEvent(this.id!!, "deleted", from)
-    }
+        registerEvent(this.id!!, "deleted", from)    }
 
     override fun mapAggregateToKafkaDto(): CustomerKfk {
         return CustomerKfk(this.id!!, this.customerName, this.address, this.contact, this.deleted, this.state)
     }
+
 
 }
 

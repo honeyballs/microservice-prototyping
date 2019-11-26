@@ -22,29 +22,32 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
 
     @GetMapping(employeeUrl)
     override fun getAllEmployees(): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByDeletedFalse().map { service.mapEntityToDto(it) })
+        return ok(service.getAllEmployees())
     }
 
     @GetMapping("$employeeUrl/{id}")
     override fun getEmployeeById(@PathVariable("id") id: Long): ResponseEntity<EmployeeDto> {
-        return ok(repository.getByIdAndDeletedFalse(id).map { service.mapEntityToDto(it) }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find employee using the given id")
-        })
+        try {
+            return ok(service.getEmployeeById(id))
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find employee using the given id")
+
+        }
     }
 
     @GetMapping("$employeeUrl/department/{depId}")
     override fun getEmployeesOfDepartment(@PathVariable("depId") departmentId: Long): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByDepartment_IdAndDeletedFalse(departmentId).map { service.mapEntityToDto(it) })
+        return ok(service.getEmployeesOfDepartment(departmentId))
     }
 
     @PostMapping("$employeeUrl/position/{posId}")
     override fun getEmployeesByPosition(@PathVariable("posId") positionId: Long): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByPosition_IdAndDeletedFalse(positionId).map { service.mapEntityToDto(it) })
+        return ok(service.getEmployeesByPosition(positionId))
     }
 
     @GetMapping("$employeeUrl/name")
     override fun getEmployeesByName(@RequestParam("firstname") firstname: String, @RequestParam("lastname") lastname: String): ResponseEntity<List<EmployeeDto>> {
-        return ok(repository.getAllByFirstnameContainingAndLastnameContainingAndDeletedFalse(firstname, lastname).map { service.mapEntityToDto(it) })
+        return ok(service.getEmployeesByName(firstname, lastname))
     }
 
     @PostMapping(employeeUrl)

@@ -27,6 +27,24 @@ class ProjectServiceImpl(
         val eventProducer: KafkaEventProducer
 ) : ProjectService {
 
+    override fun getAllProjects(): List<ProjectDto> {
+        return projectRepository.getAllByDeletedFalse().map { mapEntityToDto(it) }
+    }
+
+    override fun getProjectById(id: Long): ProjectDto {
+        return projectRepository.getByIdAndDeletedFalse(id).map { mapEntityToDto(it) }.orElseThrow()
+    }
+
+    override fun getProjectsOfCustomer(customerId: Long): List<ProjectDto> {
+        return projectRepository.getAllByCustomerIdAndDeletedFalse(customerId).map { mapEntityToDto(it) }
+    }
+
+    override fun getProjectsOfEmployee(employeeId: Long): List<ProjectDto> {
+        return employeeRepository.findByEmployeeIdAndDeletedFalse(employeeId).map {
+            mapEntitiesToDtos(projectRepository.getAllByEmployeesContainingAndDeletedFalse(it))
+        }.orElseThrow()
+    }
+
     @Throws(Exception::class)
     override fun createProject(projectDto: ProjectDto): ProjectDto {
         val project = mapDtoToEntity(projectDto)

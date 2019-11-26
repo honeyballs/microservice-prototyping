@@ -7,6 +7,7 @@ import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.services.CustomerService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.ResponseEntity.ok
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
@@ -21,23 +22,25 @@ class CustomerControllerImpl(
 
     @GetMapping(customerUrl)
     override fun getAllCustomers(): ResponseEntity<List<CustomerDto>> {
-        return ResponseEntity.ok(customerService.mapEntitiesToDtos(customerRepository.getAllByDeletedFalse()))
+        return ok(customerService.getAllCustomers())
     }
 
     @GetMapping("$customerUrl/{id}")
     override fun getCustomerById(@PathVariable("id") id: Long): ResponseEntity<CustomerDto> {
-        val customer = customerRepository.getByIdAndDeletedFalse(id).map { customerService.mapEntityToDto(it) }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "No customer found")
+        try {
+            return ok(customerService.getCustomerById(id))
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No customer found")
         }
-        return ResponseEntity.ok(customer)
     }
 
     @GetMapping("$customerUrl/project/{id}")
     override fun getCustomerOfProject(@PathVariable("id") projectId: Long): ResponseEntity<CustomerDto> {
-        val customer = projectRepository.getByIdAndDeletedFalse(projectId).map { customerService.mapEntityToDto(it.customer) }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "No customer found")
+        try {
+            return ok(customerService.getCustomerOfProject(projectId))
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "No customer found")
         }
-        return ResponseEntity.ok(customer)
     }
 
     @PostMapping(customerUrl)

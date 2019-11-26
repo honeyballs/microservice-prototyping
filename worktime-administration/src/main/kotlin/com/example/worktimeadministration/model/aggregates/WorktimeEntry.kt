@@ -13,8 +13,8 @@ import javax.persistence.*
 const val WORKTIME_AGGREGATE_NAME = "worktime-entry"
 
 @Entity
-data class WorktimeEntry(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+class WorktimeEntry(
+         id: Long?,
         var startTime: LocalDateTime,
         var endTime: LocalDateTime,
         var pauseTimeInMinutes: Int = 0,
@@ -26,9 +26,9 @@ data class WorktimeEntry(
         val employee: Employee,
         var description: String,
         var type: EntryType,
-        var deleted: Boolean = false,
+        deleted: Boolean = false,
         override var aggregateName: String = WORKTIME_AGGREGATE_NAME
-): EventAggregate(), Serializable {
+): EventAggregate(id, deleted), Serializable {
 
     init {
         if (type == EntryType.WORK && !isPauseSufficient(calculateTimespan(startTime, endTime))) {
@@ -102,13 +102,6 @@ data class WorktimeEntry(
         }
     }
 
-    fun deleteEntry() {
-        val from = mapAggregateToKafkaDto()
-        this.deleted = true
-        registerEvent(this.id!!, "deleted", from)
-
-    }
-
     fun isPauseSufficient(timespan: Int, pause: Int? = null): Boolean {
         return timespan < 8 || timespan in 8..9 && pause ?: pauseTimeInMinutes >= 30
                 || timespan >= 10 && pause ?:pauseTimeInMinutes >= 60
@@ -127,11 +120,15 @@ data class WorktimeEntry(
         return startTime.until(endTime, ChronoUnit.HOURS).toInt()
     }
 
+    override fun deleteAggregate() {
+        val from = mapAggregateToKafkaDto()
+        this.deleted = true
+        registerEvent(this.id!!, "deleted", from)
+    }
+
     override fun mapAggregateToKafkaDto(): WorktimeEntryKfk {
         return WorktimeEntryKfk(id!!, startTime, endTime, pauseTimeInMinutes, project.projectId, employee.employeeId, description, type, deleted, state)
     }
-
-
 
 }
 

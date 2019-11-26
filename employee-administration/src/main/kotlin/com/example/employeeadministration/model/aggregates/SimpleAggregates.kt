@@ -13,11 +13,12 @@ const val DEPARTMENT_AGGREGATE_NAME = "department"
  * Department Aggregate
  */
 @Entity
-data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
-                      @Column(name = "department_name") var name: String,
-                      var deleted: Boolean = false,
-                      override var aggregateName: String = DEPARTMENT_AGGREGATE_NAME
-) : EventAggregate() {
+class Department(
+        id: Long?,
+        @Column(name = "department_name") var name: String,
+        deleted: Boolean = false,
+        override var aggregateName: String = DEPARTMENT_AGGREGATE_NAME
+) : EventAggregate(id, deleted) {
 
     fun created() {
         if (id != null) {
@@ -31,11 +32,10 @@ data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id
         registerEvent(this.id!!, "updated", from)
     }
 
-    fun deleteDepartment() {
+    override fun deleteAggregate() {
         val from = mapAggregateToKafkaDto()
         deleted = true
-        registerEvent(this.id!!, "deleted", from)
-    }
+        registerEvent(this.id!!, "deleted", from)    }
 
     override fun mapAggregateToKafkaDto(): DepartmentKfk {
         return DepartmentKfk(this.id!!, this.name, this.deleted, this.state)
@@ -64,13 +64,14 @@ const val POSITION_AGGREGATE_NAME = "position"
  * Position aggregate
  */
 @Entity
-class Position @JsonCreator constructor(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
-                                        var title: String,
-                                        minHourlyWage: BigDecimal,
-                                        maxHourlyWage: BigDecimal,
-                                        var deleted: Boolean = false,
-                                        override var aggregateName: String = POSITION_AGGREGATE_NAME
-) : EventAggregate() {
+class Position(
+        id: Long?,
+        var title: String,
+        minHourlyWage: BigDecimal,
+        maxHourlyWage: BigDecimal,
+        deleted: Boolean = false,
+        override var aggregateName: String = POSITION_AGGREGATE_NAME
+) : EventAggregate(id, deleted) {
 
     var minHourlyWage: BigDecimal = minHourlyWage.setScale(2, RoundingMode.HALF_UP)
         set(value) {
@@ -101,7 +102,7 @@ class Position @JsonCreator constructor(@Id @GeneratedValue(strategy = Generatio
         registerEvent(this.id!!, "updated", from)
     }
 
-    fun deletePosition() {
+    override fun deleteAggregate() {
         val from = mapAggregateToKafkaDto()
         deleted = true
         registerEvent(this.id!!, "deleted", from)
@@ -110,6 +111,7 @@ class Position @JsonCreator constructor(@Id @GeneratedValue(strategy = Generatio
     override fun mapAggregateToKafkaDto(): PositionKfk {
         return PositionKfk(this.id!!, this.title, this.minHourlyWage, this.maxHourlyWage, this.deleted, this.state)
     }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -5,15 +5,14 @@ import com.example.employeeadministration.model.events.DomainEvent
 import com.example.employeeadministration.model.events.ResponseEvent
 import com.example.employeeadministration.services.getEventTypeFromProperties
 import com.example.employeeadministration.services.getResponseEventType
-import javax.persistence.MappedSuperclass
-import javax.persistence.Transient
+import javax.persistence.*
 
 /**
  * Defines base functionality of an aggregate which emits events.
  * Aggregates have a state which controls whether changes can be made on it.
  */
 @MappedSuperclass
-abstract class EventAggregate {
+abstract class EventAggregate(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?, var deleted: Boolean = false) {
 
     @Transient
     open lateinit var aggregateName: String
@@ -47,6 +46,8 @@ abstract class EventAggregate {
     }
 
     abstract fun mapAggregateToKafkaDto(): BaseKfkDto
+
+    abstract fun deleteAggregate()
 
 }
 

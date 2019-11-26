@@ -15,10 +15,21 @@ import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
-                            val employeeRepository: EmployeeRepository,
-                            val sagaService: SagaService,
-                            val eventProducer: KafkaEventProducer) : DepartmentService {
+class DepartmentServiceImpl(
+        val departmentRepository: DepartmentRepository,
+        val employeeRepository: EmployeeRepository,
+        val sagaService: SagaService,
+        val eventProducer: KafkaEventProducer
+) : DepartmentService {
+
+
+    override fun getAllDepartments(): List<DepartmentDto> {
+        return departmentRepository.getAllByDeletedFalse().map { mapEntityToDto(it) }
+    }
+
+    override fun getDepartmentById(id: Long): DepartmentDto {
+        return departmentRepository.getByIdAndDeletedFalse(id).map { mapEntityToDto(it) }.orElseThrow()
+    }
 
     /**
      * If the department already exists we just return it, otherwise it is saved and returned
@@ -50,7 +61,7 @@ class DepartmentServiceImpl(val departmentRepository: DepartmentRepository,
                 Exception("The department you are trying to delete does not exist")
             }
             throwPendingException(department)
-            department.deleteDepartment()
+            department.deleteAggregate()
             persistWithEvents(department)
         } else {
             throw Exception("The department has employees assigned to it and cannot be deleted.")

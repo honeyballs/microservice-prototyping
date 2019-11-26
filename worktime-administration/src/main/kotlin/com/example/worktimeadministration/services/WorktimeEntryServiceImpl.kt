@@ -31,6 +31,31 @@ class WorktimeEntryServiceImpl(
         val eventProducer: EventProducer
 ) : WorktimeEntryService {
 
+    override fun getAllEntries(): List<WorktimeEntryDto> {
+        return worktimeEntryRepository.findAllByDeletedFalse().map { mapEntityToDto(it) }
+    }
+
+    override fun getEntryById(id: Long): WorktimeEntryDto {
+        return worktimeEntryRepository.findByIdAndDeletedFalse(id).map { mapEntityToDto(it) }.orElseThrow()
+    }
+
+    override fun getAllEntriesOfEmployee(employeeId: Long): List<WorktimeEntryDto> {
+        return worktimeEntryRepository.findAllByEmployeeEmployeeIdAndDeletedFalse(employeeId).map { mapEntityToDto(it) }
+    }
+
+    override fun getAllEntriesOfProject(projectId: Long): List<WorktimeEntryDto> {
+        return worktimeEntryRepository.findAllByProjectProjectIdAndDeletedFalse(projectId).map { mapEntityToDto(it) }
+    }
+
+    override fun getAllEntriesOfEmployeeOnProject(employeeId: Long, projectId: Long): List<WorktimeEntryDto> {
+        return worktimeEntryRepository.findAllByProjectProjectIdAndEmployeeEmployeeIdAndDeletedFalse(projectId, employeeId).map { mapEntityToDto(it) }
+    }
+
+    override fun getHoursOnProject(projectId: Long): Int {
+        val entries = worktimeEntryRepository.findAllByProjectProjectIdAndDeletedFalse(projectId)
+        return entries.fold(0) { acc, worktimeEntry -> acc + worktimeEntry.calculateTimespan(worktimeEntry.startTime, worktimeEntry.endTime) }
+    }
+
     /**
      * Collects multiple Updates on an aggregate.
      */
@@ -72,7 +97,7 @@ class WorktimeEntryServiceImpl(
     override fun deleteEntry(id: Long) {
         val entry = worktimeEntryRepository.findById(id).orElseThrow()
         throwPendingException(entry)
-        entry.deleteEntry()
+        entry.deleteAggregate()
         persistWithEvents(entry)
     }
 

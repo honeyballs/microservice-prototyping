@@ -9,8 +9,8 @@ import javax.persistence.*
 const val PROJECT_AGGREGATE_NAME = "project"
 
 @Entity
-data class Project(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+class Project(
+        id: Long?,
         var name: String,
         var description: String,
         val startDate: LocalDate,
@@ -22,9 +22,9 @@ data class Project(
                 inverseJoinColumns = [JoinColumn(name = "employee_id")])
         var employees: MutableSet<Employee>,
         @ManyToOne(cascade = [CascadeType.REFRESH]) @JoinColumn(name = "fk_customer") val customer: Customer,
-        var deleted: Boolean = false,
+        deleted: Boolean = false,
         override var aggregateName: String = PROJECT_AGGREGATE_NAME
-): EventAggregate() {
+) : EventAggregate(id, deleted) {
 
     init {
         aggregateName = PROJECT_AGGREGATE_NAME
@@ -72,7 +72,7 @@ data class Project(
         registerEvent(this.id!!, "updated", from)
     }
 
-    fun deleteProject() {
+    override fun deleteAggregate() {
         val from = mapAggregateToKafkaDto()
         this.deleted = true
         registerEvent(this.id!!, "deleted", from)

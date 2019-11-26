@@ -20,13 +20,13 @@ class WorktimeEntryControllerImpl(
 
     @GetMapping(worktimeUrl)
     override fun getAllEntries(): ResponseEntity<List<WorktimeEntryDto>> {
-        return ResponseEntity.ok(worktimeEntryService.mapEntitiesToDtos(worktimeEntryRepository.findAllByDeletedFalse()))
+        return ResponseEntity.ok(worktimeEntryService.getAllEntries())
     }
 
     @GetMapping("$worktimeUrl/{id}")
     override fun getEntryById(@PathVariable("id") id: Long): ResponseEntity<WorktimeEntryDto> {
         try {
-            return ResponseEntity.ok(worktimeEntryService.mapEntityToDto(worktimeEntryRepository.findByIdAndDeletedFalse(id).orElseThrow()))
+            return ResponseEntity.ok(worktimeEntryService.getEntryById(id))
         } catch (ex: NoSuchElementException) {
             throw ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "No Entry under the given id", ex)
@@ -35,19 +35,17 @@ class WorktimeEntryControllerImpl(
 
     @GetMapping("$worktimeUrl/employee/{id}")
     override fun getAllEntriesOfEmployee(@PathVariable("id") employeeId: Long): ResponseEntity<List<WorktimeEntryDto>> {
-        return ResponseEntity.ok(worktimeEntryService.mapEntitiesToDtos(worktimeEntryRepository.findAllByEmployeeEmployeeIdAndDeletedFalse(employeeId)))
+        return ResponseEntity.ok(worktimeEntryService.getAllEntriesOfEmployee(employeeId))
     }
 
     @GetMapping("$worktimeUrl/project/{id}")
     override fun getAllEntriesOfProject(@PathVariable("id") projectId: Long): ResponseEntity<List<WorktimeEntryDto>> {
-        return ResponseEntity.ok(worktimeEntryService.mapEntitiesToDtos(worktimeEntryRepository.findAllByProjectProjectIdAndDeletedFalse(projectId)))
+        return ResponseEntity.ok(worktimeEntryService.getAllEntriesOfProject(projectId))
     }
 
     @GetMapping("$worktimeUrl/project/hours/{id}")
     override fun getHoursOnProject(@PathVariable("id") projectId: Long): ResponseEntity<Int> {
-        val entries = worktimeEntryRepository.findAllByProjectProjectIdAndDeletedFalse(projectId)
-        val hours = entries.fold(0) { acc, worktimeEntry -> acc + worktimeEntry.calculateTimespan(worktimeEntry.startTime, worktimeEntry.endTime) }
-        return ok(hours)
+        return ok(worktimeEntryService.getHoursOnProject(projectId))
     }
 
     @GetMapping("$worktimeUrl/employee/{employeeId}")

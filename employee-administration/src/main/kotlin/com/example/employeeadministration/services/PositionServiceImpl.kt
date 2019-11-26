@@ -22,6 +22,14 @@ class PositionServiceImpl(
         val eventProducer: KafkaEventProducer
 ) : PositionService {
 
+    override fun getAllPositions(): List<PositionDto> {
+        return positionRepository.getAllByDeletedFalse().map { mapEntityToDto(it) }
+    }
+
+    override fun getPositionById(id: Long): PositionDto {
+        return positionRepository.getByIdAndDeletedFalse(id).map { mapEntityToDto(it) }.orElseThrow()
+    }
+
     /**
      * Return a position if present, otherwise save a new position.
      */
@@ -55,7 +63,7 @@ class PositionServiceImpl(
                 Exception("The job position you are trying to delete does not exist")
             }
             throwPendingException(position)
-            position.deletePosition()
+            position.deleteAggregate()
             persistWithEvents(position)
         } else {
             throw Exception("The job position has employees assigned to it and cannot be deleted.")

@@ -26,6 +26,28 @@ class EmployeeServiceImpl(
         val eventProducer: KafkaEventProducer
 ) : EmployeeService {
 
+    override fun getAllEmployees(): List<EmployeeDto> {
+        return employeeRepository.getAllByDeletedFalse().map { mapEntityToDto(it) }
+    }
+
+    override fun getEmployeeById(id: Long): EmployeeDto {
+        return employeeRepository.getByIdAndDeletedFalse(id).map { mapEntityToDto(it) }.orElseThrow()
+    }
+
+    override fun getEmployeesByName(firstname: String, lastname: String): List<EmployeeDto> {
+        return employeeRepository.getAllByFirstnameContainingAndLastnameContainingAndDeletedFalse(firstname, lastname).map {
+            mapEntityToDto(it)
+        }
+    }
+
+    override fun getEmployeesOfDepartment(departmentId: Long): List<EmployeeDto> {
+        return employeeRepository.getAllByDepartment_IdAndDeletedFalse(departmentId).map { mapEntityToDto(it) }
+    }
+
+    override fun getEmployeesByPosition(positionId: Long): List<EmployeeDto> {
+        return employeeRepository.getAllByPosition_IdAndDeletedFalse(positionId).map { mapEntityToDto(it) }
+    }
+
     @Transactional
     override fun createEmployee(employeeDto: EmployeeDto): EmployeeDto {
         val employee = mapDtoToEntity(employeeDto)
@@ -67,7 +89,7 @@ class EmployeeServiceImpl(
             Exception("The employee you are trying to delete does not exist")
         }
         throwPendingException(employee)
-        employee.deleteEmployee()
+        employee.deleteAggregate()
         persistWithEvents(employee)
     }
 

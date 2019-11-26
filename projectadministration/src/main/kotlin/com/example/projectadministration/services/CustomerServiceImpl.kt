@@ -22,6 +22,18 @@ class CustomerServiceImpl(
         val eventProducer: KafkaEventProducer
 ): CustomerService {
 
+    override fun getAllCustomers(): List<CustomerDto> {
+        return customerRepository.getAllByDeletedFalse().map { mapEntityToDto(it) }
+    }
+
+    override fun getCustomerById(id: Long): CustomerDto {
+        return customerRepository.getByIdAndDeletedFalse(id).map { mapEntityToDto(it) }.orElseThrow()
+    }
+
+    override fun getCustomerOfProject(projectId: Long): CustomerDto {
+        return projectRepository.getByIdAndDeletedFalse(projectId).map { mapEntityToDto(it.customer) }.orElseThrow()
+    }
+
     @Throws(Exception::class)
     override fun createCustomer(customerDto: CustomerDto): CustomerDto {
         val customer = mapDtoToEntity(customerDto)
@@ -54,7 +66,7 @@ class CustomerServiceImpl(
                 Exception("The customer you are trying to delete does not exist")
             }
             throwPendingException(customer)
-            customer.deleteCustomer()
+            customer.deleteAggregate()
             persistWithEvents(customer)
         } else {
             throw Exception("The customer has projects assigned to it and cannot be deleted.")

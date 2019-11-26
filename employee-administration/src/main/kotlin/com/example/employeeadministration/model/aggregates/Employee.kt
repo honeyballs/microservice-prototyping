@@ -16,7 +16,7 @@ const val EMPLOYEE_AGGREGATE_NAME = "employee"
  *
  */
 @Entity
-class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+class Employee(id: Long?,
                var firstname: String,
                var lastname: String,
                val birthday: LocalDate,
@@ -27,9 +27,9 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
                var availableVacationHours: Int,
                hourlyRate: BigDecimal,
                companyMail: CompanyMail?,
-               var deleted: Boolean = false,
+               deleted: Boolean = false,
                override var aggregateName: String = EMPLOYEE_AGGREGATE_NAME
-) : EventAggregate() {
+) : EventAggregate(id, deleted) {
 
     // initialize it rounded. Apparently the custom setter is not applied to the initialization
     var hourlyRate: BigDecimal = hourlyRate.setScale(2, RoundingMode.HALF_UP)
@@ -95,7 +95,7 @@ class Employee(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?
         registerEvent(this.id!!, "updated", from)
     }
 
-    fun deleteEmployee() {
+    override fun deleteAggregate() {
         val from = mapAggregateToKafkaDto()
         deleted = true
         registerEvent(this.id!!, "deleted", from)

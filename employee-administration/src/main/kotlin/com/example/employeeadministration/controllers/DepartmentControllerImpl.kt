@@ -16,14 +16,16 @@ class DepartmentControllerImpl(val departmentService: DepartmentService, val dep
 
     @GetMapping(departmentUrl)
     override fun getAllDepartments(): ResponseEntity<List<DepartmentDto>> {
-        return ok(departmentRepository.getAllByDeletedFalse().map { departmentService.mapEntityToDto(it) })
+        return ok(departmentService.getAllDepartments())
     }
 
     @GetMapping("$departmentUrl/{id}")
     override fun getDepartmentById(@PathVariable("id") id: Long): ResponseEntity<DepartmentDto> {
-        return ok(departmentRepository.getByIdAndDeletedFalse(id).map { departmentService.mapEntityToDto(it) }.orElseThrow{
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find department using the given id")
-        })
+        try {
+            return ok(departmentService.getDepartmentById(id))
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find department using the given id")
+        }
     }
 
     @PostMapping(departmentUrl)

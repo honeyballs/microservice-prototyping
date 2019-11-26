@@ -17,14 +17,16 @@ class PositionControllerImpl(val positionService: PositionService, val positionR
 
     @GetMapping(positionUrl)
     override fun getAllPositions(): ResponseEntity<List<PositionDto>> {
-      return ok(positionRepository.getAllByDeletedFalse().map { positionService.mapEntityToDto(it) })
+      return ok(positionService.getAllPositions())
     }
 
     @GetMapping("$positionUrl/{id}")
     override fun getPositionById(@PathVariable("id") id: Long): ResponseEntity<PositionDto> {
-        return ok(positionRepository.getByIdAndDeletedFalse(id).map { positionService.mapEntityToDto(it) }.orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position using the given id")
-        })
+        try {
+            return ok(positionService.getPositionById(id))
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find position using the given id")
+        }
     }
 
     @PostMapping(positionUrl)
