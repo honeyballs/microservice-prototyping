@@ -20,12 +20,6 @@ class Department(
         override var aggregateName: String = DEPARTMENT_AGGREGATE_NAME
 ) : EventAggregate(id, deleted) {
 
-    fun created() {
-        if (id != null) {
-            registerEvent(this.id!!, "created", null)
-        }
-    }
-
     fun renameDepartment(name: String) {
         val from = mapAggregateToKafkaDto()
         this.name = name
@@ -82,12 +76,6 @@ class Position(
         set(value) {
             field = value.setScale(2, RoundingMode.HALF_UP)
         }
-
-    fun created() {
-        if (id != null) {
-            registerEvent(this.id!!, "created", null)
-        }
-    }
 
     fun changePositionTitle(title: String) {
         val from = mapAggregateToKafkaDto()

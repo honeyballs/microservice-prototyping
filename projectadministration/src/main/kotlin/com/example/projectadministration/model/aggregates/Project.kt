@@ -30,12 +30,6 @@ class Project(
         aggregateName = PROJECT_AGGREGATE_NAME
     }
 
-    fun created() {
-        if (id != null) {
-            registerEvent(this.id!!, "created", null)
-        }
-    }
-
     fun delayProject(newProjectedDate: LocalDate) {
         val from = mapAggregateToKafkaDto()
         this.projectedEndDate = newProjectedDate

@@ -41,12 +41,6 @@ class WorktimeEntry(
         }
     }
 
-    fun created() {
-        if (id != null) {
-            registerEvent(this.id!!, "created", null)
-        }
-    }
-
     @Throws(Exception::class)
     fun adjustStartTime(newStartTime: LocalDateTime) {
         if (type == EntryType.WORK && !isPauseSufficient(calculateTimespan(newStartTime, endTime))) {

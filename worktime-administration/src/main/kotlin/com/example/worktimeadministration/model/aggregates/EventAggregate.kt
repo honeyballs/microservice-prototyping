@@ -45,6 +45,12 @@ abstract class EventAggregate(@Id @GeneratedValue(strategy = GenerationType.AUTO
         events = null
     }
 
+    open fun created() {
+        if (id != null) {
+            registerEvent(this.id!!, "created", null)
+        }
+    }
+
     abstract fun mapAggregateToKafkaDto(): BaseKfkDto
 
     abstract fun deleteAggregate()

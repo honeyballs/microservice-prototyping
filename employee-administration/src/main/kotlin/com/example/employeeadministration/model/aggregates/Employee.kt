@@ -41,13 +41,6 @@ class Employee(id: Long?,
     @Embedded
     var companyMail = companyMail ?: CompanyMail(firstname, lastname)
 
-
-    fun created() {
-        if (id != null) {
-            registerEvent(this.id!!, "created", null)
-        }
-    }
-
     fun moveToNewAddress(address: Address) {
         val from = mapAggregateToKafkaDto()
         this.address = address

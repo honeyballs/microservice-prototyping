@@ -18,13 +18,6 @@ class Customer(
         override var aggregateName: String = CUSTOMER_AGGREGATE_NAME
 ): EventAggregate(id, deleted) {
 
-
-    fun created() {
-        if (id != null) {
-            registerEvent(this.id!!, "created", null)
-        }
-    }
-
     fun changeCustomerContact(contact: CustomerContact) {
         val from = mapAggregateToKafkaDto()
         this.contact = contact
