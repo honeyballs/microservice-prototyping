@@ -6,6 +6,7 @@ import com.example.employeeadministration.services.kafka.KafkaEventProducer
 import com.example.employeeadministration.model.aggregates.Employee
 import com.example.employeeadministration.model.dto.EmployeeDto
 import com.example.employeeadministration.model.aggregates.AggregateState
+import com.example.employeeadministration.model.events.getRequiredSuccessEvents
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
 import com.example.employeeadministration.repositories.PositionRepository

@@ -19,13 +19,13 @@ class ResponseEvent(
         override val originatingServiceName: String,
         override val id: String,
         override val eventCreatedAt: String,
-        override val type: String
+        override val type: String,
+        val rootEventId: String
 ): Event {
 
     var consumerName = ""
     var consumerMessage: String? = null
-    lateinit var rootEventId: String
 
-    constructor(type: String): this(SERVICE_NAME, UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type)
+    constructor(rootEventId: String, type: String): this(SERVICE_NAME, UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, rootEventId)
 
 }

@@ -4,9 +4,7 @@ import com.example.employeeadministration.SERVICE_NAME
 import com.example.employeeadministration.model.aggregates.POSITION_AGGREGATE_NAME
 import com.example.employeeadministration.model.dto.PositionKfk
 import com.example.employeeadministration.model.aggregates.AggregateState
-import com.example.employeeadministration.model.events.DomainEvent
-import com.example.employeeadministration.model.events.ResponseEvent
-import com.example.employeeadministration.model.events.UpdateStateEvent
+import com.example.employeeadministration.model.events.*
 import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.PositionRepository
 import com.example.employeeadministration.repositories.SagaRepository
@@ -36,7 +34,7 @@ class KafkaPositionEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         try {
-            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+            sagaRepository.getByTriggerEventEventId(responseEvent.rootEventId).ifPresent {
                 if (getResponseEventKeyword(responseEvent.type) == "success") {
                     val state = it.receivedSuccessEvent(responseEvent.consumerName)
                     if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
@@ -44,7 +42,7 @@ class KafkaPositionEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    compensatePosition(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensatePosition(it.aggregateId, it.triggerEvent.leftAggregate, it.triggerEvent.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -78,9 +76,9 @@ class KafkaPositionEventHandler(
         }
         // Build the compensation event
         val eventType = getEventTypeFromProperties(pos.aggregateName, "compensation")
-        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
-        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
-        val event = DomainEvent(eventType, positionKfk, failedPositionKfk, successResponse, failureResponse)
+        val successResponseType = getResponseEventType(eventType, false)
+        val failureResponseType = getResponseEventType(eventType, true)
+        val event = DomainEvent(eventType, positionKfk, failedPositionKfk, successResponseType, failureResponseType)
         eventProducer.sendDomainEvent(pos.id!!, event, pos.aggregateName)
     }
 

@@ -2,9 +2,8 @@ package com.example.projectadministration.model.aggregates
 
 import com.example.projectadministration.model.dto.BaseKfkDto
 import com.example.projectadministration.model.events.DomainEvent
-import com.example.projectadministration.model.events.ResponseEvent
-import com.example.projectadministration.services.getEventTypeFromProperties
-import com.example.projectadministration.services.getResponseEventType
+import com.example.projectadministration.model.events.getEventTypeFromProperties
+import com.example.projectadministration.model.events.getResponseEventType
 import javax.persistence.*
 
 /**
@@ -23,13 +22,13 @@ abstract class EventAggregate(@Id @GeneratedValue(strategy = GenerationType.AUTO
 
     var state: AggregateState = AggregateState.PENDING
 
-    fun registerEvent(aggregateId: Long, action: String, from: BaseKfkDto?, vararg additionalResponseEvents: ResponseEvent) {
+    fun registerEvent(aggregateId: Long, action: String, from: BaseKfkDto?, vararg additionalResponseEventTypes: String) {
         val eventType = getEventTypeFromProperties(aggregateName, action)
         // Always add a success and fail
-        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
-        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
-        val event = DomainEvent(eventType, from, mapAggregateToKafkaDto(), successResponse, failureResponse)
-        additionalResponseEvents.forEach { event.addResponseEvent(it) }
+        val successResponseType = getResponseEventType(eventType, false)
+        val failureResponseType = getResponseEventType(eventType, true)
+        val event = DomainEvent(eventType, from, mapAggregateToKafkaDto(), successResponseType, failureResponseType)
+        additionalResponseEventTypes.forEach { event.addResponseEvent(it) }
         if (events == null) {
             events = Pair(aggregateId, ArrayList())
         }

@@ -3,6 +3,7 @@ package com.example.worktimeadministration.services
 import com.example.worktimeadministration.model.events.DomainEvent
 import com.example.worktimeadministration.model.saga.Saga
 import com.example.worktimeadministration.model.saga.SagaState
+import com.example.worktimeadministration.model.saga.TriggerEvent
 import com.example.worktimeadministration.repositories.SagaRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
@@ -13,14 +14,25 @@ class SagaService(val sagaRepository: SagaRepository, val mapper: ObjectMapper) 
     fun createSagaOfEvent(event: DomainEvent, aggregateId: Long, requiredEvents: String) {
         val saga = Saga(
                 null,
-                event.id,
-                event.type,
+                mapDomainEventToTriggerEvent(event),
                 aggregateId,
-                mapper.writeValueAsString(event.from),
-                mapper.writeValueAsString(event.to),
                 requiredEvents
         )
         sagaRepository.save(saga)
+    }
+
+    fun mapDomainEventToTriggerEvent(event: DomainEvent): TriggerEvent {
+        return TriggerEvent(
+                event.id,
+                event.eventCreatedAt,
+                event.type,
+                mapper.writeValueAsString(event.from),
+                mapper.writeValueAsString(event.to),
+                event.successEventType,
+                event.failureEventType,
+                event.additionalResponseEventTypes,
+                event.originatingServiceName
+        )
     }
 
     fun existsAnotherSagaInRunningOrFailed(id: Long, aggregateId: Long): Boolean {

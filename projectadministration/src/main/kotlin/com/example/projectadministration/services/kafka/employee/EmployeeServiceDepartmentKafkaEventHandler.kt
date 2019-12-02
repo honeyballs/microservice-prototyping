@@ -6,10 +6,9 @@ import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AG
 import com.example.projectadministration.model.aggregates.employee.Department
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.model.dto.employee.DepartmentKfk
-import com.example.projectadministration.model.dto.employee.EmployeeKfk
 import com.example.projectadministration.model.events.*
 import com.example.projectadministration.repositories.employee.DepartmentRepository
-import com.example.projectadministration.services.getActionOfConsumedEvent
+import com.example.projectadministration.model.events.getActionOfConsumedEvent
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -43,18 +42,18 @@ class EmployeeServiceDepartmentKafkaEventHandler(
                 "compensation" -> compensateDepartment(eventDepartment as DepartmentKfk, event.from as? DepartmentKfk)
             }
 
-            val success = event.successEvent
+            val success = ResponseEvent(event.id, event.successEventType)
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventDepartment.id, success, DEPARTMENT_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
         } finally {

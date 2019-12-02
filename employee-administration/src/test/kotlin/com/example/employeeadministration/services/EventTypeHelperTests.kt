@@ -3,6 +3,7 @@ package com.example.employeeadministration.services
 import com.example.employeeadministration.model.aggregates.DEPARTMENT_AGGREGATE_NAME
 import com.example.employeeadministration.model.aggregates.EMPLOYEE_AGGREGATE_NAME
 import com.example.employeeadministration.model.aggregates.POSITION_AGGREGATE_NAME
+import com.example.employeeadministration.model.events.*
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -7,6 +7,7 @@ import com.example.projectadministration.model.aggregates.Project
 import com.example.projectadministration.model.dto.ProjectCustomerDto
 import com.example.projectadministration.model.dto.ProjectDto
 import com.example.projectadministration.model.dto.ProjectEmployeeDto
+import com.example.projectadministration.model.events.getRequiredSuccessEvents
 import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.repositories.employee.EmployeeRepository

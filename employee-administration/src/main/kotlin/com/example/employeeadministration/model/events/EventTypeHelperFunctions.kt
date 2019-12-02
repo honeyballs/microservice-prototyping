@@ -1,4 +1,4 @@
-package com.example.worktimeadministration.services
+package com.example.employeeadministration.model.events
 
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.support.PropertiesLoaderUtils
@@ -20,11 +20,12 @@ fun getEventTypeFromProperties(aggregate: String, action: String): String {
  * Get either the success or fail event belonging to the specified event.
  */
 fun getResponseEventType(eventType: String, fail: Boolean): String {
-    val props = getEventTypeProperties()
+    val producerProps = getEventTypeProperties()
+    val consumerProps = getConsumerEventTypes()
     if (fail) {
-        return props["${getKeyFromEventType(props, eventType)}.fail"] as String
+        return consumerProps["${getKeyFromEventType(producerProps, eventType)}.fail"] as String
     } else {
-        return props["${getKeyFromEventType(props, eventType)}.success"] as String
+        return consumerProps["${getKeyFromEventType(producerProps, eventType)}.success"] as String
     }
 }
 
@@ -32,7 +33,7 @@ fun getResponseEventType(eventType: String, fail: Boolean): String {
  * Pass a response event to receive the response keyword (e.g. "success", "fail")
  */
 fun getResponseEventKeyword(eventType: String): String {
-    val props = getEventTypeProperties()
+    val props = getConsumerEventTypes()
     val key = getKeyFromEventType(props, eventType)
     return key.substringAfterLast(".")
 }

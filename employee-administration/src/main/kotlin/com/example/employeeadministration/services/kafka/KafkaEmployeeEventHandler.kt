@@ -4,9 +4,7 @@ import com.example.employeeadministration.SERVICE_NAME
 import com.example.employeeadministration.model.aggregates.EMPLOYEE_AGGREGATE_NAME
 import com.example.employeeadministration.model.dto.EmployeeKfk
 import com.example.employeeadministration.model.aggregates.AggregateState
-import com.example.employeeadministration.model.events.DomainEvent
-import com.example.employeeadministration.model.events.ResponseEvent
-import com.example.employeeadministration.model.events.UpdateStateEvent
+import com.example.employeeadministration.model.events.*
 import com.example.employeeadministration.model.saga.SagaState
 import com.example.employeeadministration.repositories.DepartmentRepository
 import com.example.employeeadministration.repositories.EmployeeRepository
@@ -40,7 +38,7 @@ class KafkaEmployeeEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         try {
-            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+            sagaRepository.getByTriggerEventEventId(responseEvent.rootEventId).ifPresent {
                 if (getResponseEventKeyword(responseEvent.type) == "success") {
                     val state = it.receivedSuccessEvent(responseEvent.consumerName)
                     if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
@@ -48,7 +46,7 @@ class KafkaEmployeeEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    compensateEmployee(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensateEmployee(it.aggregateId, it.triggerEvent.leftAggregate, it.triggerEvent.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -91,9 +89,9 @@ class KafkaEmployeeEventHandler(
         }
         // Build the compensation event
         val eventType = getEventTypeFromProperties(emp.aggregateName, "compensation")
-        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
-        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
-        val event = DomainEvent(eventType, employeeKfk, failedEmployeeKfk, successResponse, failureResponse)
+        val successResponseType = getResponseEventType(eventType, false)
+        val failureResponseType = getResponseEventType(eventType, true)
+        val event = DomainEvent(eventType, employeeKfk, failedEmployeeKfk, successResponseType, failureResponseType)
         eventProducer.sendDomainEvent(emp.id!!, event, emp.aggregateName)
     }
 

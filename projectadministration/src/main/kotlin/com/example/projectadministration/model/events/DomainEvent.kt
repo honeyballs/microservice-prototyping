@@ -24,22 +24,17 @@ open class DomainEvent(
         override val type: String,
         val from: BaseKfkDto?,
         val to: BaseKfkDto,
-        val successEvent: ResponseEvent,
-        val failureEvent: ResponseEvent,
+        val successEventType: String,
+        val failureEventType: String,
         override val originatingServiceName: String = SERVICE_NAME
 ) : Event {
 
-    init {
-        successEvent.rootEventId = id
-        failureEvent.rootEventId = id
-    }
+    var additionalResponseEventTypes = setOf<String>()
 
-    var additionalResponseEvents = setOf<ResponseEvent>()
+    constructor(type: String, from: BaseKfkDto?, to: BaseKfkDto, successEvent: String, failureEvent: String): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
 
-    constructor(type: String, from: BaseKfkDto?, to: BaseKfkDto, successEvent: ResponseEvent, failureEvent: ResponseEvent): this(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)), type, from, to, successEvent, failureEvent)
-
-    fun addResponseEvent(response: ResponseEvent) {
-        additionalResponseEvents = additionalResponseEvents.plus(response)
+    fun addResponseEvent(responseType: String) {
+        additionalResponseEventTypes = additionalResponseEventTypes.plus(responseType)
     }
 
 }

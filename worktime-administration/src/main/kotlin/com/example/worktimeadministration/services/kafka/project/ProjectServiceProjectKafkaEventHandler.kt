@@ -4,14 +4,14 @@ import com.example.worktimeadministration.SERVICE_NAME
 import com.example.worktimeadministration.model.aggregates.AggregateState
 import com.example.worktimeadministration.model.aggregates.project.PROJECT_AGGREGATE_NAME
 import com.example.worktimeadministration.model.aggregates.project.Project
-import com.example.worktimeadministration.model.dto.employee.EmployeeKfk
 import com.example.worktimeadministration.model.dto.project.ProjectKfk
 import com.example.worktimeadministration.model.events.DomainEvent
+import com.example.worktimeadministration.model.events.ResponseEvent
 import com.example.worktimeadministration.model.events.UpdateStateEvent
 import com.example.worktimeadministration.repositories.employee.EmployeeRepository
 import com.example.worktimeadministration.repositories.project.ProjectRepository
 import com.example.worktimeadministration.services.EventHandler
-import com.example.worktimeadministration.services.getActionOfConsumedEvent
+import com.example.worktimeadministration.model.events.getActionOfConsumedEvent
 import com.example.worktimeadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -47,18 +47,18 @@ class ProjectServiceProjectKafkaEventHandler(
                 "compensation" -> compensateProject(eventProject as ProjectKfk, event.from as? ProjectKfk)
             }
 
-            val success = event.successEvent
+            val success = ResponseEvent(event.id, event.successEventType)
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventProject.id, success, PROJECT_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
         } finally {

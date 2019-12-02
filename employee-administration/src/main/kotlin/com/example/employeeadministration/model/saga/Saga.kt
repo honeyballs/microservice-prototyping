@@ -15,19 +15,16 @@ import javax.persistence.*
 @Entity
 class Saga(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
-        val sagaEventId: String,
-        val eventType: String,
+        @Embedded val triggerEvent: TriggerEvent,
         val aggregateId: Long,
-        @Lob val leftAggregate: String,
-        @Lob val rightAggregate: String,
         var requiredSuccessEvents: String,
         var receivedSuccessEvents: String = "",
         var sagaState: SagaState = SagaState.RUNNING
 ) {
 
     fun receivedSuccessEvent(consumerName: String): SagaState {
-        val required = convertToList(requiredSuccessEvents)
-        val received = convertToList(receivedSuccessEvents)
+        val required = convertStringToList(requiredSuccessEvents)
+        val received = convertStringToList(receivedSuccessEvents)
         if (!received.contains(consumerName)) {
             received.add(consumerName)
         }
@@ -35,20 +32,12 @@ class Saga(
             sagaState = SagaState.COMPLETED
         }
         println("received size: ${received.size}, required size: ${required.size}")
-        receivedSuccessEvents = convertToString(received)
+        receivedSuccessEvents = convertListToString(received)
         return sagaState
     }
 
     fun receivedFailureEvent() {
         this.sagaState = SagaState.FAILED
-    }
-
-    private fun convertToList(str: String): MutableList<String> {
-        return str.split(",").filter { it != "" }.toMutableList()
-    }
-    
-    private fun convertToString(strings: List<String>): String {
-        return strings.reduce { acc, s ->  "$acc,$s"}.removePrefix(",")
     }
 
 }

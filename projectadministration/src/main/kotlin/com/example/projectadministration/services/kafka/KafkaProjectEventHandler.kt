@@ -4,9 +4,7 @@ import com.example.projectadministration.SERVICE_NAME
 import com.example.projectadministration.model.aggregates.AggregateState
 import com.example.projectadministration.model.aggregates.PROJECT_AGGREGATE_NAME
 import com.example.projectadministration.model.dto.ProjectKfk
-import com.example.projectadministration.model.events.DomainEvent
-import com.example.projectadministration.model.events.ResponseEvent
-import com.example.projectadministration.model.events.UpdateStateEvent
+import com.example.projectadministration.model.events.*
 import com.example.projectadministration.model.saga.SagaState
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.repositories.SagaRepository
@@ -39,7 +37,7 @@ class KafkaProjectEventHandler(
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}")
         try {
-            sagaRepository.getBySagaEventId(responseEvent.rootEventId).ifPresent {
+            sagaRepository.getByTriggerEventEventId(responseEvent.rootEventId).ifPresent {
                 if (getResponseEventKeyword(responseEvent.type) == "success") {
                     val state = it.receivedSuccessEvent(responseEvent.consumerName)
                     if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
@@ -47,7 +45,7 @@ class KafkaProjectEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    compensateProject(it.aggregateId, it.leftAggregate, it.rightAggregate)
+                    compensateProject(it.aggregateId, it.triggerEvent.leftAggregate, it.triggerEvent.rightAggregate)
                 }
             }
             ack.acknowledge()
@@ -83,8 +81,8 @@ class KafkaProjectEventHandler(
         }
         // Build the compensation event
         val eventType = getEventTypeFromProperties(project.aggregateName, "compensation")
-        val successResponse = ResponseEvent(getResponseEventType(eventType, false))
-        val failureResponse = ResponseEvent(getResponseEventType(eventType, true))
+        val successResponse = getResponseEventType(eventType, false)
+        val failureResponse = getResponseEventType(eventType, true)
         val event = DomainEvent(eventType, projectKfk, failedProjectKfk, successResponse, failureResponse)
         eventProducer.sendDomainEvent(project.id!!, event, project.aggregateName)
     }

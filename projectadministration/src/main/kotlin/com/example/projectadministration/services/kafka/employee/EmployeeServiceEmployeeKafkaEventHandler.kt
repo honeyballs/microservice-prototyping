@@ -7,11 +7,12 @@ import com.example.projectadministration.model.aggregates.employee.Employee
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.model.dto.employee.EmployeeKfk
 import com.example.projectadministration.model.events.DomainEvent
+import com.example.projectadministration.model.events.ResponseEvent
 import com.example.projectadministration.model.events.UpdateStateEvent
 import com.example.projectadministration.repositories.employee.DepartmentRepository
 import com.example.projectadministration.repositories.employee.EmployeeRepository
 import com.example.projectadministration.repositories.employee.PositionRepository
-import com.example.projectadministration.services.getActionOfConsumedEvent
+import com.example.projectadministration.model.events.getActionOfConsumedEvent
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -47,18 +48,18 @@ class EmployeeServiceEmployeeKafkaEventHandler(
                 "compensation" -> compensateEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
             }
 
-            val success = event.successEvent
+            val success = ResponseEvent(event.id, event.successEventType)
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventEmployee.id, success, EMPLOYEE_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
         } finally {

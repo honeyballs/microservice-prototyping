@@ -2,17 +2,15 @@ package com.example.projectadministration.services.kafka.employee
 
 import com.example.projectadministration.SERVICE_NAME
 import com.example.projectadministration.model.aggregates.AggregateState
-import com.example.projectadministration.model.aggregates.employee.DEPARTMENT_AGGREGATE_NAME
-import com.example.projectadministration.model.aggregates.employee.Department
 import com.example.projectadministration.model.aggregates.employee.POSITION_AGGREGATE_NAME
 import com.example.projectadministration.model.aggregates.employee.Position
-import com.example.projectadministration.model.dto.employee.DepartmentKfk
 import com.example.projectadministration.services.EventHandler
 import com.example.projectadministration.model.dto.employee.PositionKfk
 import com.example.projectadministration.model.events.DomainEvent
+import com.example.projectadministration.model.events.ResponseEvent
 import com.example.projectadministration.model.events.UpdateStateEvent
 import com.example.projectadministration.repositories.employee.PositionRepository
-import com.example.projectadministration.services.getActionOfConsumedEvent
+import com.example.projectadministration.model.events.getActionOfConsumedEvent
 import com.example.projectadministration.services.kafka.KafkaEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
@@ -21,7 +19,6 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import javax.persistence.RollbackException
 
 @Service
@@ -47,18 +44,18 @@ class EmployeeServicePositionKafkaEventHandler(
                 "compensation" -> compensatePosition(eventPos as PositionKfk, event.from as? PositionKfk)
             }
 
-            val success = event.successEvent
+            val success = ResponseEvent(event.id, event.successEventType)
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventPos.id, success, POSITION_AGGREGATE_NAME)
 
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventPos.id, failure, POSITION_AGGREGATE_NAME)
         } catch (exception: Exception) {
             exception.printStackTrace()
-            val failure = event.failureEvent
+            val failure = ResponseEvent(event.id, event.failureEventType)
             failure.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventPos.id, failure, POSITION_AGGREGATE_NAME)
         } finally {

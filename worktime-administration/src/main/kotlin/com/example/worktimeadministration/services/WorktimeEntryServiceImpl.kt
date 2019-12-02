@@ -5,9 +5,8 @@ import com.example.worktimeadministration.configurations.throwPendingException
 import com.example.worktimeadministration.model.aggregates.AggregateState
 import com.example.worktimeadministration.model.aggregates.EntryType
 import com.example.worktimeadministration.model.aggregates.WorktimeEntry
-import com.example.worktimeadministration.model.aggregates.employee.Employee
-import com.example.worktimeadministration.model.aggregates.project.Project
 import com.example.worktimeadministration.model.dto.WorktimeEntryDto
+import com.example.worktimeadministration.model.events.getRequiredSuccessEvents
 import com.example.worktimeadministration.repositories.WorktimeEntryRepository
 import com.example.worktimeadministration.repositories.employee.EmployeeRepository
 import com.example.worktimeadministration.repositories.project.ProjectRepository
@@ -18,7 +17,6 @@ import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @Service
 class WorktimeEntryServiceImpl(

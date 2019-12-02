@@ -5,6 +5,7 @@ import com.example.projectadministration.configurations.throwPendingException
 import com.example.projectadministration.model.aggregates.AggregateState
 import com.example.projectadministration.model.aggregates.Customer
 import com.example.projectadministration.model.dto.CustomerDto
+import com.example.projectadministration.model.events.getRequiredSuccessEvents
 import com.example.projectadministration.repositories.CustomerRepository
 import com.example.projectadministration.repositories.ProjectRepository
 import com.example.projectadministration.services.kafka.KafkaEventProducer
