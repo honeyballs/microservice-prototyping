@@ -91,7 +91,7 @@ class CustomerServiceImpl(
             aggregate.events()!!.second.forEach {
                 val responseEvents = getRequiredSuccessEvents(it.type)
                 if (responseEvents != "") {
-                    sagaService.createSagaOfEvent(it, agg.id!!, responseEvents)
+                    sagaService.createSagaOfEvent(it, agg.id!!, responseEvents, null)
                     canBeMadeActive = false
                 }
             }

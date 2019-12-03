@@ -35,7 +35,7 @@ class KafkaCustomerEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         try {
-            sagaRepository.getByTriggerEventEventId(responseEvent.rootEventId).ifPresent {
+            sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresent {
                 if (getResponseEventKeyword(responseEvent.type) == "success") {
                     val state = it.receivedSuccessEvent(responseEvent.consumerName)
                     if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
@@ -43,7 +43,7 @@ class KafkaCustomerEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    compensateCustomer(it.aggregateId, it.triggerEvent.leftAggregate, it.triggerEvent.rightAggregate)
+                    compensateCustomer(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()

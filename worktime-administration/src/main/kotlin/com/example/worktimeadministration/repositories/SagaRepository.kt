@@ -7,7 +7,7 @@ import java.util.*
 
 interface SagaRepository: JpaRepository<Saga, Long> {
 
-    fun getByTriggerEventEventId(eventId: String): Optional<Saga>
+    fun getByEmittedEventId(eventId: String): Optional<Saga>
     fun getByAggregateIdAndSagaState(aggregateId: Long, state: SagaState): List<Saga>
     fun existsAllByIdNotAndAggregateIdAndSagaStateIn(id: Long, aggregateId: Long, states: List<SagaState>): Boolean
 

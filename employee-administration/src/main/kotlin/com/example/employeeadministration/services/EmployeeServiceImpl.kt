@@ -73,10 +73,10 @@ class EmployeeServiceImpl(
             employee.switchBankDetails(employeeDto.bankDetails)
         }
         if (employee.department.id!! != employeeDto.department.id!!) {
-            employee.moveToAnotherDepartment(departmentRepository.findById(employeeDto.department.id!!).orElseThrow())
+            employee.moveToAnotherDepartment(departmentRepository.findById(employeeDto.department.id).orElseThrow())
         }
         if (employee.position.id!! != employeeDto.position.id!!) {
-            employee.changeJobPosition(positionRepository.findById(employeeDto.position.id!!).orElseThrow(), null)
+            employee.changeJobPosition(positionRepository.findById(employeeDto.position.id).orElseThrow(), null)
         }
         return mapEntityToDto(persistWithEvents(employee))
     }
@@ -110,7 +110,7 @@ class EmployeeServiceImpl(
             aggregate.events()!!.second.forEach {
                 val responseEvents = getRequiredSuccessEvents(it.type)
                 if (responseEvents != "") {
-                    sagaService.createSagaOfEvent(it, agg.id!!, responseEvents)
+                    sagaService.createSagaOfEvent(it, agg.id!!, responseEvents, null)
                     canBeMadeActive = false
                 }
             }

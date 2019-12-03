@@ -37,7 +37,7 @@ class KafkaProjectEventHandler(
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}")
         try {
-            sagaRepository.getByTriggerEventEventId(responseEvent.rootEventId).ifPresent {
+            sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresent {
                 if (getResponseEventKeyword(responseEvent.type) == "success") {
                     val state = it.receivedSuccessEvent(responseEvent.consumerName)
                     if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
@@ -45,7 +45,7 @@ class KafkaProjectEventHandler(
                     }
                 } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
                     it.receivedFailureEvent()
-                    compensateProject(it.aggregateId, it.triggerEvent.leftAggregate, it.triggerEvent.rightAggregate)
+                    compensateProject(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
             }
             ack.acknowledge()

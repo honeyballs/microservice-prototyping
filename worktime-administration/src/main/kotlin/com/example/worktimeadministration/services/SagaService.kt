@@ -11,23 +11,27 @@ import org.springframework.stereotype.Service
 @Service
 class SagaService(val sagaRepository: SagaRepository, val mapper: ObjectMapper) {
 
-    fun createSagaOfEvent(event: DomainEvent, aggregateId: Long, requiredEvents: String) {
+    fun createSagaOfEvent(emittedEvent: DomainEvent, aggregateId: Long, requiredEvents: String, triggerEvent: DomainEvent?) {
         val saga = Saga(
                 null,
-                mapDomainEventToTriggerEvent(event),
                 aggregateId,
+                mapper.writeValueAsString(emittedEvent.from),
+                mapper.writeValueAsString(emittedEvent.to),
+                emittedEvent.id,
+                mapDomainEventToTriggerEvent(triggerEvent),
                 requiredEvents
         )
         sagaRepository.save(saga)
     }
 
-    fun mapDomainEventToTriggerEvent(event: DomainEvent): TriggerEvent {
+    fun mapDomainEventToTriggerEvent(event: DomainEvent?): TriggerEvent? {
+        if (event == null) {
+            return null
+        }
         return TriggerEvent(
                 event.id,
                 event.eventCreatedAt,
                 event.type,
-                mapper.writeValueAsString(event.from),
-                mapper.writeValueAsString(event.to),
                 event.successEventType,
                 event.failureEventType,
                 event.additionalResponseEventTypes,

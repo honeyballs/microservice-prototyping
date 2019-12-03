@@ -15,8 +15,11 @@ import javax.persistence.*
 @Entity
 class Saga(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
-        @Embedded val triggerEvent: TriggerEvent,
         val aggregateId: Long,
+        @Lob val leftAggregate: String,
+        @Lob val rightAggregate: String,
+        val emittedEventId: String,
+        @Embedded val triggerEvent: TriggerEvent?,
         var requiredSuccessEvents: String,
         var receivedSuccessEvents: String = "",
         var sagaState: SagaState = SagaState.RUNNING
