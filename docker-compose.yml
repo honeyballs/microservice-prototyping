@@ -23,27 +23,27 @@ services:
 #    volumes:
 #      - /var/run/docker.sock:/var/run/docker.sock
 
-  employee-administration:
-    build: ./employee-administration/.
-    ports:
-      - "8080:8080"
-    depends_on:
-      - zookeeper
-      - kafka  
+  # employee-administration:
+  #   build: ./employee-administration/.
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - zookeeper
+  #     - kafka  
 
-  project-administration:
-    build: ./projectadministration/.
-    ports:
-      - "8090:8090"
-    depends_on:
-      - zookeeper
-      - kafka
+  # project-administration:
+  #   build: ./projectadministration/.
+  #   ports:
+  #     - "8090:8090"
+  #   depends_on:
+  #     - zookeeper
+  #     - kafka
 
-  worktime-administration:
-    build: ./worktime-administration/.
-    ports:
-      - "8085:8085"
-    depends_on:
-      - zookeeper
-      - kafka          
+  # worktime-administration:
+  #   build: ./worktime-administration/.
+  #   ports:
+  #     - "8085:8085"
+  #   depends_on:
+  #     - zookeeper
+  #     - kafka          
       

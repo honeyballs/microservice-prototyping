@@ -14,7 +14,13 @@ import org.springframework.stereotype.Service
  * Service which sends Domain Events to Kafka.
  */
 @Service
-class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>, val mapper: ObjectMapper, val sagaRepository: SagaRepository) : EventProducer {
+class KafkaEventProducer(
+        val kafkaTemplate: KafkaTemplate<Long, Event>,
+        // Use this template when sending aggregate events.
+        // The other template is used for sending within a listening container
+        // See KafkaConfiguration
+        val producingOnlyTemplate: KafkaTemplate<Long, Event>
+) : EventProducer {
 
     val logger = LoggerFactory.getLogger("KafkaEventProducer")
 
@@ -32,13 +38,14 @@ class KafkaEventProducer(val kafkaTemplate: KafkaTemplate<Long, Event>, val mapp
     /**
      * Function used to send all events which occurred on an aggregate.
      * Clears the events after sending.
-     * TODO: Wait for success before clearing?
      */
     override fun sendEventsOfAggregate(aggregate: EventAggregate) {
         logger.info("Sending Aggregate Events")
         if (aggregate.events() != null) {
-            aggregate.events()!!.second.forEach() {
-                sendDomainEvent(aggregate.events()!!.first, it, aggregate.aggregateName)
+            producingOnlyTemplate.executeInTransaction { operation ->
+                aggregate.events()!!.second
+                        .map { ProducerRecord<Long, Event>(aggregate.aggregateName, aggregate.id, it) }
+                        .forEach { operation.send(it) }
             }
             aggregate.clearEvents()
         }

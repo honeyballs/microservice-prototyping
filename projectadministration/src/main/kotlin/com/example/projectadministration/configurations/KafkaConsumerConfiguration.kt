@@ -15,6 +15,7 @@ import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.support.serializer.JsonDeserializer
+import org.springframework.kafka.transaction.KafkaTransactionManager
 
 @Configuration
 @EnableKafka
@@ -46,10 +47,16 @@ class KafkaConsumerConfiguration {
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, Event> {
+    fun kafkaListenerContainerFactory(kafkaTransactionManager: KafkaTransactionManager<Long, Event>): ConcurrentKafkaListenerContainerFactory<Long, Event> {
         val factory = ConcurrentKafkaListenerContainerFactory<Long, Event>()
         factory.consumerFactory = consumerFactory()
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
+        factory.setConcurrency(1)
+        // The transaction manager is created in the producer configuration
+        // When so configured, the container starts a transaction before invoking the listener.
+        // Any KafkaTemplate operations performed by the listener participate in the transaction.
+        // https://docs.spring.io/spring-kafka/reference/html/#transaction-synchronization
+        factory.containerProperties.transactionManager = kafkaTransactionManager
         return factory
     }
 
