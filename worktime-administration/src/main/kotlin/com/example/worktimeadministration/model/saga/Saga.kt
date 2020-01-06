@@ -11,7 +11,7 @@ import javax.persistence.*
  */
 @Entity
 class Saga(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?,
+        @Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "worktime_seq") var id: Long?,
         val aggregateId: Long,
         @Lob val leftAggregate: String,
         @Lob val rightAggregate: String,

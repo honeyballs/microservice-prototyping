@@ -9,14 +9,14 @@ const val DEPARTMENT_AGGREGATE_NAME = "department"
 
 
 @Entity
-data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO) var dbId: Long?, val departmentId: Long, var name: String, var deleted: Boolean = false, var state: AggregateState)
+data class Department(@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "project_seq") var dbId: Long?, val departmentId: Long, var name: String, var deleted: Boolean = false, var state: AggregateState)
 
 @Entity
-data class Position(@Id @GeneratedValue(strategy = GenerationType.AUTO) var dbId: Long?, val positionId: Long, var title: String, var deleted: Boolean = false, var state: AggregateState)
+data class Position(@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "project_seq") var dbId: Long?, val positionId: Long, var title: String, var deleted: Boolean = false, var state: AggregateState)
 
 @Entity
 data class Employee(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var dbId: Long?,
+        @Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "project_seq") var dbId: Long?,
         val employeeId: Long,
         var firstname: String,
         var lastname: String,

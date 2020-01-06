@@ -11,7 +11,8 @@ import javax.persistence.*
  * Aggregates have a state which controls whether changes can be made on it.
  */
 @MappedSuperclass
-abstract class EventAggregate(@Id @GeneratedValue(strategy = GenerationType.AUTO) var id: Long?, var deleted: Boolean = false) {
+@SequenceGenerator(name = "project_seq", sequenceName = "project_id_sequence")
+abstract class EventAggregate(@Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "project_seq") var id: Long?, var deleted: Boolean = false) {
 
     @Transient
     open lateinit var aggregateName: String

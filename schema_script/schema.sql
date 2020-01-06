@@ -1,0 +1,3 @@
+CREATE SCHEMA employee;
+CREATE SCHEMA project;
+CREATE SCHEMA worktime;

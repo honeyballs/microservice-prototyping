@@ -9,7 +9,7 @@ const val EMPLOYEE_AGGREGATE_NAME = "employee"
 
 @Entity
 data class Employee(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var dbId: Long?,
+        @Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "worktime_seq") var dbId: Long?,
         val employeeId: Long,
         var firstname: String,
         var lastname: String,

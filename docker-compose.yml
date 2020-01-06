@@ -23,13 +23,21 @@ services:
 #    volumes:
 #      - /var/run/docker.sock:/var/run/docker.sock
 
+  db:
+    image: honeyball/schema-pg:latest
+    environment: 
+      POSTGRES_PASSWORD: passwort
+    ports:
+      - "5432:5432"    
+
   employee-administration:
     build: ./employee-administration/.
     ports:
       - "8080:8080"
     depends_on:
       - zookeeper
-      - kafka  
+      - kafka 
+      - db 
 
   project-administration:
     build: ./projectadministration/.
@@ -38,6 +46,7 @@ services:
     depends_on:
       - zookeeper
       - kafka
+      - db
 
   worktime-administration:
     build: ./worktime-administration/.
@@ -45,5 +54,6 @@ services:
       - "8085:8085"
     depends_on:
       - zookeeper
-      - kafka          
+      - kafka   
+      - db       
       

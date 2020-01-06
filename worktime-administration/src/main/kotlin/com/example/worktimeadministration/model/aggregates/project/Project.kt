@@ -10,7 +10,7 @@ const val PROJECT_AGGREGATE_NAME = "project"
 
 @Entity
 data class Project(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) var dbId: Long?,
+        @Id @GeneratedValue(strategy = GenerationType.AUTO, generator = "worktime_seq") var dbId: Long?,
         val projectId: Long,
         var name: String,
         var description: String,

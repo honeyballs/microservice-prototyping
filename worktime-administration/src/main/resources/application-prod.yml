@@ -1,17 +1,17 @@
 spring:
+
+  datasource:
+    url: jdbc:postgresql://db:5432/postgres
+    username: postgres
+    password: passwort
+
   jpa:
     hibernate:
       ddl-auto: create-drop
-
-  datasource:
-    url: jdbc:h2:mem:testdb
-
-  h2:
-    console:
-      enabled: true
-      path: /console
-      settings:
-        web-allow-others: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: worktime
 
   jackson:
     serialization:
