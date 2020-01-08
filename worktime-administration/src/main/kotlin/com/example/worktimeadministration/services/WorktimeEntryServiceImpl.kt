@@ -75,14 +75,25 @@ class WorktimeEntryServiceImpl(
             entryToUpdate.changeDescription(worktimeEntryDto.description)
         }
         if (entryToUpdate.project.projectId != worktimeEntryDto.project.id) {
-            entryToUpdate.project = projectRepository.findByProjectIdAndDeletedFalse(worktimeEntryDto.project.id).orElseThrow()
+            val project = projectRepository.findByProjectIdAndDeletedFalse(worktimeEntryDto.project.id).orElseThrow()
+            if (project.state != AggregateState.ACTIVE) {
+                throw PendingException("The project is not in sync. Try again later")
+            }
+            entryToUpdate.project = project
         }
         return mapEntityToDto(persistWithEvents(entryToUpdate))
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(Exception::class, PendingException::class)
     override fun createEntry(worktimeEntryDto: WorktimeEntryDto): WorktimeEntryDto {
         val entry = mapDtoToEntity(worktimeEntryDto)
+        if (entry.employee.state != AggregateState.ACTIVE) {
+            throw PendingException("The employee is not in sync. Try again later")
+        }
+        if (entry.project.state != AggregateState.ACTIVE) {
+            throw PendingException("The project is not in sync. Try again later")
+        }
         if (entry.type == EntryType.VACATION) {
             entry.employee.usedVacationHours -= entry.calculateTimespan(entry.startTime, entry.endTime)
             employeeRepository.save(entry.employee)

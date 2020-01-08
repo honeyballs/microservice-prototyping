@@ -46,9 +46,16 @@ class ProjectServiceImpl(
         }.orElseThrow()
     }
 
-    @Throws(Exception::class)
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
+    @Throws(PendingException::class)
     override fun createProject(projectDto: ProjectDto): ProjectDto {
         val project = mapDtoToEntity(projectDto)
+        if (project.employees.any { it.state != AggregateState.ACTIVE }) {
+            throw PendingException("At least one employee is not in sync. Try again later")
+        }
+        if (project.customer.state != AggregateState.ACTIVE) {
+            throw PendingException("The customer of the project you are trying to create is not in sync. Try again later")
+        }
         return mapEntityToDto(persistWithEvents(project))
     }
 
@@ -64,7 +71,11 @@ class ProjectServiceImpl(
             project.delayProject(projectDto.projectedEndDate)
         }
         if (project.employees.map { it.employeeId } != projectDto.projectEmployees.map { it.id }) {
-            project.changeEmployeesWorkingOnProject(employeeRepository.findAllByEmployeeIdInAndDeletedFalse(projectDto.projectEmployees.map { it.id }).toMutableSet())
+            val employees = employeeRepository.findAllByEmployeeIdInAndDeletedFalse(projectDto.projectEmployees.map { it.id })
+            if (employees.any { emp -> emp.state != AggregateState.ACTIVE }) {
+                throw  PendingException("At least one employee is not in sync. Try again later")
+            }
+            project.changeEmployeesWorkingOnProject(employees.toMutableSet())
         }
         return mapEntityToDto(persistWithEvents(project))
     }
