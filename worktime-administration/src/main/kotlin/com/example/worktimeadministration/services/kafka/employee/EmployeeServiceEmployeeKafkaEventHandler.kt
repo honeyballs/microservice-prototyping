@@ -35,7 +35,7 @@ class EmployeeServiceEmployeeKafkaEventHandler(
         logger.info("Employee Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
         val eventEmployee = event.to
-        try {
+//        try {
 
             when(action) {
                 "created" -> createEmployee(eventEmployee as EmployeeKfk)
@@ -44,23 +44,27 @@ class EmployeeServiceEmployeeKafkaEventHandler(
                 "compensation" -> compensateEmployee(eventEmployee as EmployeeKfk, event.from as? EmployeeKfk)
             }
 
+
+
             val success = ResponseEvent(event.id, event.successEventType)
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventEmployee.id, success, EMPLOYEE_AGGREGATE_NAME)
 
-        } catch (rollback: UnexpectedRollbackException) {
-            rollback.printStackTrace()
-            val failure = ResponseEvent(event.id, event.failureEventType)
-            failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            val failure = ResponseEvent(event.id, event.failureEventType)
-            failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
-        } finally {
             ack.acknowledge()
-        }
+
+//        } catch (rollback: UnexpectedRollbackException) {
+//            rollback.printStackTrace()
+//            val failure = ResponseEvent(event.id, event.failureEventType)
+//            failure.consumerName = SERVICE_NAME
+//            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
+//        } catch (exception: Exception) {
+//            exception.printStackTrace()
+//            val failure = ResponseEvent(event.id, event.failureEventType)
+//            failure.consumerName = SERVICE_NAME
+//            producer.sendDomainEvent(eventEmployee.id, failure, EMPLOYEE_AGGREGATE_NAME)
+//        } finally {
+//            ack.acknowledge()
+//        }
     }
 
     @KafkaHandler

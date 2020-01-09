@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
+import java.lang.Exception
 
 /**
  * Service which sends Domain Events to Kafka.
@@ -40,6 +41,7 @@ class KafkaEventProducer(
      * Function used to send all events which occurred on an aggregate.
      * Clears the events after sending.
      */
+    @Throws(Exception::class)
     override fun sendEventsOfAggregate(aggregate: EventAggregate) {
         logger.info("Sending Aggregate Events")
         if (aggregate.events() != null) {

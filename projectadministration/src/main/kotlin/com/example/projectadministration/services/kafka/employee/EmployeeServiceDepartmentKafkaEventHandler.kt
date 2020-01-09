@@ -33,7 +33,7 @@ class EmployeeServiceDepartmentKafkaEventHandler(
         logger.info("Department Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
         val eventDepartment = event.to
-        try {
+//        try {
 
             when(action) {
                 "created" -> createDepartment(eventDepartment as DepartmentKfk)
@@ -45,20 +45,21 @@ class EmployeeServiceDepartmentKafkaEventHandler(
             val success = ResponseEvent(event.id, event.successEventType)
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventDepartment.id, success, DEPARTMENT_AGGREGATE_NAME)
-
-        } catch (rollback: UnexpectedRollbackException) {
-            rollback.printStackTrace()
-            val failure = ResponseEvent(event.id, event.failureEventType)
-            failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            val failure = ResponseEvent(event.id, event.failureEventType)
-            failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
-        } finally {
             ack.acknowledge()
-        }
+
+//        } catch (rollback: UnexpectedRollbackException) {
+//            rollback.printStackTrace()
+//            val failure = ResponseEvent(event.id, event.failureEventType)
+//            failure.consumerName = SERVICE_NAME
+//            producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
+//        } catch (exception: Exception) {
+//            exception.printStackTrace()
+//            val failure = ResponseEvent(event.id, event.failureEventType)
+//            failure.consumerName = SERVICE_NAME
+//            producer.sendDomainEvent(eventDepartment.id, failure, DEPARTMENT_AGGREGATE_NAME)
+//        } finally {
+//            ack.acknowledge()
+//        }
     }
 
     @KafkaHandler

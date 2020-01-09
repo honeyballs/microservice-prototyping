@@ -15,6 +15,7 @@ import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.UnexpectedRollbackException
 import org.springframework.transaction.annotation.Transactional
+import java.lang.RuntimeException
 
 @Service
 class EmployeeServiceImpl(
@@ -121,8 +122,14 @@ class EmployeeServiceImpl(
                 employeeRepository.save(agg)
             }
 
-            // Send all events
-            eventProducer.sendEventsOfAggregate(aggregate)
+            // Send all events. If this failes we initiate a rollback
+            try {
+                eventProducer.sendEventsOfAggregate(aggregate)
+            } catch (e: java.lang.Exception) {
+                // Runtime Exceptions initiate a rollback when thrown in a method annotated with @Transactional
+                throw RuntimeException("Events could not be sent")
+            }
+
         } catch (rollback: UnexpectedRollbackException) {
             rollback.printStackTrace()
         } catch (ex: Exception) {

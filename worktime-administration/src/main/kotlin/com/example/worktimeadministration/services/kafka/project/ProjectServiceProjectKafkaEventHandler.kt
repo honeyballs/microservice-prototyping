@@ -38,7 +38,7 @@ class ProjectServiceProjectKafkaEventHandler(
         logger.info("Project Event received. Type: ${event.type}, Id: ${event.to.id}")
         val action = getActionOfConsumedEvent(event.type)
         val eventProject = event.to
-        try {
+        //try {
 
             when (action) {
                 "created" -> createProject(eventProject as ProjectKfk)
@@ -51,19 +51,21 @@ class ProjectServiceProjectKafkaEventHandler(
             success.consumerName = SERVICE_NAME
             producer.sendDomainEvent(eventProject.id, success, PROJECT_AGGREGATE_NAME)
 
-        } catch (rollback: UnexpectedRollbackException) {
-            rollback.printStackTrace()
-            val failure = ResponseEvent(event.id, event.failureEventType)
-            failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            val failure = ResponseEvent(event.id, event.failureEventType)
-            failure.consumerName = SERVICE_NAME
-            producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
-        } finally {
-            ack.acknowledge()
-        }
+        ack.acknowledge()
+
+//        } catch (rollback: UnexpectedRollbackException) {
+//            rollback.printStackTrace()
+//            val failure = ResponseEvent(event.id, event.failureEventType)
+//            failure.consumerName = SERVICE_NAME
+//            producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
+//        } catch (exception: Exception) {
+//            exception.printStackTrace()
+//            val failure = ResponseEvent(event.id, event.failureEventType)
+//            failure.consumerName = SERVICE_NAME
+//            producer.sendDomainEvent(eventProject.id, failure, PROJECT_AGGREGATE_NAME)
+//        } finally {
+//            ack.acknowledge()
+//        }
     }
 
     @KafkaHandler
@@ -143,3 +145,4 @@ class ProjectServiceProjectKafkaEventHandler(
     }
 
 }
+
