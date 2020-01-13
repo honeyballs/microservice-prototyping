@@ -36,8 +36,7 @@ class KafkaProjectEventHandler(
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
         logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}")
-        try {
-            sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresent {
+            sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresentOrElse({
                 if (getResponseEventKeyword(responseEvent.type) == "success") {
                     val state = it.receivedSuccessEvent(responseEvent.consumerName)
                     if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
@@ -47,11 +46,10 @@ class KafkaProjectEventHandler(
                     it.receivedFailureEvent()
                     compensateProject(it.aggregateId, it.leftAggregate, it.rightAggregate)
                 }
+            }) {
+                throw RuntimeException("Saga does not (yet) exist")
             }
             ack.acknowledge()
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-        }
     }
 
     @Throws(Exception::class)

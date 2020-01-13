@@ -42,6 +42,7 @@ class PositionServiceImpl(
                 .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(positionDto))) }
     }
 
+    @Transactional
     @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
     @Throws(PendingException::class, Exception::class)
     override fun updatePosition(positionDto: PositionDto): PositionDto {
@@ -72,6 +73,7 @@ class PositionServiceImpl(
         }
     }
 
+    @Transactional
     override fun persistWithEvents(aggregate: Position): Position {
         var agg: Position? = null
         try {
@@ -100,10 +102,10 @@ class PositionServiceImpl(
             }
 
             // Send all events
-            // Send all events. If this failes we initiate a rollback
+            // Send all events. If this fails we initiate a rollback
             try {
                 eventProducer.sendEventsOfAggregate(aggregate)
-            } catch (e: java.lang.Exception) {
+            } catch (e: Exception) {
                 // Runtime Exceptions initiate a rollback when thrown in a method annotated with @Transactional
                 throw RuntimeException("Events could not be sent")
             }

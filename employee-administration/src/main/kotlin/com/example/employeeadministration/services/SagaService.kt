@@ -7,6 +7,8 @@ import com.example.employeeadministration.model.saga.TriggerEvent
 import com.example.employeeadministration.repositories.SagaRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class SagaService(val sagaRepository: SagaRepository, val mapper: ObjectMapper) {
@@ -22,6 +24,7 @@ class SagaService(val sagaRepository: SagaRepository, val mapper: ObjectMapper) 
                 requiredEvents
         )
         sagaRepository.save(saga)
+        println("saga created with emittedEvent event id: ${emittedEvent.id}")
     }
 
     fun mapDomainEventToTriggerEvent(event: DomainEvent?): TriggerEvent? {

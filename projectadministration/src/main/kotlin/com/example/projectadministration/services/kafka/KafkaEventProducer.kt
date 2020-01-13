@@ -7,6 +7,7 @@ import com.example.projectadministration.services.EventProducer
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 
@@ -15,11 +16,11 @@ import org.springframework.stereotype.Service
  */
 @Service
 class KafkaEventProducer(
-        val kafkaTemplate: KafkaTemplate<Long, Event>,
+        @Qualifier("listener-template") val kafkaTemplate: KafkaTemplate<Long, Event>,
         // Use this template when sending aggregate events.
         // The other template is used for sending within a listening container
         // See KafkaConfiguration
-        val producingOnlyTemplate: KafkaTemplate<Long, Event>
+        @Qualifier("producer-template") val producingOnlyTemplate: KafkaTemplate<Long, Event>
 ) : EventProducer {
 
     val logger = LoggerFactory.getLogger("KafkaEventProducer")

@@ -7,6 +7,7 @@ import com.example.employeeadministration.services.EventProducer
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.env.Environment
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
@@ -17,11 +18,11 @@ import java.lang.Exception
  */
 @Service
 class KafkaEventProducer(
-        val kafkaTemplate: KafkaTemplate<Long, Event>,
+        @Qualifier("listener-template") val kafkaTemplate: KafkaTemplate<Long, Event>,
         // Use this template when sending aggregate events.
         // The other template is used for sending events after reacting to other events
         // See KafkaConfiguration
-        val producingOnlyTemplate: KafkaTemplate<Long, Event>
+        @Qualifier("producer-template") val producingOnlyTemplate: KafkaTemplate<Long, Event>
 ) : EventProducer {
 
     val logger = LoggerFactory.getLogger("KafkaEventProducer")

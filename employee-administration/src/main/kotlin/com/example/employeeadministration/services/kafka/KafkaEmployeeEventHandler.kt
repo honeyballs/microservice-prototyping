@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -37,22 +39,23 @@ class KafkaEmployeeEventHandler(
     @KafkaHandler
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
-        try {
-            sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresent {
-                if (getResponseEventKeyword(responseEvent.type) == "success") {
-                    val state = it.receivedSuccessEvent(responseEvent.consumerName)
-                    if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
-                        activateEmployee(it.aggregateId, it.id!!)
-                    }
-                } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
-                    it.receivedFailureEvent()
-                    compensateEmployee(it.aggregateId, it.leftAggregate, it.rightAggregate)
+        logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}, with original id: ${responseEvent.rootEventId}")
+        sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresentOrElse({
+            println("SAGA LOADED - Events received: ${it.receivedSuccessEvents}")
+            if (getResponseEventKeyword(responseEvent.type) == "success") {
+                val state = it.receivedSuccessEvent(responseEvent.consumerName)
+                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
+                    println("ACTIVATE")
+                    activateEmployee(it.aggregateId, it.id!!)
                 }
+            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                it.receivedFailureEvent()
+                compensateEmployee(it.aggregateId, it.leftAggregate, it.rightAggregate)
             }
-            ack.acknowledge()
-        } catch (exception: Exception) {
-            exception.printStackTrace()
+        }) {
+            throw RuntimeException("Saga does not (yet) exist")
         }
+        ack.acknowledge()
     }
 
     @Throws(Exception::class)

@@ -36,13 +36,13 @@ class DepartmentServiceImpl(
     /**
      * If the department already exists we just return it, otherwise it is saved and returned
      */
-    @Transactional
     override fun createDepartmentUniquely(departmentDto: DepartmentDto): DepartmentDto {
         return departmentRepository.getByNameAndDeletedFalse(departmentDto.name)
                 .map { mapEntityToDto(it) }
                 .orElseGet { mapEntityToDto(persistWithEvents(mapDtoToEntity(departmentDto))) }
     }
 
+    @Transactional
     @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
     @Throws(PendingException::class, Exception::class)
     override fun updateDepartment(departmentDto: DepartmentDto): DepartmentDto {
@@ -54,8 +54,8 @@ class DepartmentServiceImpl(
         return mapEntityToDto(persistWithEvents(department))
     }
 
-    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
     @Transactional
+    @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
     @Throws(PendingException::class, Exception::class)
     override fun deleteDepartment(id: Long) {
         if (employeeRepository.getAllByDepartment_IdAndDeletedFalse(id).isEmpty()) {

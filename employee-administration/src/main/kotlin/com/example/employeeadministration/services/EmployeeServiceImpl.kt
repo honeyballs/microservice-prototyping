@@ -56,6 +56,7 @@ class EmployeeServiceImpl(
         return mapEntityToDto(persistWithEvents(employee))
     }
 
+    @Transactional
     @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
     @Throws(PendingException::class, Exception::class)
     override fun updateEmployee(employeeDto: EmployeeDto): EmployeeDto {
@@ -95,6 +96,7 @@ class EmployeeServiceImpl(
         persistWithEvents(employee)
     }
 
+    @Transactional
     override fun persistWithEvents(aggregate: Employee): Employee {
         var agg: Employee? = null
         try {

@@ -36,6 +36,7 @@ import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.transaction.KafkaTransactionManager
 import org.springframework.retry.RecoveryCallback
 import org.springframework.retry.backoff.ExponentialBackOffPolicy
+import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 
@@ -75,7 +76,7 @@ class KafkaConsumerConfiguration {
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
         factory.setConcurrency(1)
         val retryTemplate = RetryTemplate()
-        retryTemplate.setBackOffPolicy(ExponentialBackOffPolicy())
+        retryTemplate.setBackOffPolicy(FixedBackOffPolicy())
         retryTemplate.setRetryPolicy(SimpleRetryPolicy(5))
         factory.setRetryTemplate(retryTemplate)
         factory.setRecoveryCallback(kafkaRecoveryCallback)

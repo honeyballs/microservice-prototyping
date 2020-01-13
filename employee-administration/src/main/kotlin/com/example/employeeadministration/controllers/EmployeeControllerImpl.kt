@@ -52,8 +52,7 @@ class EmployeeControllerImpl(val repository: EmployeeRepository, val service: Em
 
     @PostMapping(employeeUrl)
     override fun createEmployee(@RequestBody employeeDto: EmployeeDto): ResponseEntity<EmployeeDto> {
-        val entity = service.persistWithEvents(service.mapDtoToEntity(employeeDto))
-        return ok(service.mapEntityToDto(entity))
+        return ok(service.createEmployee(employeeDto))
     }
 
     @PutMapping(employeeUrl)

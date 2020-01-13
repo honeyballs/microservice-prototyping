@@ -26,7 +26,7 @@ class KafkaCustomerEventHandler(
         val sagaService: SagaService,
         val mapper: ObjectMapper,
         val eventProducer: KafkaEventProducer
-): EventHandler {
+) : EventHandler {
 
     val logger = LoggerFactory.getLogger(KafkaCustomerEventHandler::class.java)
 
@@ -34,22 +34,21 @@ class KafkaCustomerEventHandler(
     @KafkaHandler
     @Transactional
     fun handleResponse(responseEvent: ResponseEvent, ack: Acknowledgment) {
-        try {
-            sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresent {
-                if (getResponseEventKeyword(responseEvent.type) == "success") {
-                    val state = it.receivedSuccessEvent(responseEvent.consumerName)
-                    if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
-                        activateCustomer(it.aggregateId, it.id!!)
-                    }
-                } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
-                    it.receivedFailureEvent()
-                    compensateCustomer(it.aggregateId, it.leftAggregate, it.rightAggregate)
+        logger.info("Response Event received - From: ${responseEvent.consumerName}, type: ${responseEvent.type}")
+        sagaRepository.getByEmittedEventId(responseEvent.rootEventId).ifPresentOrElse({
+            if (getResponseEventKeyword(responseEvent.type) == "success") {
+                val state = it.receivedSuccessEvent(responseEvent.consumerName)
+                if (state == SagaState.COMPLETED && !sagaService.existsAnotherSagaInRunningOrFailed(it.id!!, it.aggregateId)) {
+                    activateCustomer(it.aggregateId, it.id!!)
                 }
+            } else if (getResponseEventKeyword(responseEvent.type) == "fail") {
+                it.receivedFailureEvent()
+                compensateCustomer(it.aggregateId, it.leftAggregate, it.rightAggregate)
             }
-            ack.acknowledge()
-        } catch (exception: Exception) {
-            exception.printStackTrace()
+        }) {
+            throw RuntimeException("Saga does not (yet) exist")
         }
+        ack.acknowledge()
     }
 
     @Throws(Exception::class)

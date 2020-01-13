@@ -16,6 +16,10 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.transaction.KafkaTransactionManager
+import org.springframework.retry.backoff.ExponentialBackOffPolicy
+import org.springframework.retry.backoff.FixedBackOffPolicy
+import org.springframework.retry.policy.SimpleRetryPolicy
+import org.springframework.retry.support.RetryTemplate
 
 @Configuration
 @EnableKafka
@@ -51,6 +55,13 @@ class KafkaConsumerConfiguration {
         factory.consumerFactory = consumerFactory()
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
         factory.setConcurrency(1)
+        val retryTemplate = RetryTemplate()
+        retryTemplate.setBackOffPolicy(FixedBackOffPolicy())
+        retryTemplate.setRetryPolicy(SimpleRetryPolicy(5))
+        factory.setRetryTemplate(retryTemplate)
+        factory.setRecoveryCallback {
+            println("RETRY LIMIT EXCEEDED")
+        }
         // The transaction manager is created in the producer configuration
         // When so configured, the container starts a transaction before invoking the listener.
         // Any KafkaTemplate operations performed by the listener participate in the transaction.

@@ -57,7 +57,7 @@ class KafkaConfiguration {
         return KafkaAdmin(producerConfigs())
     }
 
-    @Bean
+    @Bean(name = ["listener-producer-factory"])
     fun producerFactory(): ProducerFactory<Long, Event> {
         val serializer = JsonSerializer<Event>(mapper)
         serializer.isAddTypeInfo = false
@@ -69,7 +69,7 @@ class KafkaConfiguration {
     // Provides another consumer factory using a transaction prefix per instance, not for all application instances
     // This is required when messages are only produced:
     // See https://docs.spring.io/spring-kafka/reference/html/#transaction-id-prefix
-    @Bean
+    @Bean(name = ["producer-producer-factory"])
     fun producingOnlyProducerFactory(): ProducerFactory<Long, Event> {
         val serializer = JsonSerializer<Event>(mapper)
         serializer.isAddTypeInfo = false
@@ -80,17 +80,17 @@ class KafkaConfiguration {
     }
 
     @Bean
-    fun kafkaTransactionManager(producerFactory: ProducerFactory<Long, Event>): KafkaTransactionManager<Long, Event> {
+    fun kafkaTransactionManager(@Qualifier("listener-producer-factory") producerFactory: ProducerFactory<Long, Event>): KafkaTransactionManager<Long, Event> {
         return KafkaTransactionManager(producerFactory)
     }
 
-    @Bean
-    fun kafkaTemplate(producerFactory: ProducerFactory<Long, Event>): KafkaTemplate<Long, Event> {
+    @Bean(name = ["listener-template"])
+    fun kafkaTemplate(@Qualifier("listener-producer-factory") producerFactory: ProducerFactory<Long, Event>): KafkaTemplate<Long, Event> {
         return KafkaTemplate<Long, Event>(producerFactory)
     }
 
-    @Bean
-    fun producingOnlyTemplate(producingOnlyProducerFactory: ProducerFactory<Long, Event>): KafkaTemplate<Long, Event> {
+    @Bean(name = ["producer-template"])
+    fun producingOnlyTemplate(@Qualifier("producer-producer-factory") producingOnlyProducerFactory: ProducerFactory<Long, Event>): KafkaTemplate<Long, Event> {
         return KafkaTemplate<Long, Event>(producingOnlyProducerFactory)
     }
 

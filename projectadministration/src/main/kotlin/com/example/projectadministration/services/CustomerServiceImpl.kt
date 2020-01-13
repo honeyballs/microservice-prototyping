@@ -37,6 +37,7 @@ class CustomerServiceImpl(
     }
 
     @Throws(Exception::class)
+    @Transactional
     override fun createCustomer(customerDto: CustomerDto): CustomerDto {
         val customer = mapDtoToEntity(customerDto)
         return mapEntityToDto(persistWithEvents(customer))
@@ -44,6 +45,7 @@ class CustomerServiceImpl(
 
     @Retryable(value = [PendingException::class], maxAttempts = 2, backoff = Backoff(700))
     @Throws(PendingException::class, Exception::class)
+    @Transactional
     override fun updateCustomer(customerDto: CustomerDto): CustomerDto {
         val customer = customerRepository.findById(customerDto.id!!).orElseThrow()
         throwPendingException(customer)
